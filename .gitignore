@@ -1,0 +1,8 @@
+node_modules
+.next
+.env*.local
+.env
+public/pyodide
+*.tsbuildinfo
+next-env.d.ts
+.vercel
