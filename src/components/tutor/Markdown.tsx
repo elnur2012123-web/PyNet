@@ -19,22 +19,28 @@ export function Markdown({ text }: { text: string }) {
 
 function Prose({ text }: { text: string }) {
   const blocks = text.split(/\n{2,}/).filter((b) => b.trim());
-  return (
-    <>
-      {blocks.map((b, i) => {
-        const lines = b.split("\n").filter((l) => l.trim());
-        if (lines.every((l) => /^\s*[-*•]\s/.test(l))) return <ul key={i}>{lines.map((l, j) => <li key={j}><Inline text={l.replace(/^\s*[-*•]\s/, "")} /></li>)}</ul>;
-        if (lines.every((l) => /^\s*\d+[.)]\s/.test(l))) return <ol key={i}>{lines.map((l, j) => <li key={j}><Inline text={l.replace(/^\s*\d+[.)]\s/, "")} /></li>)}</ol>;
-        const h = /^(#{1,4})\s+(.*)$/.exec(lines[0] ?? "");
-        if (h && lines.length === 1) return h[1].length <= 2 ? <h3 key={i}>{h[2]}</h3> : <h4 key={i}>{h[2]}</h4>;
-        return (
-          <p key={i}>
-            {lines.map((l, j) => (
-              <span key={j}>{j > 0 && <br />}<Inline text={l.replace(/^#{1,4}\s+/, "")} /></span>
-            ))}
-          </p>
-        );
-      })}
-    </>
-  );
+  const out: React.ReactNode[] = [];
+  blocks.forEach((b, i) => {
+    const lines = b.split("\n").filter((l) => l.trim());
+    // group consecutive lines into paragraph / bullet / numbered runs
+    let run: { kind: "p" | "ul" | "ol"; lines: string[] } | null = null;
+    const runs: { kind: "p" | "ul" | "ol"; lines: string[] }[] = [];
+    for (const l of lines) {
+      const kind = /^\s*[-*•]\s/.test(l) ? "ul" : /^\s*\d+[.)]\s/.test(l) ? "ol" : "p";
+      if (!run || run.kind !== kind) { run = { kind, lines: [] }; runs.push(run); }
+      run.lines.push(l);
+    }
+    runs.forEach((r, j) => {
+      const key = `${i}-${j}`;
+      if (r.kind === "ul") out.push(<ul key={key}>{r.lines.map((l, k) => <li key={k}><Inline text={l.replace(/^\s*[-*•]\s/, "")} /></li>)}</ul>);
+      else if (r.kind === "ol") out.push(<ol key={key}>{r.lines.map((l, k) => <li key={k}><Inline text={l.replace(/^\s*\d+[.)]\s/, "")} /></li>)}</ol>);
+      else {
+        const h = /^(#{1,4})\s+(.*)$/.exec(r.lines[0]);
+        if (h && r.lines.length === 1) out.push(h[1].length <= 3 ? <h3 key={key}>{h[2]}</h3> : <h4 key={key}>{h[2]}</h4>);
+        else if (r.lines.length === 1 && /^-{3,}$/.test(r.lines[0].trim())) out.push(<hr key={key} className="my-4 border-border" />);
+        else out.push(<p key={key}>{r.lines.map((l, k) => <span key={k}>{k > 0 && <br />}<Inline text={l.replace(/^#{1,4}\s+/, "")} /></span>)}</p>);
+      }
+    });
+  });
+  return <>{out}</>;
 }

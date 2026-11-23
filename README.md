@@ -23,7 +23,7 @@ PyNest is a Python learning platform for complete beginners. It has interactive 
 
 - **Full mode** (Supabase configured): real accounts, synced progress, leaderboard, subscriptions.
 - **Local mode** (no Supabase env vars): everything educational works and progress is saved in `localStorage`. The UI says clearly that progress isn't synced. Leaderboards, friends and payments are shown as unavailable instead of being faked.
-- **PyBuddy without `ANTHROPIC_API_KEY`:** the tutor shows a configuration message instead of pretending to answer.
+- **PyBuddy without `ANTHROPIC_API_KEY`:** the tutor runs as **PyBuddy Lite**, a free rule-based tutor (`src/lib/tutor/`). It answers from PyNest's lessons, error guides, exercises and a Python glossary. It explains error messages, walks through pasted code line by line, flags common bugs, gives practice questions and exercise hints, and refuses non-Python questions. It needs no API key, costs nothing and has no daily limit. Add a key later and PyBuddy switches to Claude automatically.
 - **Payments without Lemon Squeezy credentials:** the pricing and billing pages show a "Demo mode" notice, and upgrade buttons are disabled. Nothing is simulated.
 
 ## Quick start (local)
@@ -44,7 +44,7 @@ See `.env.example`. None of these are exposed to the browser except the `NEXT_PU
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Accounts and everything database-backed |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only: XP awards, quotas, webhooks, username sign-in, account deletion |
-| `ANTHROPIC_API_KEY` | PyBuddy (`ANTHROPIC_MODEL` is optional; the default is `claude-sonnet-5-5`) |
+| `ANTHROPIC_API_KEY` | Optional. Claude-powered PyBuddy; without it, the free PyBuddy Lite runs (`ANTHROPIC_MODEL` is optional; the default is `claude-sonnet-5-5`) |
 | `NEXT_PUBLIC_SITE_URL` | Auth redirect links and checkout return URL |
 | `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | Set to `true` after enabling Google in Supabase Auth |
 | `LEMONSQUEEZY_*` | Payments (see `docs/PAYMENTS.md`) |

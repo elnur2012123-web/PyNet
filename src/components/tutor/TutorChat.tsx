@@ -37,10 +37,14 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
   const [mode, setMode] = useState<AiFeature>("chat");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: "warn" | "error" | "info"; text: string; cta?: "signin" | "upgrade" } | null>(null);
+  const [engine, setEngine] = useState<"claude" | "lite" | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
+  useEffect(() => {
+    fetch("/api/tutor").then((r) => r.json()).then((d) => setEngine(d.mode)).catch(() => {});
+  }, []);
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem(STORE);
@@ -55,7 +59,7 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
   const send = useCallback(async (text: string, feature: AiFeature = mode) => {
     const content = text.trim();
     if (!content || busy) return;
-    if (!planAtLeast(p.plan, AI_FEATURE_MIN_PLAN[feature])) {
+    if (engine !== "lite" && !planAtLeast(p.plan, AI_FEATURE_MIN_PLAN[feature])) {
       setNotice({ kind: "info", text: `${MODES.find((m) => m.id === feature)?.label} is part of the ${AI_FEATURE_MIN_PLAN[feature]} plan.`, cta: "upgrade" });
       return;
     }
@@ -109,7 +113,7 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
       setBusy(false);
       abortRef.current = null;
     }
-  }, [busy, context, messages, mode, p]);
+  }, [busy, context, messages, mode, p, engine]);
 
   useEffect(() => {
     if (!listen) return;
@@ -124,13 +128,13 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
     return () => window.removeEventListener(TUTOR_EVENT, handler);
   }, [listen, send]);
 
-  const aiLabel = p.mode === "account" ? `${Math.max(0, p.ai.limit - p.ai.used)} of ${p.ai.limit} messages left today` : p.authConfigured ? "Sign in to chat" : "Demo mode";
+  const aiLabel = engine === "lite" ? "PyBuddy Lite · free" : p.mode === "account" ? `${Math.max(0, p.ai.limit - p.ai.used)} of ${p.ai.limit} messages left today` : p.authConfigured ? "Sign in to chat" : "Demo mode";
 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className={`flex flex-wrap items-center gap-1.5 border-b border-border ${compact ? "px-3 py-2" : "px-4 py-3"}`}>
         {MODES.map((m) => {
-          const locked = !planAtLeast(p.plan, AI_FEATURE_MIN_PLAN[m.id]);
+          const locked = engine !== "lite" && !planAtLeast(p.plan, AI_FEATURE_MIN_PLAN[m.id]);
           return (
             <button key={m.id} onClick={() => setMode(m.id)} title={m.hint}
               className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${mode === m.id ? "bg-accent text-white" : "text-muted hover:bg-elevated hover:text-fg"}`}>
@@ -148,7 +152,7 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
         {messages.length === 0 && (
           <div className="mx-auto max-w-lg py-4 text-center">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-accent to-accent2 text-white"><Bot className="h-6 w-6" /></span>
-            <p className="mt-3 font-semibold">Hi! I'm PyBuddy, your Python tutor.</p>
+            <p className="mt-3 font-semibold">Hi! I'm {engine === "lite" ? "PyBuddy Lite" : "PyBuddy"}, your Python tutor.</p>
             <p className="mt-1 text-sm text-muted">Ask me anything — no question is too small. You can paste code too.</p>
             <div className="mt-5 grid gap-2 sm:grid-cols-2">
               {SUGGESTIONS.slice(0, compact ? 4 : 6).map((s) => (
@@ -200,7 +204,7 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
             <button type="submit" disabled={!input.trim()} className="btn-primary h-9 w-9 !p-0" aria-label="Send"><ArrowUp className="h-4 w-4" /></button>
           )}
         </div>
-        <p className="mt-1.5 px-1 text-[11px] text-muted">PyBuddy can make mistakes — run the code to check. Fair-use daily limits apply.</p>
+        <p className="mt-1.5 px-1 text-[11px] text-muted">{engine === "lite" ? "PyBuddy Lite answers from PyNest's lessons and only covers Python — free, no limits." : "PyBuddy can make mistakes — run the code to check. Fair-use daily limits apply."}</p>
       </form>
     </div>
   );

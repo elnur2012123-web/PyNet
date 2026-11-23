@@ -5,6 +5,30 @@ import { clientIp, rateLimit } from "@/lib/server/rate-limit";
 import { error, readJson, sameOrigin } from "@/lib/server/http";
 import { AI_DAILY_LIMIT, AI_FEATURE_MIN_PLAN, planAtLeast, type AiFeature, type Plan } from "@/lib/plans";
 import { isSupabaseConfigured } from "@/lib/env";
+import { localTutorAnswer } from "@/lib/tutor/local";
+
+/** Which tutor engine is active (used by the chat UI label). */
+export function GET() {
+  return Response.json({ mode: process.env.ANTHROPIC_API_KEY ? "claude" : "lite" });
+}
+
+/** Stream a ready-made answer in small chunks so it feels like typing. */
+function streamText(text: string, headers: Record<string, string> = {}) {
+  const enc = new TextEncoder();
+  const chars = Array.from(text); // split by code point so emoji are never cut in half
+  const parts: string[] = [];
+  for (let i = 0; i < chars.length; i += 24) parts.push(chars.slice(i, i + 24).join(""));
+  const stream = new ReadableStream<Uint8Array>({
+    async start(c) {
+      for (const p of parts) {
+        c.enqueue(enc.encode(p));
+        await new Promise((r) => setTimeout(r, 8));
+      }
+      c.close();
+    },
+  });
+  return new Response(stream, { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", ...headers } });
+}
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -66,14 +90,17 @@ function validate(messages: unknown): ChatMessage[] | null {
 
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return error("Bad origin", 403);
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return error("PyBuddy is not configured yet. Add ANTHROPIC_API_KEY to the server environment to enable the AI tutor.", 503, { configured: false });
-  }
-
   const body = await readJson<{ messages?: unknown; feature?: AiFeature; context?: string }>(req, 200_000);
   const messages = validate(body?.messages);
   if (!messages) return error("Invalid conversation");
   const feature: AiFeature = body?.feature && body.feature in FEATURE_PROMPTS ? body.feature : "chat";
+
+  // Free mode: no API key configured -> PyBuddy Lite (rule-based, no cost, no quota).
+  if (!process.env.ANTHROPIC_API_KEY) {
+    const burst = rateLimit(`lite:${clientIp(req)}`, 30, 60_000);
+    if (!burst.ok) return error(`You're sending messages very quickly. Try again in ${burst.retryAfter}s.`, 429);
+    return streamText(localTutorAnswer(messages, feature), { "X-AI-Mode": "lite" });
+  }
   const context = typeof body?.context === "string" ? body.context.slice(0, 500) : "";
 
   // --- who is asking, and are they allowed? ---------------------------------
