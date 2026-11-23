@@ -9,6 +9,8 @@ import { Icon } from "@/components/ui/Icon";
 import { ACHIEVEMENTS } from "@/lib/achievements";
 import type { Plan } from "@/lib/plans";
 import { EmptyState } from "@/components/ui/States";
+import { SpecialBadge, SpecialChip } from "@/components/ui/SpecialBadge";
+import { formatXp } from "@/lib/xp";
 
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
   return { title: `@${(await params).username}` };
@@ -18,7 +20,7 @@ interface PublicProfile {
   id: string; username: string; display_name: string | null; avatar_url: string | null; bio: string | null; country: string | null;
   created_at: string; show_stats: boolean; total_xp: number | null; level: number; lessons: number | null; exercises: number | null;
   quizzes: number | null; projects: number | null; streak: number | null; longest_streak: number | null; plan: Plan; league: string;
-  accent_theme: string; achievements: { id: string; unlocked_at: string }[];
+  accent_theme: string; achievements: { id: string; unlocked_at: string }[]; special_title: string | null;
 }
 
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
@@ -41,18 +43,18 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         <div className="relative flex flex-col items-start gap-5 sm:flex-row sm:items-end">
           <Avatar src={prof.avatar_url} name={prof.display_name || prof.username} size={96} />
           <div className="flex-1">
-            <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold">{prof.display_name || prof.username} <PlanBadge plan={prof.plan} /></h1>
+            <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold">{prof.display_name || prof.username} <PlanBadge plan={prof.plan} />{prof.special_title && <SpecialChip title={prof.special_title} />}</h1>
             <p className="text-muted">@{prof.username}{prof.country ? ` · ${prof.country}` : ""}</p>
             {prof.bio && <p className="mt-2 max-w-xl text-fg/90">{prof.bio}</p>}
             <p className="mt-2 flex items-center gap-1.5 text-xs text-muted"><CalendarDays className="h-3.5 w-3.5" /> Member since {new Date(prof.created_at).toLocaleDateString(undefined, { month: "long", year: "numeric" })}</p>
           </div>
-          <LeagueBadge league={prof.league} size={56} showLabel />
+          {prof.special_title ? <SpecialBadge title={prof.special_title} size={56} showLabel /> : <LeagueBadge league={prof.league} size={56} showLabel />}
         </div>
       </div>
 
       {prof.show_stats || prof.total_xp != null ? (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-          {[["Total XP", prof.total_xp?.toLocaleString()], ["Level", prof.level], ["Lessons", prof.lessons], ["Challenges", prof.exercises], ["Streak", prof.streak]].map(([l, v]) => (
+          {[["Total XP", prof.total_xp != null ? formatXp(prof.total_xp) : null], ["Level", prof.level?.toLocaleString("en-US")], ["Lessons", prof.lessons], ["Challenges", prof.exercises], ["Streak", prof.streak]].map(([l, v]) => (
             <div key={String(l)} className="card p-4"><p className="text-xs text-muted">{l}</p><p className="mt-1 flex items-center gap-1 text-2xl font-semibold">{l === "Streak" && <Flame className="h-5 w-5 text-warn" />}{v ?? "—"}</p></div>
           ))}
         </div>

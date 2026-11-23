@@ -37,6 +37,8 @@ export interface Profile {
   accent_theme: string;
   onboarded: boolean;
   created_at: string;
+  special_title?: string | null;
+  hidden_from_weekly?: boolean;
 }
 export interface DayActivity { date: string; xp: number; lessons: number; exercises: number; minutes: number }
 export interface Stats { global_rank: number | null; weekly_rank: number | null; weekly_xp: number; monthly_xp: number; league: string; best_rank: number | null }

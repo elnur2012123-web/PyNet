@@ -11,6 +11,7 @@ import { GlobalSearch } from "./GlobalSearch";
 import { UserMenu } from "./UserMenu";
 import { useProgress } from "@/components/providers/ProgressProvider";
 import { FloatingTutor } from "@/components/tutor/FloatingTutor";
+import { formatXp } from "@/lib/xp";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -81,7 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {p.ready && (
           <div className="hidden items-center gap-2 md:flex">
             <span className="chip" title="Learning streak"><Flame className="h-3.5 w-3.5 text-warn" /> {p.streak} day{p.streak === 1 ? "" : "s"}</span>
-            <span className="chip" title="Total XP"><Zap className="h-3.5 w-3.5 text-accent" /> {p.xp.toLocaleString()} XP</span>
+            <span className="chip" title="Total XP"><Zap className="h-3.5 w-3.5 text-accent" /> {formatXp(p.xp)} XP</span>
           </div>
         )}
         <ThemeToggle />

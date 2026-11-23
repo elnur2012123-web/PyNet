@@ -43,3 +43,17 @@ export function leagueForWeeklyXp(xp: number) {
 export function streakBonus(streak: number) {
   return streak >= 2 ? 5 + Math.min(streak, 10) : 0;
 }
+
+const BIG = [
+  [1e18, "Quintillion"], [1e15, "Quadrillion"], [1e12, "Trillion"], [1e9, "Billion"],
+] as const;
+/** Readable XP: 1,250 / 3.4 Billion / 1 Quintillion */
+export function formatXp(n: number): string {
+  for (const [v, name] of BIG) {
+    if (n >= v) {
+      const x = n / v;
+      return `${x >= 100 ? Math.round(x) : Number(x.toFixed(2))} ${name}`;
+    }
+  }
+  return Math.round(n).toLocaleString("en-US");
+}

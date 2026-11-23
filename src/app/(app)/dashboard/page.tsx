@@ -10,7 +10,8 @@ import { PlanBadge } from "@/components/ui/PlanBadge";
 import { LeagueBadge } from "@/components/ui/LeagueBadge";
 import { Icon } from "@/components/ui/Icon";
 import { Skeleton } from "@/components/ui/States";
-import { leagueForWeeklyXp, levelProgress } from "@/lib/xp";
+import { formatXp, leagueForWeeklyXp, levelProgress } from "@/lib/xp";
+import { SpecialBadge, SpecialChip } from "@/components/ui/SpecialBadge";
 import { planAtLeast } from "@/lib/plans";
 import { achievementById } from "@/lib/achievements";
 
@@ -70,7 +71,7 @@ export default function Dashboard() {
         {p.mode === "account" && <Avatar src={p.profile?.avatar_url} name={name} size={52} />}
         <div className="flex-1">
           <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight">
-            {name ? `Welcome back, ${name}` : "Welcome to PyNest"} <PlanBadge plan={p.plan} />
+            {name ? `Welcome back, ${name}` : "Welcome to PyNest"} <PlanBadge plan={p.plan} />{p.profile?.special_title && <SpecialChip title={p.profile.special_title} />}
           </h1>
           <p className="text-sm text-muted">
             {done === 0 ? "Let's write your first line of Python today." : `You've completed ${done} of ${total} lessons. Keep going!`}
@@ -129,7 +130,7 @@ export default function Dashboard() {
       {/* stat tiles */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Stat icon={<Flame className="h-4 w-4 text-warn" />} label="Learning streak" value={`${p.streak} day${p.streak === 1 ? "" : "s"}`} sub={`Best: ${p.longestStreak}`} />
-        <Stat icon={<Zap className="h-4 w-4 text-accent" />} label="Total XP" value={p.xp.toLocaleString()} sub={`${weekly} this week`} />
+        <Stat icon={<Zap className="h-4 w-4 text-accent" />} label="Total XP" value={formatXp(p.xp)} sub={`${weekly} this week`} />
         <Stat icon={<Code2 className="h-4 w-4 text-accent2" />} label="Challenges solved" value={String(p.exercises.size)} sub={`of ${catalog.exercises.length}`} />
         <Stat icon={<ListChecks className="h-4 w-4 text-success" />} label="Quiz performance" value={avgQuiz == null ? "—" : `${avgQuiz}%`} sub={`${p.quizzes.size} quizzes passed`} />
       </div>
@@ -139,15 +140,15 @@ export default function Dashboard() {
         <div className="card p-6">
           <div className="flex items-center justify-between"><h3 className="font-semibold">League</h3><Link href="/leaderboard" className="text-xs text-accent">Leaderboard →</Link></div>
           <div className="mt-4 flex items-center gap-4">
-            <LeagueBadge league={league.league.name} size={52} />
+            {p.profile?.special_title ? <SpecialBadge title={p.profile.special_title} size={52} /> : <LeagueBadge league={league.league.name} size={52} />}
             <div>
-              <p className="text-lg font-semibold">{league.league.name} League</p>
-              <p className="text-sm text-muted">{league.next ? `${league.xpToNext} XP to ${league.next.name}` : "Top league — amazing!"}</p>
+              <p className="text-lg font-semibold">{p.profile?.special_title ?? `${league.league.name} League`}</p>
+              <p className="text-sm text-muted">{p.profile?.special_title ? "A one-of-a-kind rank" : league.next ? `${league.xpToNext} XP to ${league.next.name}` : "Top league — amazing!"}</p>
             </div>
           </div>
           <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-xl bg-elevated/70 p-3"><dt className="text-xs text-muted">Global rank</dt><dd className="font-semibold">{p.stats?.global_rank ? `#${p.stats.global_rank}` : p.mode === "account" ? "—" : "Sign in"}</dd></div>
-            <div className="rounded-xl bg-elevated/70 p-3"><dt className="text-xs text-muted">Weekly rank</dt><dd className="font-semibold">{p.stats?.weekly_rank && weekly > 0 ? `#${p.stats.weekly_rank}` : "—"}</dd></div>
+            <div className="rounded-xl bg-elevated/70 p-3"><dt className="text-xs text-muted">Weekly rank</dt><dd className="font-semibold">{p.profile?.hidden_from_weekly ? "Hidden" : p.stats?.weekly_rank && weekly > 0 ? `#${p.stats.weekly_rank}` : "—"}</dd></div>
           </dl>
         </div>
 

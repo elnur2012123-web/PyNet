@@ -173,3 +173,26 @@ do $$ begin
 end $$;
 reset role;
 select 'FAVORITES TESTS PASSED' as result;
+
+-- owner title / big XP / hidden from weekly (migration 0004)
+reset role;
+update profiles set special_title = 'Founder', hidden_from_weekly = true where username = 'alice';
+update user_progress set total_xp = 1000000000000000000 where user_id = '11111111-1111-1111-1111-111111111111';
+set role service_role;
+select public.award_activity('11111111-1111-1111-1111-111111111111', 'lesson', 'm2-naming', 20, 100);
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', false);
+do $$ begin
+  -- cannot grant yourself a title
+  begin
+    update profiles set special_title = 'King' where id = auth.uid();
+    raise exception 'user set own special_title';
+  exception when insufficient_privilege then null; end;
+  if (select xp from get_leaderboard('global', 10) where username = 'alice') <> 1000000000000000020 then raise exception 'big xp'; end if;
+  if (select special_title from get_leaderboard('global', 10) where username = 'alice') <> 'Founder' then raise exception 'title'; end if;
+  if exists (select 1 from get_leaderboard('weekly', 10) where username = 'alice') then raise exception 'owner on weekly board'; end if;
+  if (select special_title from get_public_profile('alice')) <> 'Founder' then raise exception 'profile title'; end if;
+end $$;
+reset role;
+select 'OWNER TITLE TESTS PASSED' as result;

@@ -8,10 +8,11 @@ import { Avatar } from "@/components/ui/Avatar";
 import { PlanBadge } from "@/components/ui/PlanBadge";
 import { LeagueBadge } from "@/components/ui/LeagueBadge";
 import { EmptyState, Skeleton } from "@/components/ui/States";
-import { leagueForWeeklyXp } from "@/lib/xp";
+import { formatXp, leagueForWeeklyXp } from "@/lib/xp";
+import { SpecialBadge, SpecialChip } from "@/components/ui/SpecialBadge";
 import type { Plan } from "@/lib/plans";
 
-interface Row { rank: number; user_id: string; username: string; display_name: string | null; avatar_url: string | null; country: string | null; xp: number; level: number; lessons: number; exercises: number; streak: number; plan: Plan; league: string }
+interface Row { rank: number; user_id: string; username: string; display_name: string | null; avatar_url: string | null; country: string | null; xp: number; level: number; lessons: number; exercises: number; streak: number; plan: Plan; league: string; special_title: string | null }
 const TABS = [
   { id: "global", label: "All time" },
   { id: "weekly", label: "This week" },
@@ -62,14 +63,14 @@ export default function LeaderboardPage() {
       {p.mode === "account" ? (
         <div className="grid gap-4 md:grid-cols-4">
           <div className="card flex items-center gap-3 p-4 md:col-span-2">
-            <LeagueBadge league={league.league.name} size={48} />
+            {p.profile?.special_title ? <SpecialBadge title={p.profile.special_title} size={48} /> : <LeagueBadge league={league.league.name} size={48} />}
             <div>
-              <p className="font-semibold">{league.league.name} League</p>
-              <p className="text-sm text-muted">{weekly} XP this week{league.next ? ` · ${league.xpToNext} XP to ${league.next.name}` : ""}</p>
+              <p className="font-semibold">{p.profile?.special_title ?? `${league.league.name} League`}</p>
+              <p className="text-sm text-muted">{p.profile?.hidden_from_weekly ? "Hidden from the weekly leaderboard" : `${weekly} XP this week${league.next ? ` · ${league.xpToNext} XP to ${league.next.name}` : ""}`}</p>
             </div>
           </div>
           <div className="card p-4"><p className="text-xs text-muted">Global rank</p><p className="text-2xl font-semibold">{p.stats?.global_rank ? `#${p.stats.global_rank}` : "—"}</p><p className="text-xs text-muted">Best: {p.stats?.best_rank ? `#${p.stats.best_rank}` : "—"}</p></div>
-          <div className="card p-4"><p className="text-xs text-muted">Weekly rank</p><p className="text-2xl font-semibold">{weekly > 0 && p.stats?.weekly_rank ? `#${p.stats.weekly_rank}` : "—"}</p><p className="text-xs text-muted">{p.stats?.monthly_xp ?? 0} XP this month</p></div>
+          <div className="card p-4"><p className="text-xs text-muted">Weekly rank</p><p className="text-2xl font-semibold">{p.profile?.hidden_from_weekly ? "Hidden" : weekly > 0 && p.stats?.weekly_rank ? `#${p.stats.weekly_rank}` : "—"}</p><p className="text-xs text-muted">{p.stats?.monthly_xp ?? 0} XP this month</p></div>
         </div>
       ) : (
         <div className="card flex flex-wrap items-center justify-between gap-3 p-4 text-sm"><span>Create an account to appear on the leaderboard and get your own rank.</span><Link href="/signup" className="btn-primary btn-sm">Join free</Link></div>
@@ -101,7 +102,7 @@ export default function LeaderboardPage() {
                     <Trophy className={`h-6 w-6 ${color}`} aria-label={`${place} place`} />
                     <div className="mt-2"><Avatar src={r.avatar_url} name={r.display_name || r.username} size={place === 1 ? 56 : 44} /></div>
                     <p className="mt-2 max-w-full truncate text-sm font-semibold">{r.display_name || r.username}</p>
-                    <p className="text-xs text-muted">{r.xp.toLocaleString()} XP</p>
+                    <p className="text-xs text-muted">{formatXp(r.xp)} XP</p>
                   </Link>
                 );
               })}
@@ -121,12 +122,12 @@ export default function LeaderboardPage() {
                       <td className="px-4 py-3">
                         <Link href={`/profile/${r.username}`} className="flex items-center gap-3 hover:text-accent">
                           <Avatar src={r.avatar_url} name={r.display_name || r.username} size={32} />
-                          <span className="min-w-0"><span className="flex items-center gap-1.5 font-medium">{r.display_name || r.username} <PlanBadge plan={r.plan} />{me && <span className="chip">You</span>}</span><span className="text-xs text-muted">@{r.username}</span></span>
-                          <span className="ml-auto"><LeagueBadge league={r.league} size={22} /></span>
+                          <span className="min-w-0"><span className="flex items-center gap-1.5 font-medium">{r.display_name || r.username} <PlanBadge plan={r.plan} />{r.special_title && <SpecialChip title={r.special_title} />}{me && <span className="chip">You</span>}</span><span className="text-xs text-muted">@{r.username}</span></span>
+                          <span className="ml-auto">{r.special_title ? <SpecialBadge title={r.special_title} size={22} /> : <LeagueBadge league={r.league} size={22} />}</span>
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold tabular-nums">{r.xp.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">{r.level}</td>
+                      <td className="px-4 py-3 text-right font-semibold tabular-nums">{formatXp(r.xp)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{r.level.toLocaleString("en-US")}</td>
                       <td className="px-4 py-3 text-right tabular-nums">{r.lessons}</td>
                       <td className="px-4 py-3 text-right tabular-nums">{r.exercises}</td>
                       <td className="px-4 py-3 text-right tabular-nums"><Flame className="mr-1 inline h-3.5 w-3.5 text-warn" />{r.streak}</td>
