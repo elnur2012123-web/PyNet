@@ -193,6 +193,7 @@ do $$ begin
   if (select special_title from get_leaderboard('global', 10) where username = 'alice') <> 'Founder' then raise exception 'title'; end if;
   if exists (select 1 from get_leaderboard('weekly', 10) where username = 'alice') then raise exception 'owner on weekly board'; end if;
   if (select special_title from get_public_profile('alice')) <> 'Founder' then raise exception 'profile title'; end if;
+  if exists (select 1 from get_leaderboard('monthly', 10) where username = 'alice') then raise exception 'owner on monthly board'; end if;
 end $$;
 reset role;
 select 'OWNER TITLE TESTS PASSED' as result;

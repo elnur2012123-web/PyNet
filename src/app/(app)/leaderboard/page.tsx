@@ -66,7 +66,7 @@ export default function LeaderboardPage() {
             {p.profile?.special_title ? <SpecialBadge title={p.profile.special_title} size={48} /> : <LeagueBadge league={league.league.name} size={48} />}
             <div>
               <p className="font-semibold">{p.profile?.special_title ?? `${league.league.name} League`}</p>
-              <p className="text-sm text-muted">{p.profile?.hidden_from_weekly ? "Hidden from the weekly leaderboard" : `${weekly} XP this week${league.next ? ` · ${league.xpToNext} XP to ${league.next.name}` : ""}`}</p>
+              <p className="text-sm text-muted">{p.profile?.hidden_from_weekly ? "Hidden from weekly & monthly leaderboards" : `${weekly} XP this week${league.next ? ` · ${league.xpToNext} XP to ${league.next.name}` : ""}`}</p>
             </div>
           </div>
           <div className="card p-4"><p className="text-xs text-muted">Global rank</p><p className="text-2xl font-semibold">{p.stats?.global_rank ? `#${p.stats.global_rank}` : "—"}</p><p className="text-xs text-muted">Best: {p.stats?.best_rank ? `#${p.stats.best_rank}` : "—"}</p></div>
