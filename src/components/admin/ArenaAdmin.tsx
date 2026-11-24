@@ -6,6 +6,7 @@ import { getBrowserSupabase } from "@/lib/supabase/client";
 import { getRuntime } from "@/lib/python/runner";
 import { CodeEditor } from "@/components/editor/CodeEditor";
 import { difficultyClass } from "@/lib/arena/rank";
+import { CheatDetector } from "./CheatDetector";
 
 interface P { id: number; title: string; rating: number; visibility: string }
 interface C { id: number; title: string; starts_at: string; duration_minutes: number }
@@ -92,6 +93,7 @@ export function ArenaAdmin() {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Arena</h2>
+      <CheatDetector />
       {msg && <p className={`card p-3 text-sm ${msg.ok ? "text-success" : "text-danger"}`}>{msg.text}</p>}
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card space-y-3 p-5">

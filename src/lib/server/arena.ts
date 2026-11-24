@@ -21,16 +21,28 @@ export function contestPhase(c: Pick<ContestRow, "starts_at" | "duration_minutes
   return "finished" as const;
 }
 
+/** Rounds with unreviewed cheat flags wait this long before ratings are applied anyway. */
+const REVIEW_WINDOW_MS = 48 * 3600e3;
+
 /**
- * Applies rating changes for every finished, rated round that hasn't been rated yet.
+ * Runs after a round ends: scans it for cheating once, then applies rating changes
+ * (right away if nothing was flagged, otherwise after staff review or 48 hours).
  * Safe to call on every page view: the database applies each round exactly once.
  */
 export async function finalizeFinishedContests() {
   const admin = getAdminSupabase();
   if (!admin) return;
-  const { data } = await admin.from("contests").select("id, starts_at, duration_minutes").eq("rated", true).eq("rating_applied", false);
-  for (const c of (data ?? []) as Pick<ContestRow, "id" | "starts_at" | "duration_minutes">[]) {
+  const { data } = await admin.from("contests").select("id, starts_at, duration_minutes, rated, rating_applied, checked_at")
+    .or("checked_at.is.null,and(rated.eq.true,rating_applied.eq.false)");
+  for (const c of (data ?? []) as (ContestRow & { checked_at: string | null })[]) {
     if (contestPhase(c) !== "finished") continue;
+    if (!c.checked_at) {
+      const { scanContest } = await import("./cheat");
+      await scanContest(admin, c.id, true);
+    }
+    if (!c.rated || c.rating_applied) continue;
+    const { count } = await admin.from("cheat_flags").select("id", { count: "exact", head: true }).eq("contest_id", c.id).eq("status", "open").neq("severity", "low");
+    if ((count ?? 0) > 0 && Date.now() < endsAt(c).getTime() + REVIEW_WINDOW_MS) continue;
     const { data: rows } = await admin.rpc("get_contest_standings", { p_contest: c.id });
     const standings = (rows ?? []) as { rank: number; user_id: string; rating: number | null }[];
     const places = placesFromRanks(standings.map((r) => Number(r.rank)));

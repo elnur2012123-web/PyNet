@@ -391,3 +391,24 @@ do $$ begin
 end $$;
 reset role;
 select 'ARENA TESTS PASSED' as result;
+
+-- cheat detector (migration 0012)
+set role service_role;
+insert into cheat_flags (kind, contest_id, problem_id, user_id, score) values ('fast_solve', 900, 1101, '11111111-1111-1111-1111-111111111111', 1);
+insert into contest_disqualifications (contest_id, user_id, reason) values (900, '11111111-1111-1111-1111-111111111111', 'copied code');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
+do $$ begin
+  begin
+    perform 1 from cheat_flags;
+    raise exception 'user read cheat flags';
+  exception when insufficient_privilege then null; end;
+  begin
+    delete from contest_disqualifications;
+    raise exception 'user removed a disqualification';
+  exception when insufficient_privilege then null; end;
+  if exists (select 1 from get_contest_standings(900) where username = 'alice') then raise exception 'disqualified user still in standings'; end if;
+end $$;
+reset role;
+select 'CHEAT DETECTOR TESTS PASSED' as result;

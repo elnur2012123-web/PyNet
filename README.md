@@ -76,6 +76,7 @@ PyNest also has a competitive-programming side:
 - **Status** (`/submissions`) shows every verdict. Code stays private: you can read someone's solution only after you solve that problem yourself.
 - **Calendar** (`/calendar`) shows every round in your own time zone.
 - **Profiles** show the rank, contest rating (and max), a rating graph, an activity heatmap and solved-problem stats.
+- **Cheat detector** (Admin panel → Arena): when a round ends, every pair of Accepted solutions to the same problem is compared after removing comments and spacing and renaming every variable, so disguised copies are caught. Hard problems solved suspiciously fast are flagged too. Staff compare the two programs side by side, then **Ban** (which also removes the user from the standings), **Disqualify** or mark **Not cheating**. Ratings for a round wait until its medium/high flags are reviewed (or 48 hours pass). Staff can read any submission's code. Run `0012_cheat_detector.sql` to enable it.
 - **Staff** schedule rounds and write new problems in the **Admin panel → Arena**. Expected outputs are computed by running a reference solution in the browser.
 
 **How judging works:** the browser downloads only the test *inputs* and runs the code in Pyodide. The server compares the outputs with expected answers that never leave the database (`problem_tests` has no browser grants). Problem bank source: `scripts/problems/data.ts`. `npm run build:problems` re-runs every reference solution and regenerates the `0010_*`/`0011_*` seed parts.
