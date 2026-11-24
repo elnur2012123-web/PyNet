@@ -419,3 +419,36 @@ do $$ begin
   if exists (select 1 from contests where title like '%Div.%') then raise exception 'Div. title left'; end if;
 end $$;
 select 'DIVISION TESTS PASSED' as result;
+
+-- code privacy during a running round (migration 0014)
+set role service_role;
+-- round 902 is running and reuses public problem 1001; bob and dee solved 1001 in practice earlier
+insert into contests (id, title, starts_at, duration_minutes) values (902, 'Live reuse', now() - interval '10 minutes', 60);
+insert into contest_problems values (902, 'A', 1001);
+insert into submissions (id, user_id, problem_id, code, verdict, tests_total, created_at) values
+  (990001, '22222222-2222-2222-2222-222222222222', 1001, 'bob practice code', 'OK', 6, now() - interval '2 days'),
+  (990002, '11111111-1111-1111-1111-111111111111', 1001, 'alice practice code', 'OK', 6, now() - interval '3 days');
+update profiles set role = 'admin' where id = '33333333-3333-3333-3333-333333333333';
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
+do $$ begin
+  if (select code from get_submission(990002)) is not null then raise exception 'user saw code for a problem in a running round'; end if;
+  if (select code from get_submission(990001)) <> 'bob practice code' then raise exception 'user cannot see own code'; end if;
+end $$;
+select set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', false);
+do $$ begin
+  if (select code from get_submission(990002)) <> 'alice practice code' then raise exception 'staff cannot see code during a round'; end if;
+end $$;
+reset role;
+-- after the round ends, solvers can read each other again
+set role service_role;
+update contests set starts_at = now() - interval '3 hours' where id = 902;
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
+do $$ begin
+  if (select code from get_submission(990002)) <> 'alice practice code' then raise exception 'solver cannot read code after the round'; end if;
+end $$;
+reset role;
+select 'CODE PRIVACY TESTS PASSED' as result;
