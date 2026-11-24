@@ -1,3 +1,5 @@
+export type Tier = "bronze" | "silver" | "gold" | "legendary";
+
 /** Mirrors the achievements seeded in supabase/migrations/0001_init.sql. */
 export interface AchievementDef {
   id: string;
@@ -6,6 +8,7 @@ export interface AchievementDef {
   icon: string;
   xp: number;
   type: "lesson" | "lessons" | "quiz" | "quizzes" | "exercises" | "projects" | "streak" | "xp";
+  tier?: Tier;
   value: number;
   ref?: string;
 }
@@ -53,4 +56,30 @@ export function isAchievementMet(a: AchievementDef, s: AchievementState) {
     case "streak": return s.streak >= a.value;
     case "xp": return s.xp >= a.value;
   }
+}
+
+const TIERS: Record<string, Tier> = {
+  "variable-master": "silver",
+  "loop-explorer": "silver",
+  "quizzes-5": "silver",
+  "first-project": "silver",
+  "streak-7": "silver",
+  "function-builder": "gold",
+  "debugging-beginner": "gold",
+  "oop-architect": "gold",
+  "lessons-50": "gold",
+  "exercises-20": "gold",
+  "xp-2000": "gold",
+  "python-intermediate": "legendary",
+  "streak-30": "legendary",
+};
+export const tierOf = (id: string): Tier => TIERS[id] ?? "bronze";
+export const TIER_RANK: Record<Tier, number> = { bronze: 1, silver: 2, gold: 3, legendary: 4 };
+export const TIER_LABEL: Record<Tier, string> = { bronze: "Bronze", silver: "Silver", gold: "Gold", legendary: "Legendary" };
+
+/** The badge to show: the chosen one if earned, otherwise the rarest earned badge. */
+export function displayBadge(earned: string[], featured?: string | null): string | null {
+  if (featured && earned.includes(featured)) return featured;
+  const byRarity = [...earned].sort((a, b) => TIER_RANK[tierOf(b)] - TIER_RANK[tierOf(a)] || (achievementById(b)?.xp ?? 0) - (achievementById(a)?.xp ?? 0));
+  return byRarity[0] ?? null;
 }

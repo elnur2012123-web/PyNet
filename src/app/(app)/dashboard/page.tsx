@@ -13,7 +13,8 @@ import { Skeleton } from "@/components/ui/States";
 import { formatXp, leagueForWeeklyXp, levelProgress } from "@/lib/xp";
 import { SpecialBadge, SpecialChip } from "@/components/ui/SpecialBadge";
 import { planAtLeast } from "@/lib/plans";
-import { achievementById } from "@/lib/achievements";
+import { achievementById, displayBadge } from "@/lib/achievements";
+import { BadgeChip, BadgeMedal } from "@/components/ui/AchievementBadge";
 
 const GOAL_TIPS: Record<string, string> = {
   ai: "For AI, focus on lists & dictionaries (Module 8), functions (Module 9) and comprehensions (Module 14) — they are everywhere in data science.",
@@ -71,7 +72,7 @@ export default function Dashboard() {
         {p.mode === "account" && <Avatar src={p.profile?.avatar_url} name={name} size={52} />}
         <div className="flex-1">
           <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight">
-            {name ? `Welcome back, ${name}` : "Welcome to PyNest"} <PlanBadge plan={p.plan} />{p.profile?.special_title && <SpecialChip title={p.profile.special_title} />}
+            {name ? `Welcome back, ${name}` : "Welcome to PyNest"} <PlanBadge plan={p.plan} />{p.profile?.special_title && <SpecialChip title={p.profile.special_title} />}<BadgeChip id={displayBadge(p.achievements.map((a) => a.id), p.profile?.featured_badge)} />
           </h1>
           <p className="text-sm text-muted">
             {done === 0 ? "Let's write your first line of Python today." : `You've completed ${done} of ${total} lessons. Keep going!`}
@@ -243,7 +244,7 @@ export default function Dashboard() {
                 const def = achievementById(a.id);
                 return (
                   <li key={a.id} className="rounded-xl border border-border p-3 text-center">
-                    <span className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent2 text-white"><Icon name={def?.icon ?? "trophy"} className="h-5 w-5" /></span>
+                    <span className="flex justify-center"><BadgeMedal id={a.id} size={44} /></span>
                     <p className="mt-2 truncate text-xs font-medium">{def?.name ?? a.id}</p>
                   </li>
                 );

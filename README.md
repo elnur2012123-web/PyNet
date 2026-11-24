@@ -60,6 +60,12 @@ Run `supabase/migrations/0007_roles_and_bans.sql`, then make yourself Founder in
 update public.profiles set role = 'founder' where username = 'YOUR_USERNAME';
 ```
 
+## Badges
+
+Every achievement has a tier: **Bronze**, **Silver**, **Gold** or **Legendary**. Your rarest earned badge shows next to your name on the leaderboard, your profile and your dashboard. Learners can pick a different one on the Achievements page ("Show on my profile"). The database only accepts badges the user has actually earned.
+
+Run `supabase/migrations/0008_badges.sql` once to turn badges on.
+
 ## Quick start (local)
 
 ```bash

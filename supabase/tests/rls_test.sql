@@ -284,3 +284,19 @@ do $$ begin
 end $$;
 reset role;
 select 'BAN SYSTEM TESTS PASSED' as result;
+
+-- badges (migration 0008)
+set role authenticated;
+select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', false);
+do $$ begin
+  -- alice has 'first-program' (bronze) and xp-500/xp-2000 from her big XP; rarest is shown by default
+  if (select badge from get_leaderboard('global', 50) where username = 'alice') is null then raise exception 'no default badge'; end if;
+  update profiles set featured_badge = 'first-program' where id = auth.uid();
+  if (select badge from get_public_profile('alice')) <> 'first-program' then raise exception 'chosen badge not shown'; end if;
+  begin
+    update profiles set featured_badge = 'streak-30' where id = auth.uid();
+    raise exception 'set an unearned badge';
+  exception when raise_exception then if sqlerrm not like '%earned%' then raise; end if; end;
+end $$;
+reset role;
+select 'BADGE TESTS PASSED' as result;

@@ -13,6 +13,14 @@ export interface UpdateEntry {
 
 export const CODE_UPDATES: UpdateEntry[] = [
   {
+    id: "2026-11-24-badges",
+    date: "2026-11-24T23:00:00Z",
+    kind: "feature",
+    title: "Your achievements are now badges",
+    body: "Every achievement you unlock is now a Bronze, Silver, Gold or Legendary badge. Your rarest badge shows next to your name on the leaderboard and your profile. Want a different one? Open Achievements and press \"Show on my profile\".",
+    link: "/achievements",
+  },
+  {
     id: "2026-11-24-pybuddy-dictionary",
     date: "2026-11-24T20:00:00Z",
     kind: "feature",

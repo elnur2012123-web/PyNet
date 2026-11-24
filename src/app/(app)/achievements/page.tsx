@@ -1,7 +1,11 @@
 "use client";
 import { Lock } from "lucide-react";
 import { useCatalog, useProgress } from "@/components/providers/ProgressProvider";
-import { ACHIEVEMENTS } from "@/lib/achievements";
+import { ACHIEVEMENTS, TIER_LABEL, displayBadge, tierOf } from "@/lib/achievements";
+import { BadgeChip, BadgeMedal } from "@/components/ui/AchievementBadge";
+import { getBrowserSupabase } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/Toast";
+import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { ProgressBar } from "@/components/ui/Progress";
 import { LEAGUES, levelProgress, xpForLevel } from "@/lib/xp";
@@ -11,6 +15,18 @@ export default function AchievementsPage() {
   const p = useProgress();
   const catalog = useCatalog();
   const unlocked = new Map(p.achievements.map((a) => [a.id, a.at]));
+  const toast = useToast();
+  const [saving, setSaving] = useState(false);
+  const shown = displayBadge([...unlocked.keys()], p.profile?.featured_badge);
+  const wear = async (id: string | null) => {
+    const sb = getBrowserSupabase();
+    if (!sb || !p.profile) return;
+    setSaving(true);
+    const { error } = await sb.from("profiles").update({ featured_badge: id }).eq("id", p.profile.id);
+    setSaving(false);
+    if (error) toast({ kind: "error", title: "Couldn't change your badge", body: error.message });
+    else { toast({ kind: "success", title: id ? "Badge updated" : "Showing your rarest badge" }); p.refresh(); }
+  };
   const lvl = levelProgress(p.xp);
   const totalLessons = catalog.modules.reduce((s, m) => s + m.lessons.length, 0);
 
@@ -56,20 +72,39 @@ export default function AchievementsPage() {
         </div>
       </div>
 
+      {shown && (
+        <div className="card flex flex-wrap items-center gap-4 p-5">
+          <BadgeMedal id={shown} size={64} />
+          <div className="flex-1">
+            <p className="text-sm text-muted">Your badge — shown next to your name on the leaderboard and your profile</p>
+            <div className="mt-1"><BadgeChip id={shown} /></div>
+          </div>
+          {p.mode === "account" && p.profile?.featured_badge && <button onClick={() => wear(null)} disabled={saving} className="btn-ghost btn-sm">Show my rarest badge automatically</button>}
+        </div>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {ACHIEVEMENTS.map((a) => {
           const at = unlocked.get(a.id);
           const pct = at ? 1 : progressFor(a.type, a.value, a.ref);
+          const tier = tierOf(a.id);
+          const showing = shown === a.id;
           return (
-            <div key={a.id} className={`card-flat flex gap-4 p-4 ${at ? "" : "opacity-80"}`}>
-              <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${at ? "bg-gradient-to-br from-accent to-accent2 text-white" : "bg-elevated text-muted"}`}>
-                {at ? <Icon name={a.icon} className="h-6 w-6" /> : <Lock className="h-5 w-5" />}
+            <div key={a.id} className={`card-flat flex gap-4 p-4 ${at ? "" : "opacity-80"} ${showing ? "ring-2 ring-accent" : ""}`}>
+              <span className="relative">
+                <BadgeMedal id={a.id} size={52} locked={!at} />
+                {!at && <Lock className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-surface p-0.5 text-muted" />}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold">{a.name}</p>
+                <p className="flex flex-wrap items-center gap-2 font-semibold">{a.name} <span className="text-[10px] font-bold uppercase tracking-wider text-muted">{TIER_LABEL[tier]}</span></p>
                 <p className="text-sm text-muted">{a.description}</p>
                 {at ? (
-                  <p className="mt-1 text-xs text-success">Unlocked {new Date(at).toLocaleDateString()}{a.xp ? ` · +${a.xp} XP` : ""}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <p className="text-xs text-success">Unlocked {new Date(at).toLocaleDateString()}{a.xp ? ` · +${a.xp} XP` : ""}</p>
+                    {p.mode === "account" && (showing
+                      ? <span className="text-xs font-medium text-accent">✓ Shown on your profile</span>
+                      : <button onClick={() => wear(a.id)} disabled={saving} className="text-xs font-medium text-accent hover:underline">Show on my profile</button>)}
+                  </div>
                 ) : (
                   <><ProgressBar value={pct * 100} className="mt-2 h-1.5" label={`${a.name} progress`} /><p className="mt-1 text-xs text-muted">{a.xp ? `+${a.xp} XP` : "Badge"}</p></>
                 )}

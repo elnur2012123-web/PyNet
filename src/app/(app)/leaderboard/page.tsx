@@ -10,9 +10,10 @@ import { LeagueBadge } from "@/components/ui/LeagueBadge";
 import { EmptyState, Skeleton } from "@/components/ui/States";
 import { formatXp, leagueForWeeklyXp } from "@/lib/xp";
 import { SpecialBadge, SpecialChip } from "@/components/ui/SpecialBadge";
+import { BadgeChip } from "@/components/ui/AchievementBadge";
 import type { Plan } from "@/lib/plans";
 
-interface Row { rank: number; user_id: string; username: string; display_name: string | null; avatar_url: string | null; country: string | null; xp: number; level: number; lessons: number; exercises: number; streak: number; plan: Plan; league: string; special_title: string | null }
+interface Row { rank: number; user_id: string; username: string; display_name: string | null; avatar_url: string | null; country: string | null; xp: number; level: number; lessons: number; exercises: number; streak: number; plan: Plan; league: string; special_title: string | null; badge: string | null }
 const TABS = [
   { id: "global", label: "All time" },
   { id: "weekly", label: "This week" },
@@ -103,6 +104,7 @@ export default function LeaderboardPage() {
                     <div className="mt-2"><Avatar src={r.avatar_url} name={r.display_name || r.username} size={place === 1 ? 56 : 44} /></div>
                     <p className="mt-2 max-w-full truncate text-sm font-semibold">{r.display_name || r.username}</p>
                     <p className="text-xs text-muted">{formatXp(r.xp)} XP</p>
+                    {r.badge && <BadgeChip id={r.badge} className="mt-1.5" />}
                   </Link>
                 );
               })}
@@ -122,7 +124,7 @@ export default function LeaderboardPage() {
                       <td className="px-4 py-3">
                         <Link href={`/profile/${r.username}`} className="flex items-center gap-3 hover:text-accent">
                           <Avatar src={r.avatar_url} name={r.display_name || r.username} size={32} />
-                          <span className="min-w-0"><span className="flex items-center gap-1.5 font-medium">{r.display_name || r.username} <PlanBadge plan={r.plan} />{r.special_title && <SpecialChip title={r.special_title} />}{me && <span className="chip">You</span>}</span><span className="text-xs text-muted">@{r.username}</span></span>
+                          <span className="min-w-0"><span className="flex items-center gap-1.5 font-medium">{r.display_name || r.username} <PlanBadge plan={r.plan} />{r.special_title && <SpecialChip title={r.special_title} />}<BadgeChip id={r.badge} />{me && <span className="chip">You</span>}</span><span className="text-xs text-muted">@{r.username}</span></span>
                           <span className="ml-auto">{r.special_title ? <SpecialBadge title={r.special_title} size={22} /> : <LeagueBadge league={r.league} size={22} />}</span>
                         </Link>
                       </td>
