@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  AlertTriangle, Award, ShieldCheck, BookOpen, Bot, Code2, Crown, Flame, LayoutDashboard, ListChecks, Menu, Play, Settings, Trophy, Users, X, Zap,
+  Activity, AlertTriangle, Award, BarChart3, CalendarDays, ListOrdered, Swords, ShieldCheck, BookOpen, Bot, Code2, Crown, Flame, LayoutDashboard, ListChecks, Menu, Play, Settings, Trophy, Users, X, Zap,
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -22,6 +22,16 @@ const NAV_GROUPS = [
       { href: "/learn", label: "Course", icon: BookOpen },
       { href: "/practice", label: "Practice", icon: Code2 },
       { href: "/quizzes", label: "Quizzes", icon: ListChecks },
+    ],
+  },
+  {
+    label: "Compete",
+    items: [
+      { href: "/problemset", label: "Problemset", icon: ListOrdered },
+      { href: "/contests", label: "Contests", icon: Swords },
+      { href: "/rating", label: "Rating", icon: BarChart3 },
+      { href: "/submissions", label: "Status", icon: Activity },
+      { href: "/calendar", label: "Calendar", icon: CalendarDays },
     ],
   },
   {

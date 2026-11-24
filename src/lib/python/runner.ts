@@ -26,6 +26,10 @@ export interface RunOptions {
   echoInput?: boolean;
   append?: string;
   timeoutMs?: number;
+  /** Judge mode: feed this text as real stdin (sys.stdin / input()). */
+  stdin?: string;
+  /** Max characters of output kept (default 100 000). */
+  maxOutput?: number;
   onOutput?: (text: string, stream: "stdout" | "stderr") => void;
 }
 
@@ -169,6 +173,8 @@ class PythonRuntime {
           inputs: opts.inputs ?? [],
           echo: opts.echoInput ?? false,
           append: opts.append ?? "",
+          stdin: opts.stdin,
+          maxOutput: opts.maxOutput,
         });
       });
     });

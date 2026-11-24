@@ -41,6 +41,8 @@ export interface Profile {
   featured_badge?: string | null;
   role?: "user" | "admin" | "co_founder" | "founder";
   hidden_from_weekly?: boolean;
+  rating?: number | null;
+  max_rating?: number | null;
 }
 export interface DayActivity { date: string; xp: number; lessons: number; exercises: number; minutes: number }
 export interface Stats { global_rank: number | null; weekly_rank: number | null; weekly_xp: number; monthly_xp: number; league: string; best_rank: number | null }

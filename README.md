@@ -66,6 +66,22 @@ Every achievement has a tier: **Bronze**, **Silver**, **Gold** or **Legendary**.
 
 Run `supabase/migrations/0008_badges.sql` once to turn badges on.
 
+## Arena (problemset, contests, rating)
+
+PyNest also has a competitive-programming side:
+
+- **Problemset** (`/problemset`): problems with hidden tests, a difficulty rating (800–3500), tags, solve counts and filters. Each solution is checked on every test: **Accepted**, **Wrong answer on test N**, **Runtime error**, **Time limit exceeded** or **Compilation error**. Your first Accepted gives XP.
+- **Contests** (`/contests`): timed rounds with registration, a countdown, a live scoreboard (ICPC rules: solved, then penalty = minutes + 20 per wrong try) and final standings. Problems are hidden until the round starts, then move into the problemset when it ends.
+- **Rating** (`/rating`): an Elo-style rating that changes after every rated round. Ranks run from Newbie to Legendary Grandmaster, and usernames are coloured by rank across the site.
+- **Status** (`/submissions`) shows every verdict. Code stays private: you can read someone's solution only after you solve that problem yourself.
+- **Calendar** (`/calendar`) shows every round in your own time zone.
+- **Profiles** show the rank, contest rating (and max), a rating graph, an activity heatmap and solved-problem stats.
+- **Staff** schedule rounds and write new problems in the **Admin panel → Arena**. Expected outputs are computed by running a reference solution in the browser.
+
+**How judging works:** the browser downloads only the test *inputs* and runs the code in Pyodide. The server compares the outputs with expected answers that never leave the database (`problem_tests` has no browser grants). Problem bank source: `scripts/problems/data.ts`. `npm run build:problems` re-runs every reference solution and regenerates `0010`/`0011`.
+
+Run `supabase/migrations/0009_arena.sql`, `0010_problemset_seed.sql` and `0011_contests_seed.sql` (in that order) to turn it on.
+
 ## Quick start (local)
 
 ```bash
@@ -127,4 +143,5 @@ These suites were also run against a real Supabase stack (Supabase Postgres + Go
 - **Exercise results are reported by the browser.** Code runs in the learner's own browser, so the server can't re-run it. The server decides XP amounts, enforces plan limits and awards each exercise once. A determined user could still claim an exercise without solving it, which is worth at most that exercise's XP once. Quiz and lesson knowledge checks are graded on the server, except a quiz's "coding challenge" items, which are also run in the browser.
 - **Browser runtime limits.** The editor includes only the standard library (no `pip`). `input()` reads from the Input box, files live in a temporary in-browser filesystem, and programs stop after 10 seconds.
 - **Burst rate limiting is per instance.** The AI tutor's per-minute burst limiter is in memory, so it applies per serverless instance. The daily quota is enforced in Postgres and is global.
+- **Contest outputs come from the browser.** As with exercises, code runs on the learner's device. The server never reveals expected outputs, so a correct verdict still requires correct answers, but it can't prove that the submitted code produced them.
 - **Leagues update live.** Leagues are computed from the current week's XP, with no end-of-week promotion ceremony.

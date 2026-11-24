@@ -1,4 +1,5 @@
 "use client";
+import { ArenaAdmin } from "./ArenaAdmin";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Gavel, ShieldCheck, Terminal } from "lucide-react";
 import { Markdown } from "@/components/tutor/Markdown";
@@ -80,6 +81,7 @@ export function AdminConsole({ role, username }: { role: string; username: strin
           <section className="card p-5"><h2 className="mb-2 font-semibold">Moderation log</h2><Markdown text={log || "Loading…"} /></section>
         </div>
       </div>
+      <ArenaAdmin />
     </div>
   );
 }

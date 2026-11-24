@@ -25,6 +25,10 @@ npx supabase db push
 | `0001_init.sql` | All tables and indexes, RLS policies, the new-user trigger (profile + progress + FREE subscription), leaderboard/profile/friends functions, privileged XP/quota/snapshot functions, achievement seed data and the `avatars` storage bucket with policies |
 | `0002_saved_code_limit.sql` | Free-plan limit of 5 snippets, plus the premium theme guard (enforced by triggers) |
 | `0003_favorites.sql` | Bookmarked lessons |
+| `0004`–`0008` | Owner title, monthly hiding, announcements, roles & bans, badges |
+| `0009_arena.sql` | Arena: problems, hidden tests, submissions, contests, registrations, rating changes and their functions |
+| `0010_problemset_seed.sql` | 24 public problems with their hidden tests (≈1.1 MB — paste it on its own) |
+| `0011_contests_seed.sql` | 12 contest problems + PyNest Round #1 and #2 (next Saturday 14:00 UTC, then a week later) |
 
 ### Tables
 

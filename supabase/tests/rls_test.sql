@@ -300,3 +300,94 @@ do $$ begin
 end $$;
 reset role;
 select 'BADGE TESTS PASSED' as result;
+
+-- arena (migrations 0009-0011)
+select set_config('request.jwt.claim.sub', '', false);
+set role anon;
+do $$ begin
+  if (select count(*) from problems) <> 24 then raise exception 'anon should only see the 24 public problems, saw %', (select count(*) from problems); end if;
+  if exists (select 1 from contest_problems) then raise exception 'contest problems leaked before start'; end if;
+  if (select count(*) from get_problemset()) <> 24 then raise exception 'problemset should list 24'; end if;
+  begin
+    perform 1 from problem_tests limit 1;
+    raise exception 'anon read hidden tests';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+
+-- a round that started 30 minutes ago, using hidden problem 1101
+set role service_role;
+insert into contests (id, title, starts_at, duration_minutes) values (900, 'Live round', now() - interval '30 minutes', 120);
+insert into contest_problems values (900, 'A', 1101);
+insert into contests (id, title, starts_at, duration_minutes) values (901, 'Old round', now() - interval '3 days', 60);
+insert into contest_problems values (901, 'A', 1102);
+insert into submissions (user_id, problem_id, contest_id, code, verdict, failed_test, tests_total, created_at)
+values ('11111111-1111-1111-1111-111111111111', 1101, 900, 'print(1)', 'WA', 2, 7, now() - interval '20 minutes'),
+       ('11111111-1111-1111-1111-111111111111', 1101, 900, 'secret code', 'OK', null, 7, now() - interval '10 minutes'),
+       ('22222222-2222-2222-2222-222222222222', 1101, 900, 'x', 'CE', 1, 7, now() - interval '5 minutes');
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
+do $$
+declare v_id bigint;
+begin
+  if not exists (select 1 from problems where id = 1101) then raise exception 'started round problem should be readable'; end if;
+  if exists (select 1 from get_problemset() where id = 1101) then raise exception 'running round problem listed in problemset'; end if;
+  if not exists (select 1 from get_problemset() where id = 1102) then raise exception 'finished round problem should be listed'; end if;
+  if exists (select 1 from problems where id = 1103) then raise exception 'unused hidden problem readable'; end if;
+  begin
+    perform input from problem_tests where problem_id = 1101;
+    raise exception 'user read hidden tests';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform code from submissions limit 1;
+    raise exception 'user read submission code column';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into submissions (user_id, problem_id, code, verdict, tests_total) values (auth.uid(), 1001, 'x', 'OK', 1);
+    raise exception 'user inserted a submission';
+  exception when insufficient_privilege then null; end;
+  select id into v_id from submissions where verdict = 'OK' and problem_id = 1101;
+  if (select code from get_submission(v_id)) is not null then raise exception 'other user saw code'; end if;
+  -- standings: alice 1 solved, penalty 20 (minute) + 20 (one wrong try); bob's CE does not count
+  if (select solved from get_contest_standings(900) where username = 'alice') <> 1 then raise exception 'standings solved'; end if;
+  if (select penalty from get_contest_standings(900) where username = 'alice') <> 40 then raise exception 'standings penalty %', (select penalty from get_contest_standings(900) where username = 'alice'); end if;
+  if exists (select 1 from get_contest_standings(900) where username = 'bob') then raise exception 'CE-only user in standings'; end if;
+  -- registration: own only
+  insert into contest_registrations (contest_id, user_id) values (900, auth.uid());
+  begin
+    insert into contest_registrations (contest_id, user_id) values (900, '11111111-1111-1111-1111-111111111111');
+    raise exception 'registered someone else';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into contest_registrations (contest_id, user_id) values (901, auth.uid());
+    raise exception 'registered for a finished round';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.apply_contest_ratings(901, '[]'::jsonb);
+    raise exception 'browser applied ratings';
+  exception when insufficient_privilege then null; end;
+end $$;
+select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', false);
+do $$ begin
+  if (select code from get_submission((select id from submissions where verdict = 'OK' and problem_id = 1101))) <> 'secret code' then raise exception 'owner cannot see own code'; end if;
+end $$;
+reset role;
+
+set role service_role;
+do $$ begin
+  if public.apply_contest_ratings(900, '[]'::jsonb) <> 0 then raise exception 'rated a running round'; end if;
+  perform public.apply_contest_ratings(901, '[{"user_id":"11111111-1111-1111-1111-111111111111","rank":1,"old_rating":1400,"new_rating":1520}]'::jsonb);
+  if public.apply_contest_ratings(901, '[{"user_id":"11111111-1111-1111-1111-111111111111","rank":1,"old_rating":1520,"new_rating":1700}]'::jsonb) <> 0 then raise exception 'ratings applied twice'; end if;
+  if (select rating from profiles where username = 'alice') <> 1520 then raise exception 'rating not stored'; end if;
+end $$;
+reset role;
+select set_config('request.jwt.claim.sub', '', false);
+set role anon;
+do $$ begin
+  if (select rating from get_rating_list(10) where username = 'alice') <> 1520 then raise exception 'rating list'; end if;
+  if (select count(*) from get_rating_history('alice')) <> 1 then raise exception 'rating history'; end if;
+end $$;
+reset role;
+select 'ARENA TESTS PASSED' as result;

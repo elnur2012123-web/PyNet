@@ -13,6 +13,11 @@ import { SpecialBadge, SpecialChip } from "@/components/ui/SpecialBadge";
 import { formatXp } from "@/lib/xp";
 import { ModerateButtons } from "@/components/admin/ModerateButtons";
 import { BadgeChip, BadgeMedal } from "@/components/ui/AchievementBadge";
+import Link from "next/link";
+import { BarChart3, Star, Users } from "lucide-react";
+import { RatingGraph, type RatingPoint } from "@/components/arena/RatingGraph";
+import { Heatmap } from "@/components/arena/Heatmap";
+import { rankFor } from "@/lib/arena/rank";
 
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
   return { title: `@${(await params).username}` };
@@ -23,6 +28,7 @@ interface PublicProfile {
   created_at: string; show_stats: boolean; total_xp: number | null; level: number; lessons: number | null; exercises: number | null;
   quizzes: number | null; projects: number | null; streak: number | null; longest_streak: number | null; plan: Plan; league: string;
   accent_theme: string; achievements: { id: string; unlocked_at: string }[]; special_title: string | null; role: string; banned: boolean; badge: string | null;
+  rating: number | null; max_rating: number | null; friends: number;
 }
 
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
@@ -40,6 +46,16 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   const myRole = (Array.isArray(me) ? me[0] : me)?.role ?? "user";
   const { data: auth } = await supabase.auth.getUser();
   const canModerate = myRole !== "user" && auth.user?.id !== prof.id;
+  const [{ data: hist }, { data: act }, { data: solvedData }] = await Promise.all([
+    supabase.rpc("get_rating_history", { p_username: prof.username }),
+    supabase.rpc("get_activity", { p_username: prof.username }),
+    supabase.rpc("get_solved_stats", { p_username: prof.username }),
+  ]);
+  const history = (hist ?? []) as RatingPoint[];
+  const solvedRow = (Array.isArray(solvedData) ? solvedData[0] : solvedData) as { all_time: number; last_year: number; last_month: number } | undefined;
+  const solved = solvedRow ? { all_time: Number(solvedRow.all_time), last_year: Number(solvedRow.last_year), last_month: Number(solvedRow.last_month) } : null;
+  const rank = rankFor(prof.rating);
+  const maxRank = rankFor(prof.max_rating);
   const accent = prof.plan !== "FREE" && prof.accent_theme !== "default" ? prof.accent_theme : undefined;
 
   return (
@@ -49,9 +65,15 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         <div className="relative flex flex-col items-start gap-5 sm:flex-row sm:items-end">
           <Avatar src={prof.avatar_url} name={prof.display_name || prof.username} size={96} />
           <div className="flex-1">
-            <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold">{prof.display_name || prof.username} <PlanBadge plan={prof.plan} />{prof.special_title && <SpecialChip title={prof.special_title} />}</h1>
+            <p className={`text-sm font-semibold ${rank.className}`}>{rank.name}</p>
+            <h1 className={`flex flex-wrap items-center gap-2 text-2xl font-semibold`}><span className={prof.rating != null ? rank.className : ""}>{prof.display_name || prof.username}</span> <PlanBadge plan={prof.plan} />{prof.special_title && <SpecialChip title={prof.special_title} />}</h1>
             <p className="text-muted">@{prof.username}{prof.country ? ` · ${prof.country}` : ""}</p>
             {prof.badge && <div className="mt-2"><BadgeChip id={prof.badge} /></div>}
+            <div className="mt-3 space-y-1 text-sm">
+              <p className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-accent" /> Contest rating: {prof.rating != null ? <><b className={rank.className}>{prof.rating}</b> <span className="text-xs text-muted">(max. <span className={maxRank.className}>{maxRank.name.toLowerCase()}, {prof.max_rating}</span>)</span></> : <span className="text-muted">unrated</span>}</p>
+              <p className="flex items-center gap-2"><Star className="h-4 w-4 text-warn" /> Friend of: {prof.friends} user{Number(prof.friends) === 1 ? "" : "s"}</p>
+              <p className="flex items-center gap-2"><Users className="h-4 w-4 text-muted" /> <Link className="link" href={`/submissions?user=${prof.username}`}>Submissions</Link></p>
+            </div>
             {prof.banned && <p className="mt-2 inline-flex rounded-md bg-danger/10 px-2 py-0.5 text-xs font-semibold text-danger">Suspended</p>}
             {prof.bio && <p className="mt-2 max-w-xl text-fg/90">{prof.bio}</p>}
             {canModerate && <div className="mt-3"><ModerateButtons username={prof.username} banned={prof.banned} /></div>}
@@ -69,6 +91,17 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         </div>
       ) : (
         <p className="card p-4 text-sm text-muted"><Lock className="mr-1 inline h-4 w-4" /> This learner keeps their statistics private.</p>
+      )}
+
+      <div className="card p-5">
+        <h2 className="mb-3 font-semibold">Rating history</h2>
+        <RatingGraph points={history} />
+      </div>
+      {act !== null && (prof.show_stats || prof.total_xp != null) && (
+        <div className="card p-5">
+          <h2 className="mb-3 font-semibold">Activity</h2>
+          <Heatmap days={(act ?? []) as { day: string; count: number }[]} solved={solved} />
+        </div>
       )}
 
       <div className="card p-6">

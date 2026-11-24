@@ -15,6 +15,7 @@ import { SpecialBadge, SpecialChip } from "@/components/ui/SpecialBadge";
 import { planAtLeast } from "@/lib/plans";
 import { achievementById, displayBadge } from "@/lib/achievements";
 import { BadgeChip, BadgeMedal } from "@/components/ui/AchievementBadge";
+import { ArenaStrip } from "@/components/arena/ArenaStrip";
 
 const GOAL_TIPS: Record<string, string> = {
   ai: "For AI, focus on lists & dictionaries (Module 8), functions (Module 9) and comprehensions (Module 14) — they are everywhere in data science.",
@@ -127,6 +128,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <ArenaStrip />
 
       {/* stat tiles */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

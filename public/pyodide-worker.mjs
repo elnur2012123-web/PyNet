@@ -5,7 +5,7 @@
 let pyodide = null;
 let currentId = null;
 let outLen = 0;
-const OUTPUT_LIMIT = 100_000;
+let outputLimit = 100_000;
 const decoder = new TextDecoder();
 
 const PRELUDE = `
@@ -22,8 +22,23 @@ def _pn_input(prompt=""):
         sys.stdout.write(value + "\\n")
     return value
 builtins.input = _pn_input
+_pn_real_stdin = sys.stdin
+def _pn_stdin_input(prompt=""):
+    line = sys.stdin.readline()
+    if not line:
+        raise EOFError("EOF when reading a line")
+    return line.rstrip("\\n")
+def _pn_judge(data):
+    # Judge mode: the test input is a real stdin (input(), sys.stdin.readline, sys.stdin.buffer all work).
+    import io
+    sys.stdin = io.TextIOWrapper(io.BytesIO(data.encode()), encoding="utf-8")
+    builtins.input = _pn_stdin_input
+    if os.getcwd() not in sys.path:
+        sys.path.insert(0, os.getcwd())
 def _pn_setup(inputs, echo):
     global _pn_echo
+    sys.stdin = _pn_real_stdin
+    builtins.input = _pn_input
     _pn_inputs.clear()
     _pn_inputs.extend(inputs)
     _pn_echo = echo
@@ -41,8 +56,8 @@ function makeWriter(stream) {
   return {
     write(buf) {
       const text = decoder.decode(buf);
-      if (outLen < OUTPUT_LIMIT) {
-        const room = OUTPUT_LIMIT - outLen;
+      if (outLen < outputLimit) {
+        const room = outputLimit - outLen;
         const chunk = text.length > room ? text.slice(0, room) + "\n[output truncated]\n" : text;
         outLen += text.length;
         post({ type: stream, id: currentId, text: chunk });
@@ -89,17 +104,19 @@ function parseError(err, userLines) {
   return { type, message, line, traceback };
 }
 
-async function run({ id, code, inputs, echo, append }) {
+async function run({ id, code, inputs, echo, append, stdin, maxOutput }) {
   currentId = id;
   outLen = 0;
-  const started = performance.now();
+  outputLimit = maxOutput || 100_000;
   let ns;
   try {
-    pyodide.globals.get("_pn_setup")(pyodide.toPy(inputs || []), Boolean(echo));
+    if (typeof stdin === "string") pyodide.globals.get("_pn_judge")(stdin);
+    else pyodide.globals.get("_pn_setup")(pyodide.toPy(inputs || []), Boolean(echo));
     ns = pyodide.globals.get("dict")();
     ns.set("__name__", "__main__");
     const userLines = code.split("\n").length;
     const full = append ? code + "\n" + append : code;
+    const started = performance.now();
     try {
       pyodide.runPython(full, { globals: ns, filename: "main.py" });
       post({ type: "done", id, ok: true, ms: performance.now() - started });
