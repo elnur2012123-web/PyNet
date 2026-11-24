@@ -78,9 +78,9 @@ PyNest also has a competitive-programming side:
 - **Profiles** show the rank, contest rating (and max), a rating graph, an activity heatmap and solved-problem stats.
 - **Staff** schedule rounds and write new problems in the **Admin panel → Arena**. Expected outputs are computed by running a reference solution in the browser.
 
-**How judging works:** the browser downloads only the test *inputs* and runs the code in Pyodide. The server compares the outputs with expected answers that never leave the database (`problem_tests` has no browser grants). Problem bank source: `scripts/problems/data.ts`. `npm run build:problems` re-runs every reference solution and regenerates `0010`/`0011`.
+**How judging works:** the browser downloads only the test *inputs* and runs the code in Pyodide. The server compares the outputs with expected answers that never leave the database (`problem_tests` has no browser grants). Problem bank source: `scripts/problems/data.ts`. `npm run build:problems` re-runs every reference solution and regenerates the `0010_*`/`0011_*` seed parts.
 
-Run `supabase/migrations/0009_arena.sql`, `0010_problemset_seed.sql` and `0011_contests_seed.sql` (in that order) to turn it on.
+Run `supabase/migrations/0009_arena.sql`, then every `0010_*` part and every `0011_*` part, in order, to turn it on. The seed parts are safe to re-run.
 
 ## Quick start (local)
 
