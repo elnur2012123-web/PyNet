@@ -9,7 +9,7 @@ interface Item { type: "Lesson" | "Exercise" | "Error" | "Quiz" | "Page"; title:
 const PAGES: Item[] = [
   ["Dashboard", "/dashboard"], ["Course curriculum", "/learn"], ["Python playground", "/playground"], ["PyBuddy AI tutor", "/tutor"],
   ["Practice exercises", "/practice"], ["Quizzes", "/quizzes"], ["Error encyclopedia", "/errors"], ["Leaderboard", "/leaderboard"],
-  ["Progress & achievements", "/achievements"], ["Friends", "/friends"], ["Pricing", "/pricing"], ["Billing", "/billing"], ["Settings", "/settings"],
+  ["Progress & achievements", "/achievements"], ["Friends", "/friends"], ["What's new", "/updates"], ["Pricing", "/pricing"], ["Billing", "/billing"], ["Settings", "/settings"],
 ].map(([title, href]) => ({ type: "Page" as const, title, sub: "Page", href, keywords: title.toLowerCase() }));
 
 export function GlobalSearch() {

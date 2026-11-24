@@ -5,6 +5,8 @@ import "./globals.css";
 import { getCatalog } from "@/content/server";
 import { CatalogProvider, ProgressProvider } from "@/components/providers/ProgressProvider";
 import { ToastProvider } from "@/components/ui/Toast";
+import { UpdatesProvider } from "@/components/updates/UpdatesProvider";
+import { UpdatePopup } from "@/components/updates/UpdatePopup";
 import { SITE_URL } from "@/lib/env";
 
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
@@ -29,7 +31,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <ToastProvider>
             <CatalogProvider catalog={getCatalog()}>
-              <ProgressProvider>{children}</ProgressProvider>
+              <ProgressProvider>
+                <UpdatesProvider>
+                  {children}
+                  <UpdatePopup />
+                </UpdatesProvider>
+              </ProgressProvider>
             </CatalogProvider>
           </ToastProvider>
         </ThemeProvider>

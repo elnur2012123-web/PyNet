@@ -197,3 +197,26 @@ do $$ begin
 end $$;
 reset role;
 select 'OWNER TITLE TESTS PASSED' as result;
+
+-- announcements (migration 0006)
+insert into announcements (title, body) values ('Visible', 'hello');
+insert into announcements (title, body, published) values ('Draft', 'secret', false);
+set role anon;
+do $$ begin
+  if (select count(*) from announcements) <> 1 then raise exception 'anon should see only published announcements'; end if;
+  begin
+    insert into announcements (title) values ('spam');
+    raise exception 'anon inserted an announcement';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
+do $$ begin
+  begin
+    update announcements set title = 'hacked';
+    raise exception 'user edited an announcement';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+select 'ANNOUNCEMENT TESTS PASSED' as result;

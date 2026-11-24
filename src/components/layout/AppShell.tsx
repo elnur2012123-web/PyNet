@@ -9,6 +9,7 @@ import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { GlobalSearch } from "./GlobalSearch";
 import { UserMenu } from "./UserMenu";
+import { UpdatesBell } from "@/components/updates/UpdatesBell";
 import { useProgress } from "@/components/providers/ProgressProvider";
 import { FloatingTutor } from "@/components/tutor/FloatingTutor";
 import { formatXp } from "@/lib/xp";
@@ -107,6 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="chip" title="Total XP"><Zap className="h-3.5 w-3.5 text-accent" /> {formatXp(p.xp)} XP</span>
           </div>
         )}
+        <UpdatesBell />
         <ThemeToggle />
         <UserMenu />
       </header>

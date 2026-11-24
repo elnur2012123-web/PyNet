@@ -26,6 +26,15 @@ PyNest is a Python learning platform for complete beginners. It has interactive 
 - **PyBuddy without `ANTHROPIC_API_KEY`:** the tutor runs as **PyBuddy Lite**, a free rule-based tutor (`src/lib/tutor/`). It answers from PyNest's lessons, error guides, exercises and a Python glossary. It explains error messages, walks through pasted code line by line, flags common bugs, gives practice questions and exercise hints, and refuses non-Python questions. It needs no API key, costs nothing and has no daily limit. Add a key later and PyBuddy switches to Claude automatically.
 - **Payments without Lemon Squeezy credentials:** the pricing and billing pages show a "Demo mode" notice, and upgrade buttons are disabled. Nothing is simulated.
 
+## Posting updates ("What's new")
+
+Users see a bell with a red badge and a one-time popup whenever there's something new. There are two ways to post:
+
+- **No code (owner):** in Supabase, open **Table Editor → announcements → Insert row**. Fill in `title` and `body`, and optionally `link` (e.g. `/learn` or `https://…`) and `kind` (`update`, `feature`, `fix` or `event`). It shows to everyone within about a minute. Set `published` to false to hide it again.
+- **In code:** add an entry at the top of `src/content/updates.ts`. It goes live with the next deploy.
+
+Run `supabase/migrations/0006_announcements.sql` once to create the table.
+
 ## Quick start (local)
 
 ```bash

@@ -1,0 +1,46 @@
+/**
+ * Release notes shipped with the code. New entries go at the TOP.
+ * Announcements added in Supabase (table `announcements`) are merged with these.
+ */
+export interface UpdateEntry {
+  id: string;
+  date: string; // ISO date
+  title: string;
+  body: string;
+  link?: string;
+  kind: "update" | "feature" | "fix" | "event";
+}
+
+export const CODE_UPDATES: UpdateEntry[] = [
+  {
+    id: "2026-11-24-whats-new",
+    date: "2026-11-24T18:00:00Z",
+    kind: "feature",
+    title: "Never miss an update",
+    body: "The bell at the top of the page now tells you when something new arrives on PyNest. You're looking at the first one!",
+  },
+  {
+    id: "2026-11-24-pybuddy",
+    date: "2026-11-24T12:00:00Z",
+    kind: "feature",
+    title: "PyBuddy got a lot more patient",
+    body: "Say \"I didn't understand\", \"another example\", \"why?\" or \"more\" and PyBuddy keeps explaining the same topic in a new way. Answers are longer, include real-life comparisons, and PyBuddy now knows how to answer \"how do I…\" questions like reversing a string or reading a file.",
+    link: "/tutor",
+  },
+  {
+    id: "2026-11-24-redesign",
+    date: "2026-11-24T10:00:00Z",
+    kind: "update",
+    title: "A cleaner home page and menu",
+    body: "The home page shows what a real lesson looks like, the course is grouped into three stages, and the menu is now organised into Learn, Tools and Community.",
+    link: "/",
+  },
+  {
+    id: "2026-11-23-launch",
+    date: "2026-11-23T12:00:00Z",
+    kind: "event",
+    title: "Welcome to PyNest 🎉",
+    body: "107 lessons, 25 coding challenges, a quiz for every module, a real Python editor in your browser and PyBuddy, your tutor. Start with lesson 1 — it takes about five minutes.",
+    link: "/learn/m1-what-is-programming",
+  },
+];

@@ -5,7 +5,7 @@ const COLS = [
   { title: "Learn", links: [["Course", "/learn"], ["Practice", "/practice"], ["Quizzes", "/quizzes"], ["Projects", "/learn/m15-number-guessing"]] },
   { title: "Tools", links: [["Playground", "/playground"], ["PyBuddy", "/tutor"], ["Error guide", "/errors"]] },
   { title: "Community", links: [["Leaderboard", "/leaderboard"], ["Friends", "/friends"], ["Achievements", "/achievements"]] },
-  { title: "PyNest", links: [["Pricing", "/pricing"], ["Terms", "/terms"], ["Privacy", "/privacy"]] },
+  { title: "PyNest", links: [["What's new", "/updates"], ["Pricing", "/pricing"], ["Terms", "/terms"], ["Privacy", "/privacy"]] },
 ];
 
 export function SiteFooter() {

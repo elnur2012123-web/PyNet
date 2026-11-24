@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "./ThemeToggle";
+import { UpdatesBell } from "@/components/updates/UpdatesBell";
 import { useProgress } from "@/components/providers/ProgressProvider";
 
 const LINKS = [
@@ -25,6 +26,7 @@ export function SiteHeader() {
           {LINKS.map((l) => <Link key={l.href} href={l.href} className="rounded-lg px-3 py-2 text-sm text-muted hover:text-fg">{l.label}</Link>)}
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <UpdatesBell />
           <ThemeToggle />
           {p.ready && p.mode === "account" ? (
             <Link href="/dashboard" className="btn-primary btn-sm">Dashboard</Link>
