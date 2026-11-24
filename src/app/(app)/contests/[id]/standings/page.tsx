@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { loadContest } from "../data";
-import { contestPhase } from "@/lib/server/arena";
+import { contestPhase, MIN_RATED_CONTESTANTS } from "@/lib/server/arena";
 import { Handle } from "@/components/arena/Handle";
 import { isEligible, divisionOf } from "@/lib/arena/divisions";
 
@@ -31,6 +31,12 @@ export default async function StandingsPage({ params }: { params: Promise<{ id: 
         <h1 className="font-semibold">{c.title} — {phase === "running" ? "live standings" : "final standings"}</h1>
         <span className="text-xs text-muted">{standings.length} contestant{standings.length === 1 ? "" : "s"} with submissions{divisionOf(c.division).ratedBelow ? ` · * = out of competition (rating ${divisionOf(c.division).ratedBelow}+)` : ""}</span>
       </div>
+      {phase === "finished" && c.rated && c.rating_applied && changes.size === 0 && (
+        <p className="border-b border-border bg-elevated/50 px-4 py-2 text-xs text-muted">Ratings didn&apos;t change in this round: a rated round needs at least {MIN_RATED_CONTESTANTS} contestants inside the division limit.</p>
+      )}
+      {phase === "finished" && c.rated && !c.rating_applied && (
+        <p className="border-b border-border bg-elevated/50 px-4 py-2 text-xs text-muted">Rating changes are waiting for the anti-cheat review. They&apos;ll appear here soon.</p>
+      )}
       <div className="thin-scroll overflow-x-auto">
         <table className="w-full min-w-[560px] text-sm">
           <thead className="bg-elevated/60 text-xs text-muted">

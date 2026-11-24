@@ -23,6 +23,9 @@ export function contestPhase(c: Pick<ContestRow, "starts_at" | "duration_minutes
   return "finished" as const;
 }
 
+/** A rated round needs at least this many eligible contestants to change anyone's rating. */
+export const MIN_RATED_CONTESTANTS = 4;
+
 /** Rounds with unreviewed cheat flags wait this long before ratings are applied anyway. */
 const REVIEW_WINDOW_MS = 48 * 3600e3;
 
@@ -51,6 +54,11 @@ export async function finalizeFinishedContests() {
     const standings = all.filter((r) => isEligible(c.division, r.rating));
     let prev = "", rank = 0;
     standings.forEach((r, i) => { const key = `${r.solved}:${r.penalty}`; if (key !== prev) { rank = i + 1; prev = key; } r.rank = rank; });
+    // Too few contestants makes Elo swings huge and unfair: close the round without rating changes.
+    if (standings.length < MIN_RATED_CONTESTANTS) {
+      await admin.rpc("apply_contest_ratings", { p_contest: c.id, p_changes: [] });
+      continue;
+    }
     const places = placesFromRanks(standings.map((r) => Number(r.rank)));
     const changes = computeRatingChanges(standings.map((r, i) => ({ userId: r.user_id, place: places[i], rating: r.rating })))
       .map((ch, i) => ({ ...ch, rank: Number(standings[i].rank) }));
