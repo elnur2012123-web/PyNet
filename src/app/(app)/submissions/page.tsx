@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui/States";
 export const metadata: Metadata = { title: "Status" };
 export const dynamic = "force-dynamic";
 
-interface Row { id: number; created_at: string; username: string; rating: number | null; problem_id: number; problem_title: string; contest_id: number | null; letter: string | null; verdict: string; failed_test: number | null; time_ms: number }
+interface Row { id: number; created_at: string; username: string; rating: number | null; problem_id: number; problem_title: string; contest_id: number | null; letter: string | null; verdict: string; failed_test: number | null; time_ms: number; language?: string }
 type SP = Promise<{ user?: string; problem?: string; contest?: string; verdict?: string }>;
 
 export default async function StatusPage({ searchParams }: { searchParams: SP }) {
@@ -58,7 +58,7 @@ export default async function StatusPage({ searchParams }: { searchParams: SP })
                       {r.letter ? `${r.letter} - ` : `${r.problem_id} - `}{r.problem_title}
                     </Link>
                   </td>
-                  <td className="px-2 py-2.5 text-xs">Python 3</td>
+                  <td className="px-2 py-2.5 text-xs">{r.language === "cpp" ? "C++20" : "Python 3"}</td>
                   <td className={`px-2 py-2.5 ${verdictClass(r.verdict)}`}>{verdictText(r.verdict, r.failed_test)}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-muted">{r.time_ms} ms</td>
                 </tr>

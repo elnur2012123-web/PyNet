@@ -6,3 +6,4 @@ public/pyodide
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+public/cpp

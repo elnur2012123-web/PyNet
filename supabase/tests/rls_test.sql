@@ -452,3 +452,25 @@ do $$ begin
 end $$;
 reset role;
 select 'CODE PRIVACY TESTS PASSED' as result;
+
+-- C++ submissions (migration 0015)
+set role service_role;
+insert into submissions (id, user_id, problem_id, code, verdict, tests_total, language)
+values (990010, '22222222-2222-2222-2222-222222222222', 1002, 'int main(){}', 'OK', 6, 'cpp');
+reset role;
+set role anon;
+do $$ begin
+  if (select language from get_status('bob', 1002, null, 10) limit 1) <> 'cpp' then raise exception 'status missing language'; end if;
+end $$;
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
+do $$ begin
+  if (select language from get_submission(990010)) <> 'cpp' then raise exception 'submission missing language'; end if;
+  begin
+    perform code from submissions where id = 990010;
+    raise exception 'code column readable';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+select 'CPP TESTS PASSED' as result;

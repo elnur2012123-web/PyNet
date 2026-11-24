@@ -18,7 +18,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ id:
   const { data } = await sb.rpc("get_submission", { p_id: id });
   const s = (Array.isArray(data) ? data[0] : data) as {
     id: number; username: string; rating: number | null; problem_id: number; problem_title: string; contest_id: number | null; verdict: string; failed_test: number | null;
-    tests_total: number; time_ms: number; created_at: string; code: string | null; can_view_code: boolean;
+    tests_total: number; time_ms: number; created_at: string; code: string | null; can_view_code: boolean; language?: string;
   } | undefined;
   if (!s) notFound();
   return (
@@ -42,7 +42,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ id:
         </div>
       </div>
       {s.can_view_code && s.code !== null ? (
-        <CodeBlock code={s.code} title="main.py" lineNumbers />
+        <CodeBlock code={s.code} title={s.language === "cpp" ? "main.cpp · C++20" : "main.py · Python 3"} lineNumbers plain={s.language === "cpp"} />
       ) : (
         <div className="card flex items-center gap-3 p-6 text-sm text-muted">
           <Lock className="h-5 w-5" /> The code is hidden. You can read other people&apos;s solutions to a problem after you get <b className="text-success">Accepted</b> on it yourself.

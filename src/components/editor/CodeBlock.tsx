@@ -11,7 +11,7 @@ export function HighlightedCode({ code }: { code: string }) {
   );
 }
 
-export function CodeBlock({ code, title, className = "", lineNumbers = false, copy = true }: { code: string; title?: string; className?: string; lineNumbers?: boolean; copy?: boolean }) {
+export function CodeBlock({ code, title, className = "", lineNumbers = false, copy = true, plain = false }: { code: string; title?: string; className?: string; lineNumbers?: boolean; copy?: boolean; plain?: boolean }) {
   const [copied, setCopied] = useState(false);
   const lines = code.split("\n");
   return (
@@ -32,12 +32,12 @@ export function CodeBlock({ code, title, className = "", lineNumbers = false, co
             {lines.map((l, i) => (
               <span key={i} className="contents">
                 <span className="select-none pr-4 text-right text-muted/60">{i + 1}</span>
-                <span><HighlightedCode code={l || " "} /></span>
+                <span>{plain ? l || " " : <HighlightedCode code={l || " "} />}</span>
               </span>
             ))}
           </code>
         ) : (
-          <code><HighlightedCode code={code} /></code>
+          <code>{plain ? code : <HighlightedCode code={code} />}</code>
         )}
       </pre>
     </div>

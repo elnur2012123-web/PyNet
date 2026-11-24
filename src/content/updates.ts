@@ -13,6 +13,14 @@ export interface UpdateEntry {
 
 export const CODE_UPDATES: UpdateEntry[] = [
   {
+    id: "2026-11-25-cpp",
+    date: "2026-11-25T10:00:00Z",
+    kind: "feature",
+    title: "You can now submit in C++",
+    body: "Pick C++20 next to the editor on any problem. Your code is compiled with Clang 21 right in your browser (the compiler downloads once, about 27 MB). bits/stdc++.h works. Small contests also have a fairer rating formula now.",
+    link: "/problemset",
+  },
+  {
     id: "2026-11-24-arena",
     date: "2026-11-24T23:30:00Z",
     kind: "feature",

@@ -1,6 +1,6 @@
 import "server-only";
 import { getAdminSupabase } from "@/lib/supabase/admin";
-import { computeRatingChanges, placesFromRanks } from "@/lib/arena/rating";
+import { computeRatingChanges, computeSmallRoundChanges, placesFromRanks, SMALL_ROUND } from "@/lib/arena/rating";
 import { isEligible } from "@/lib/arena/divisions";
 
 export interface ContestRow {
@@ -24,7 +24,7 @@ export function contestPhase(c: Pick<ContestRow, "starts_at" | "duration_minutes
 }
 
 /** A rated round needs at least this many eligible contestants to change anyone's rating. */
-export const MIN_RATED_CONTESTANTS = 4;
+export const MIN_RATED_CONTESTANTS = 2;
 
 /** Rounds with unreviewed cheat flags wait this long before ratings are applied anyway. */
 const REVIEW_WINDOW_MS = 48 * 3600e3;
@@ -54,14 +54,24 @@ export async function finalizeFinishedContests() {
     const standings = all.filter((r) => isEligible(c.division, r.rating));
     let prev = "", rank = 0;
     standings.forEach((r, i) => { const key = `${r.solved}:${r.penalty}`; if (key !== prev) { rank = i + 1; prev = key; } r.rank = rank; });
-    // Too few contestants makes Elo swings huge and unfair: close the round without rating changes.
+    // A round with a single rated contestant can't move anyone's rating.
     if (standings.length < MIN_RATED_CONTESTANTS) {
       await admin.rpc("apply_contest_ratings", { p_contest: c.id, p_changes: [] });
       continue;
     }
-    const places = placesFromRanks(standings.map((r) => Number(r.rank)));
-    const changes = computeRatingChanges(standings.map((r, i) => ({ userId: r.user_id, place: places[i], rating: r.rating })))
-      .map((ch, i) => ({ ...ch, rank: Number(standings[i].rank) }));
+    let changes;
+    if (standings.length < SMALL_ROUND) {
+      // Small round: pairwise Elo that is gentle about speed-only differences.
+      const ids = standings.map((r) => r.user_id);
+      const { data: past } = ids.length ? await admin.from("rating_changes").select("user_id").in("user_id", ids) : { data: [] };
+      const rounds = new Map<string, number>();
+      for (const p of (past ?? []) as { user_id: string }[]) rounds.set(p.user_id, (rounds.get(p.user_id) ?? 0) + 1);
+      changes = computeSmallRoundChanges(standings.map((r) => ({ userId: r.user_id, rank: Number(r.rank), rating: r.rating, solved: r.solved, penalty: r.penalty, rounds: rounds.get(r.user_id) ?? 0 })));
+    } else {
+      const places = placesFromRanks(standings.map((r) => Number(r.rank)));
+      changes = computeRatingChanges(standings.map((r, i) => ({ userId: r.user_id, place: places[i], rating: r.rating })))
+        .map((ch, i) => ({ ...ch, rank: Number(standings[i].rank) }));
+    }
     await admin.rpc("apply_contest_ratings", { p_contest: c.id, p_changes: changes });
   }
 }

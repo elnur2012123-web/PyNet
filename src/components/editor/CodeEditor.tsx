@@ -2,6 +2,7 @@
 import { useMemo } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
+import { cpp } from "@codemirror/lang-cpp";
 import { Decoration, EditorView, keymap } from "@codemirror/view";
 import { Prec } from "@codemirror/state";
 import { HighlightStyle, syntaxHighlighting, indentUnit } from "@codemirror/language";
@@ -31,13 +32,14 @@ const baseTheme = EditorView.theme({
 });
 
 export function CodeEditor({
-  value, onChange, onRun, minHeight = "220px", maxHeight, readOnly = false, errorLine = null, ariaLabel = "Python code editor",
+  value, onChange, onRun, minHeight = "220px", maxHeight, readOnly = false, errorLine = null, ariaLabel = "Python code editor", language = "python",
 }: {
+  language?: "python" | "cpp";
   value: string; onChange?: (v: string) => void; onRun?: () => void; minHeight?: string; maxHeight?: string; readOnly?: boolean; errorLine?: number | null; ariaLabel?: string;
 }) {
   const extensions = useMemo(() => {
     const ext = [
-      python(),
+      language === "cpp" ? cpp() : python(),
       indentUnit.of("    "),
       syntaxHighlighting(highlight),
       baseTheme,
@@ -56,7 +58,7 @@ export function CodeEditor({
       }));
     }
     return ext;
-  }, [onRun, errorLine, ariaLabel]);
+  }, [onRun, errorLine, ariaLabel, language]);
 
   return (
     <div className="overflow-hidden" style={{ ["--cm-kw" as string]: "#c678dd", ["--cm-str" as string]: "#3d9a50", ["--cm-num" as string]: "#d19a66", ["--cm-fn" as string]: "#3b82f6", ["--cm-def" as string]: "#0ea5b7" }}>

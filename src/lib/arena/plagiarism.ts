@@ -12,9 +12,28 @@ const KEYWORDS = new Set(("False None True and as assert async await break class
 
 const TOKEN = /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|#[^\n]*|[A-Za-z_][A-Za-z_0-9]*|\d[\d_]*(?:\.\d*)?(?:[eE][+-]?\d+)?|\*\*=?|\/\/=?|==|!=|<=|>=|->|[-+*/%&|^<>]=?|:=|[()[\]{}:,.;=@~])/g;
 
+const CPP_KEYWORDS = new Set(("auto bool break case char class const constexpr continue default delete do double else enum explicit false float for " +
+  "if inline int long namespace new nullptr operator private protected public return short signed sizeof static struct switch template " +
+  "this true typedef typename unsigned using void while std cin cout cerr endl getline vector string map set unordered_map unordered_set " +
+  "pair make_pair queue priority_queue stack deque array bitset sort reverse min max swap abs lower_bound upper_bound accumulate " +
+  "push_back pop_back emplace_back push pop top front back begin end size empty insert erase find count clear first second " +
+  "memset fill iota gcd lcm printf scanf ios sync_with_stdio tie").split(" "));
+const CPP_TOKEN = /("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|\/\/[^\n]*|\/\*[\s\S]*?\*\/|^[ \t]*#[^\n]*|[A-Za-z_][A-Za-z_0-9]*|\d[\d']*(?:\.\d*)?(?:[eE][+-]?\d+)?[uUlLfF]*|::|->|<<=?|>>=?|\+\+|--|&&|\|\||[-+*/%&|^<>!=]=?|[()[\]{}:,.;?~])/gm;
+
 /** Normalised token list (comments dropped, names → ID, strings → S, numbers → N). */
-export function normalize(code: string): string[] {
+export function normalize(code: string, language: string = "python"): string[] {
   const out: string[] = [];
+  if (language === "cpp") {
+    for (const m of code.matchAll(CPP_TOKEN)) {
+      const t = m[0];
+      if (t.startsWith("//") || t.startsWith("/*") || /^[ \t]*#/.test(t)) continue; // comments, #include / #define lines
+      if (t[0] === '"' || t[0] === "'") out.push("S");
+      else if (/^\d/.test(t)) out.push("N");
+      else if (/^[A-Za-z_]/.test(t)) out.push(CPP_KEYWORDS.has(t) ? t : "ID");
+      else out.push(t);
+    }
+    return out;
+  }
   for (const m of code.matchAll(TOKEN)) {
     const t = m[0];
     if (t.startsWith("#")) continue;
@@ -34,8 +53,8 @@ function grams(tokens: string[]) {
 }
 
 export interface Fingerprint { tokens: number; grams: Set<string>; flat: string }
-export function fingerprint(code: string): Fingerprint {
-  const t = normalize(code);
+export function fingerprint(code: string, language: string = "python"): Fingerprint {
+  const t = normalize(code, language);
   return { tokens: t.length, grams: grams(t), flat: t.join(" ") };
 }
 

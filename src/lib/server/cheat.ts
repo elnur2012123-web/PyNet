@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fingerprint, similarity, MIN_TOKENS, SIMILAR_AT } from "@/lib/arena/plagiarism";
 
-interface Sub { id: number; user_id: string; problem_id: number; code: string; created_at: string }
+interface Sub { id: number; user_id: string; problem_id: number; code: string; created_at: string; language: string }
 interface Flag {
   kind: "similar_code" | "fast_solve"; severity: "low" | "medium" | "high"; contest_id: number; problem_id: number;
   user_id: string; other_user_id?: string | null; submission_id: number; other_submission_id?: number | null; score: number; details: string;
@@ -14,7 +14,7 @@ export async function scanContest(admin: SupabaseClient, contestId: number, mark
   if (!c) return 0;
   const [{ data: cps }, { data: subs }] = await Promise.all([
     admin.from("contest_problems").select("letter, problem_id, problems(rating)").eq("contest_id", contestId),
-    admin.from("submissions").select("id, user_id, problem_id, code, created_at").eq("contest_id", contestId).eq("verdict", "OK").order("created_at"),
+    admin.from("submissions").select("id, user_id, problem_id, code, created_at, language").eq("contest_id", contestId).eq("verdict", "OK").order("created_at"),
   ]);
   const rating = new Map(((cps ?? []) as unknown as { letter: string; problem_id: number; problems: { rating: number } }[]).map((p) => [p.problem_id, { rating: p.problems?.rating ?? 800, letter: p.letter }]));
   // first Accepted per contestant per problem
@@ -30,11 +30,12 @@ export async function scanContest(admin: SupabaseClient, contestId: number, mark
   for (const s of first.values()) byProblem.set(s.problem_id, [...(byProblem.get(s.problem_id) ?? []), s]);
   for (const [pid, list] of byProblem) {
     const info = rating.get(pid) ?? { rating: 800, letter: "?" };
-    const fps = list.map((s) => fingerprint(s.code));
+    const fps = list.map((s) => fingerprint(s.code, s.language));
     const pairs: { i: number; j: number; sim: number }[] = [];
     let total = 0;
     for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
       total++;
+      if (list[i].language !== list[j].language) continue; // only compare the same language
       if (fps[i].tokens < MIN_TOKENS || fps[j].tokens < MIN_TOKENS) continue;
       const sim = similarity(fps[i], fps[j]);
       if (sim >= SIMILAR_AT) pairs.push({ i, j, sim });

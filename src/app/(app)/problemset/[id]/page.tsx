@@ -58,7 +58,8 @@ export default async function ProblemPage({ params }: { params: Promise<{ id: st
         ))}
         <SideBox title="How judging works">
           <ul className="list-disc space-y-1 pl-4 text-xs text-muted">
-            <li>Read input with <code>input()</code> or <code>sys.stdin</code>; print the answer.</li>
+            <li>Python: read with <code>input()</code> or <code>sys.stdin</code>. C++: read with <code>cin</code> or <code>scanf</code>. Print the answer.</li>
+            <li>C++ is compiled with Clang 21 (<code>-std=c++20 -O2</code>, <code>bits/stdc++.h</code> works, no exceptions). The compiler downloads once (~27 MB).</li>
             <li>Your code runs on every test in your browser; the server compares the outputs with hidden answers.</li>
             <li>Extra spaces and blank lines don&apos;t matter.</li>
             <li>First accepted solve gives XP.</li>

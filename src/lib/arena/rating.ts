@@ -54,3 +54,36 @@ export function placesFromRanks(ranks: number[]): number[] {
     return r + (tied - 1) / 2;
   });
 }
+
+/**
+ * Rating for SMALL rounds (fewer than SMALL_ROUND contestants).
+ * The big-round formula assumes a crowd; with 2–7 people one place is worth a
+ * huge jump. Here every pair of contestants plays a mini "match" instead:
+ *   - solved more problems                → full win   (1.0)
+ *   - same problems, lower penalty        → narrow win (0.6) — speed matters, but less
+ *   - identical result                    → draw       (0.5)
+ * Change = K × average over opponents of (result − expected), where expected
+ * comes from the rating difference (standard Elo). New players (fewer than 5
+ * rated rounds) move faster (K = 60) so they reach their level quickly; others use K = 32.
+ */
+export const SMALL_ROUND = 8;
+
+export interface SmallInput { userId: string; rank: number; rating: number | null; solved: number; penalty: number; rounds: number }
+
+export function computeSmallRoundChanges(rows: SmallInput[]): RatingChange[] {
+  const n = rows.length;
+  const cur = rows.map((r) => r.rating ?? START_RATING);
+  if (n < 2) return rows.map((r, i) => ({ user_id: r.userId, rank: r.rank, old_rating: cur[i], new_rating: cur[i] }));
+  return rows.map((r, i) => {
+    let sum = 0;
+    for (let j = 0; j < n; j++) {
+      if (j === i) continue;
+      const o = rows[j];
+      const score = r.solved > o.solved ? 1 : r.solved < o.solved ? 0
+        : r.penalty < o.penalty ? 0.6 : r.penalty > o.penalty ? 0.4 : 0.5;
+      sum += score - winProb(cur[i], cur[j]);
+    }
+    const k = r.rounds < 5 ? 60 : 32;
+    return { user_id: r.userId, rank: r.rank, old_rating: cur[i], new_rating: Math.max(1, Math.round(cur[i] + (k * sum) / (n - 1))) };
+  });
+}
