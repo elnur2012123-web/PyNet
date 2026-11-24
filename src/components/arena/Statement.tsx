@@ -1,6 +1,25 @@
 import { CopyButton } from "./CopyButton";
 
-/** Renders `code` spans and paragraphs from plain statement text. */
+/**
+ * Simple math: a_i → a with subscript i, a_{i+1}, 10^9 → 10 with superscript 9, 2^{n-1}.
+ * Only a single-letter base gets a subscript, so words like snake_case stay as they are.
+ */
+const MATH = /\b([A-Za-z])_(\{[^}]{1,20}\}|[A-Za-z0-9]{1,3}\b)|([A-Za-z0-9)])\^(\{[^}]{1,20}\}|-?[A-Za-z0-9]{1,4})/g;
+function Math({ text }: { text: string }) {
+  const out: React.ReactNode[] = [];
+  let last = 0;
+  for (const m of text.matchAll(MATH)) {
+    out.push(text.slice(last, m.index));
+    const strip = (x: string) => x.replace(/^\{|\}$/g, "");
+    if (m[1]) out.push(<span key={m.index}><i>{m[1]}</i><sub>{strip(m[2])}</sub></span>);
+    else out.push(<span key={m.index}>{m[3]}<sup>{strip(m[4])}</sup></span>);
+    last = m.index! + m[0].length;
+  }
+  out.push(text.slice(last));
+  return <>{out}</>;
+}
+
+/** Renders `code` spans, simple math and paragraphs from plain statement text. */
 export function RichText({ text }: { text: string }) {
   return (
     <>
@@ -9,7 +28,7 @@ export function RichText({ text }: { text: string }) {
           {para.split(/(`[^`]+`)/g).map((part, j) =>
             part.startsWith("`") && part.endsWith("`") && part.length > 2
               ? <code key={j} className="rounded bg-elevated px-1 py-0.5 font-mono text-[0.9em]">{part.slice(1, -1)}</code>
-              : <span key={j}>{part}</span>,
+              : <Math key={j} text={part} />,
           )}
         </p>
       ))}
