@@ -1,14 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useProgress } from "@/components/providers/ProgressProvider";
 import { AuthNotConfigured, GoogleButton, PasswordInput } from "@/components/auth/AuthBits";
 import { Notice, Spinner } from "@/components/ui/States";
 import { isSupabaseConfigured } from "@/lib/env";
 
 export function SignInForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const p = useProgress();
   const rawNext = params.get("next") ?? "/dashboard";
@@ -28,9 +27,8 @@ export function SignInForm() {
     const res = await fetch("/api/auth/signin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ identifier, password, remember }) });
     const d = await res.json().catch(() => ({}));
     if (!res.ok) { setBusy(false); setError(d.error ?? "Sign in failed"); return; }
-    await p.refresh();
-    router.push(next);
-    router.refresh();
+    // Full page load so no page cached while signed out is reused.
+    window.location.assign(next);
   };
 
   return (

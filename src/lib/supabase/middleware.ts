@@ -2,8 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "@/lib/env";
 
-/** Routes that require a signed-in user (when Supabase is configured). */
-export const PROTECTED_PREFIXES = ["/onboarding", "/billing", "/friends", "/settings", "/profile/me"];
+/**
+ * Routes that require a signed-in user (when Supabase is configured).
+ * Learning itself needs an account; the home page, pricing, the course
+ * overview (/learn), the leaderboard and public profiles stay open.
+ */
+export const PROTECTED_PREFIXES = [
+  "/dashboard", "/learn/", "/practice", "/quizzes", "/playground", "/tutor", "/errors",
+  "/achievements", "/onboarding", "/billing", "/friends", "/settings", "/updates",
+];
 /** Auth pages a signed-in user should not see. */
 export const AUTH_PAGES = ["/signin", "/signup", "/forgot-password"];
 
@@ -27,9 +34,9 @@ export async function updateSession(request: NextRequest) {
   const user = data.user;
   const path = request.nextUrl.pathname;
 
-  if (!user && PROTECTED_PREFIXES.some((p) => path === p || path.startsWith(p + "/"))) {
+  if (!user && PROTECTED_PREFIXES.some((p) => (p.endsWith("/") ? path.startsWith(p) : path === p || path.startsWith(p + "/")))) {
     const url = request.nextUrl.clone();
-    url.pathname = "/signin";
+    url.pathname = "/signup";
     url.search = `?next=${encodeURIComponent(path)}`;
     return NextResponse.redirect(url);
   }

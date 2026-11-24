@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
 import { useProgress } from "@/components/providers/ProgressProvider";
 import { getBrowserSupabase } from "@/lib/supabase/client";
@@ -8,9 +8,11 @@ import { DAILY, EXPERIENCE, GOALS } from "@/lib/profile-options";
 import { Spinner } from "@/components/ui/States";
 import { LogoMark } from "@/components/ui/Logo";
 
-export default function OnboardingPage() {
+function Onboarding() {
   const p = useProgress();
-  const router = useRouter();
+  const params = useSearchParams();
+  const rawNext = params.get("next") ?? "";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "";
   const [step, setStep] = useState(0);
   const [exp, setExp] = useState<string | null>(null);
   const [goal, setGoal] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export default function OnboardingPage() {
       await sb.from("profiles").update(skip ? { onboarded: true } : { onboarded: true, experience_level: exp, learning_goal: goal, daily_goal_minutes: daily ?? 20 }).eq("id", p.profile.id);
       await p.refresh();
     }
-    router.push(exp === "other_language" && !skip ? "/learn/m2-variables" : "/dashboard");
+    window.location.assign(next || (exp === "other_language" && !skip ? "/learn/m2-variables" : "/dashboard"));
   };
 
   const steps = [
@@ -60,4 +62,8 @@ export default function OnboardingPage() {
       </div>
     </div>
   );
+}
+
+export default function OnboardingPage() {
+  return <Suspense><Onboarding /></Suspense>;
 }

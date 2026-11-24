@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Camera, Check, X } from "lucide-react";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { useProgress } from "@/components/providers/ProgressProvider";
@@ -14,6 +14,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export function SignUpForm() {
   const router = useRouter();
+  const params = useSearchParams();
+  const rawNext = params.get("next") ?? "";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "";
   const p = useProgress();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -77,8 +80,8 @@ export function SignUpForm() {
       if (!up.error) await sb.from("profiles").update({ avatar_url: sb.storage.from("avatars").getPublicUrl(path).data.publicUrl }).eq("id", data.user.id);
     }
     if (data.session) {
-      await p.refresh();
-      router.push("/onboarding");
+      // Full page load so no page cached while signed out is reused.
+      window.location.assign(next ? `/onboarding?next=${encodeURIComponent(next)}` : "/onboarding");
     } else {
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     }
@@ -87,7 +90,7 @@ export function SignUpForm() {
   return (
     <div className="card p-6 sm:p-8">
       <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
-      <p className="mt-1 text-sm text-muted">Free forever. Save your progress and join the leaderboard.</p>
+      <p className="mt-1 text-sm text-muted">{next ? "Create a free account to start this lesson — it takes 30 seconds." : "Free forever. Your progress is saved and you can learn on any device."}</p>
       <div className="mt-6"><GoogleButton next="/onboarding" /></div>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <div className="flex items-center gap-3">
@@ -129,7 +132,7 @@ export function SignUpForm() {
         {error && <Notice kind="error">{error}</Notice>}
         <button className="btn-primary w-full" disabled={busy}>{busy && <Spinner />} Create account</button>
       </form>
-      <p className="mt-6 text-center text-sm text-muted">Already have an account? <Link href="/signin" className="link font-medium">Sign in</Link></p>
+      <p className="mt-6 text-center text-sm text-muted">Already have an account? <Link href={next ? `/signin?next=${encodeURIComponent(next)}` : "/signin"} className="link font-medium">Sign in</Link></p>
     </div>
   );
 }

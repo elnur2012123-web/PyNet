@@ -19,6 +19,12 @@ PyNest is a Python learning platform for complete beginners. It has interactive 
 | Accounts | Sign up (username check, strength meter, terms checkbox, optional avatar), sign in with email **or** username (with remember me), Google OAuth (optional), forgot/reset password, email verification, onboarding, settings, data export, account deletion, and sign out of all devices. |
 | Plans | Free / Pro ($5 or $50/yr) / Max ($20 or $200/yr). Checkout, upgrade/downgrade, cancel/resume, billing history and a customer portal through Lemon Squeezy. Paid features activate **only** from verified webhooks. |
 
+### Access
+
+When Supabase is configured, **learning requires a free account**. The home page, pricing, the course overview (`/learn`), the leaderboard and public profiles are open to everyone. Lessons, practice, quizzes, the playground, PyBuddy and the error guide send signed-out visitors to sign-up and bring them back to the page they wanted afterwards.
+
+Email verification is optional. Turn **Confirm email** off in Supabase (Authentication → Sign In / Providers → Email), and new users go straight from sign-up to onboarding.
+
 ### Modes
 
 - **Full mode** (Supabase configured): real accounts, synced progress, leaderboard, subscriptions.

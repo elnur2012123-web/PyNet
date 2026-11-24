@@ -97,6 +97,7 @@ export async function POST(req: Request) {
 
   // Free mode: no API key configured -> PyBuddy Lite (rule-based, no cost, no quota).
   if (!process.env.ANTHROPIC_API_KEY) {
+    if (isSupabaseConfigured && !(await getUserContext())) return error("Please sign up or sign in to chat with PyBuddy.", 401, { signIn: true });
     const burst = rateLimit(`lite:${clientIp(req)}`, 30, 60_000);
     if (!burst.ok) return error(`You're sending messages very quickly. Try again in ${burst.retryAfter}s.`, 429);
     return streamText(localTutorAnswer(messages, feature), { "X-AI-Mode": "lite" });

@@ -115,7 +115,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {p.ready && p.mode === "guest" && (
         <div className="border-b border-border bg-elevated/60 px-4 py-2 text-center text-xs text-muted sm:px-6">
           {p.authConfigured ? (
-            <>Guest mode — your progress is saved only in this browser. <Link href="/signup" className="link">Create a free account</Link> to sync across devices and join the leaderboard.</>
+            <>You&apos;re browsing as a guest. <Link href="/signup" className="link">Create a free account</Link> to open lessons, practise and chat with PyBuddy.</>
           ) : (
             <>Local mode — accounts are not configured on this deployment, so progress is saved only in this browser.</>
           )}
