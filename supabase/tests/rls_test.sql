@@ -412,3 +412,10 @@ do $$ begin
 end $$;
 reset role;
 select 'CHEAT DETECTOR TESTS PASSED' as result;
+
+-- divisions (migration 0013)
+do $$ begin
+  if (select division from get_contests() where title = 'PyNest Hatchling Round #1') <> 'hatchling' then raise exception 'seed round not renamed to Hatchling'; end if;
+  if exists (select 1 from contests where title like '%Div.%') then raise exception 'Div. title left'; end if;
+end $$;
+select 'DIVISION TESTS PASSED' as result;

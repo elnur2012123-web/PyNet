@@ -8,6 +8,8 @@ import { Countdown, LocalTime } from "@/components/arena/Countdown";
 import { RegisterButton } from "@/components/arena/RegisterButton";
 import { Handle } from "@/components/arena/Handle";
 import { contestPhase, endsAt } from "@/lib/server/arena";
+import { DivisionChip } from "@/components/arena/DivisionChip";
+import { divisionOf } from "@/lib/arena/divisions";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +37,8 @@ export default async function ContestLayout({ children, params }: { children: Re
           <dl className="space-y-1.5 text-sm">
             <div className="flex justify-between gap-2"><dt className="text-muted">Start</dt><dd className="text-right"><LocalTime iso={c.starts_at} /></dd></div>
             <div className="flex justify-between gap-2"><dt className="text-muted">Length</dt><dd>{Math.floor(c.duration_minutes / 60)}h {c.duration_minutes % 60 ? `${c.duration_minutes % 60}m` : ""}</dd></div>
-            <div className="flex justify-between gap-2"><dt className="text-muted">Type</dt><dd>{c.rated ? "Rated" : "Unrated"}, ICPC rules</dd></div>
+            <div className="flex justify-between gap-2"><dt className="text-muted">Division</dt><dd><DivisionChip division={c.division} /></dd></div>
+            <div className="flex justify-between gap-2"><dt className="text-muted">Type</dt><dd>{c.rated ? (divisionOf(c.division).ratedBelow ? `Rated below ${divisionOf(c.division).ratedBelow}` : "Rated for all") : "Unrated"}</dd></div>
             <div className="flex justify-between gap-2"><dt className="text-muted">Registered</dt><dd className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" />{data.participants}</dd></div>
             {data.authors.length > 0 && <div className="flex justify-between gap-2"><dt className="text-muted">Prepared by</dt><dd>{data.authors.map((a) => <Handle key={a} username={a} />)}</dd></div>}
           </dl>

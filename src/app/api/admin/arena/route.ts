@@ -29,6 +29,7 @@ export async function POST(req: Request) {
     const { data: c, error: e } = await admin.from("contests").insert({
       title, description: str(body.description, 4000), starts_at: starts.toISOString(), duration_minutes: duration,
       rated: body.rated !== false, created_by: user.id,
+      division: ["hatchling", "fledgling", "soaring"].includes(String(body.division)) ? body.division : "soaring",
     }).select("id").single();
     if (e || !c) return error("Could not create the round.", 500);
     const { error: e2 } = await admin.from("contest_problems").insert(problems.map((pid, i) => ({ contest_id: c.id, letter: LETTERS[i], problem_id: pid })));

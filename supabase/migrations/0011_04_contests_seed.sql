@@ -9996,8 +9996,8 @@ declare
 begin
   if exists (select 1 from public.contests) then return; end if;
   if v_start < now() + interval '1 day' then v_start := v_start + interval '7 days'; end if;
-  insert into public.contests (title, description, starts_at, duration_minutes, rated) values ('PyNest Round #1 (Div. 3)', 'Our first rated round! Six problems for beginners and up. Problems are sorted by difficulty — read them all.', v_start + interval '0 days', 120, true) returning id into v_id;
+  insert into public.contests (title, description, starts_at, duration_minutes, rated) values ('PyNest Hatchling Round #1', 'Our first rated round! Six problems for beginners and up. Problems are sorted by difficulty — read them all.', v_start + interval '0 days', 120, true) returning id into v_id;
   insert into public.contest_problems (contest_id, letter, problem_id) values (v_id, 'A', 1101), (v_id, 'B', 1102), (v_id, 'C', 1103), (v_id, 'D', 1104), (v_id, 'E', 1105), (v_id, 'F', 1106);
-  insert into public.contests (title, description, starts_at, duration_minutes, rated) values ('PyNest Round #2 (Div. 3)', 'Six new problems. Solve as many as you can in two hours.', v_start + interval '7 days', 120, true) returning id into v_id;
+  insert into public.contests (title, description, starts_at, duration_minutes, rated) values ('PyNest Hatchling Round #2', 'Six new problems. Solve as many as you can in two hours.', v_start + interval '7 days', 120, true) returning id into v_id;
   insert into public.contest_problems (contest_id, letter, problem_id) values (v_id, 'A', 1108), (v_id, 'B', 1109), (v_id, 'C', 1107), (v_id, 'D', 1110), (v_id, 'E', 1111), (v_id, 'F', 1112);
 end $$;

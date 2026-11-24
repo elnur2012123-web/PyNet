@@ -72,6 +72,7 @@ PyNest also has a competitive-programming side:
 
 - **Problemset** (`/problemset`): problems with hidden tests, a difficulty rating (800–3500), tags, solve counts and filters. Each solution is checked on every test: **Accepted**, **Wrong answer on test N**, **Runtime error**, **Time limit exceeded** or **Compilation error**. Your first Accepted gives XP.
 - **Contests** (`/contests`): timed rounds with registration, a countdown, a live scoreboard (ICPC rules: solved, then penalty = minutes + 20 per wrong try) and final standings. Problems are hidden until the round starts, then move into the problemset when it ends.
+- **Divisions:** rounds are 🐣 **Hatchling** (beginners, rated below 1600), 🐦 **Fledgling** (rated below 2100) or 🦅 **Soaring** (rated for everyone). Stronger players can still join, but they play out of competition and their rating doesn't change. Run `0013_divisions.sql`.
 - **Rating** (`/rating`): an Elo-style rating that changes after every rated round. Ranks run from Newbie to Legendary Grandmaster, and usernames are coloured by rank across the site.
 - **Status** (`/submissions`) shows every verdict. Code stays private: you can read someone's solution only after you solve that problem yourself.
 - **Calendar** (`/calendar`) shows every round in your own time zone.

@@ -10,7 +10,7 @@ export const loadContest = cache(async (id: number) => {
   const sb = await getServerSupabase();
   if (!sb || !Number.isInteger(id)) return null;
   await finalizeFinishedContests();
-  const { data: c } = await sb.from("contests").select("id, title, description, starts_at, duration_minutes, rated, rating_applied, created_by").eq("id", id).maybeSingle();
+  const { data: c } = await sb.from("contests").select("id, title, description, starts_at, duration_minutes, rated, rating_applied, created_by, division").eq("id", id).maybeSingle();
   if (!c) return null;
   const { data: auth } = await sb.auth.getUser();
   const me = auth.user?.id ?? null;

@@ -374,6 +374,6 @@ export const PROBLEMS: ProblemSource[] = [
 
 /** Rounds created by the seed (start times are set relative to when the migration runs). */
 export const SEED_CONTESTS = [
-  { title: "PyNest Round #1 (Div. 3)", description: "Our first rated round! Six problems for beginners and up. Problems are sorted by difficulty — read them all.", problems: [1101, 1102, 1103, 1104, 1105, 1106], dayOffset: 0, durationMinutes: 120 },
-  { title: "PyNest Round #2 (Div. 3)", description: "Six new problems. Solve as many as you can in two hours.", problems: [1108, 1109, 1107, 1110, 1111, 1112], dayOffset: 7, durationMinutes: 120 },
+  { title: "PyNest Hatchling Round #1", description: "Our first rated round! Six problems for beginners and up. Problems are sorted by difficulty — read them all.", problems: [1101, 1102, 1103, 1104, 1105, 1106], dayOffset: 0, durationMinutes: 120 },
+  { title: "PyNest Hatchling Round #2", description: "Six new problems. Solve as many as you can in two hours.", problems: [1108, 1109, 1107, 1110, 1111, 1112], dayOffset: 7, durationMinutes: 120 },
 ];

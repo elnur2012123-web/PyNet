@@ -5,6 +5,8 @@ import { ArenaSidebar, SideBox } from "@/components/arena/ArenaSidebar";
 import { Countdown, LocalTime } from "@/components/arena/Countdown";
 import { RegisterButton } from "@/components/arena/RegisterButton";
 import { Handle } from "@/components/arena/Handle";
+import { DivisionChip } from "@/components/arena/DivisionChip";
+import { DIVISIONS } from "@/lib/arena/divisions";
 import { contestPhase, endsAt, finalizeFinishedContests, listContests } from "@/lib/server/arena";
 import { EmptyState } from "@/components/ui/States";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -44,6 +46,7 @@ export default async function ContestsPage() {
                           <Link href={`/contests/${c.id}`} className="font-medium hover:underline">{c.title}</Link>
                           {phase === "running" && <Link href={`/contests/${c.id}`} className="link ml-2 text-xs">Enter »</Link>}
                           {!c.rated && <span className="chip ml-2">unrated</span>}
+                          <div className="mt-1"><DivisionChip division={c.division} /></div>
                         </td>
                         <td className="px-2 py-3 text-xs">{c.authors.map((a) => <div key={a}><Handle username={a} /></div>)}</td>
                         <td className="px-2 py-3 text-xs"><LocalTime iso={c.starts_at} /></td>
@@ -76,7 +79,7 @@ export default async function ContestsPage() {
                   {past.map((c) => (
                     <tr key={c.id} className="border-t border-border/60 text-center">
                       <td className="px-4 py-3 text-left">
-                        <Link href={`/contests/${c.id}`} className="font-medium hover:underline">{c.title}</Link>
+                        <Link href={`/contests/${c.id}`} className="font-medium hover:underline">{c.title}</Link> <DivisionChip division={c.division} />
                         <div className="text-xs"><Link href={`/contests/${c.id}`} className="link">Practice »</Link></div>
                       </td>
                       <td className="px-2 py-3 text-xs">{c.authors.map((a) => <div key={a}><Handle username={a} /></div>)}</td>
@@ -93,6 +96,12 @@ export default async function ContestsPage() {
         </section>
       </div>
       <ArenaSidebar>
+        <SideBox title="Divisions">
+          <ul className="space-y-2 text-xs">
+            {DIVISIONS.map((d) => <li key={d.id}><DivisionChip division={d.id} /> <span className="text-muted">{d.who}</span></li>)}
+          </ul>
+          <p className="mt-2 text-xs text-muted">Anyone can join any round. Above the limit you play &quot;out of competition&quot; and your rating doesn&apos;t change.</p>
+        </SideBox>
         <SideBox title="How rounds work">
           <ul className="list-disc space-y-1 pl-4 text-xs text-muted">
             <li>Register before the start (or just submit during the round).</li>

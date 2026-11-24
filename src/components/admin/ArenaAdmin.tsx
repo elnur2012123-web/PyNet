@@ -7,6 +7,7 @@ import { getRuntime } from "@/lib/python/runner";
 import { CodeEditor } from "@/components/editor/CodeEditor";
 import { difficultyClass } from "@/lib/arena/rank";
 import { CheatDetector } from "./CheatDetector";
+import { DIVISIONS } from "@/lib/arena/divisions";
 
 interface P { id: number; title: string; rating: number; visibility: string }
 interface C { id: number; title: string; starts_at: string; duration_minutes: number }
@@ -43,16 +44,16 @@ export function ArenaAdmin() {
   useEffect(() => { load(); }, [load]);
 
   // ---- schedule a round
-  const [round, setRound] = useState({ title: "", description: "", start: "", duration: 120, rated: true });
+  const [round, setRound] = useState({ title: "", description: "", start: "", duration: 120, rated: true, division: "hatchling" });
   const [picked, setPicked] = useState<number[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const pool = useMemo(() => [...problems].sort((a, b) => Number(used.has(a.id)) - Number(used.has(b.id)) || (a.visibility === "hidden" ? -1 : 1) - (b.visibility === "hidden" ? -1 : 1) || a.rating - b.rating), [problems, used]);
   const createRound = async () => {
     setBusy("round"); setMsg(null);
     try {
-      const j = await post({ action: "create_contest", title: round.title, description: round.description, startsAt: new Date(round.start).toISOString(), durationMinutes: Number(round.duration), rated: round.rated, problems: picked });
+      const j = await post({ action: "create_contest", title: round.title, description: round.description, startsAt: new Date(round.start).toISOString(), durationMinutes: Number(round.duration), rated: round.rated, division: round.division, problems: picked });
       setMsg({ ok: true, text: `Round #${j.id} scheduled.` });
-      setRound({ title: "", description: "", start: "", duration: 120, rated: true }); setPicked([]); load();
+      setRound({ title: "", description: "", start: "", duration: 120, rated: true, division: "hatchling" }); setPicked([]); load();
     } catch (e) { setMsg({ ok: false, text: (e as Error).message }); }
     setBusy(null);
   };
@@ -98,12 +99,17 @@ export function ArenaAdmin() {
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card space-y-3 p-5">
           <h3 className="flex items-center gap-2 font-semibold"><CalendarPlus className="h-4 w-4" /> Schedule a round</h3>
-          <input className="input w-full" placeholder="PyNest Round #3 (Div. 3)" value={round.title} onChange={(e) => setRound({ ...round, title: e.target.value })} />
+          <input className="input w-full" placeholder="PyNest Hatchling Round #3" value={round.title} onChange={(e) => setRound({ ...round, title: e.target.value })} />
           <textarea className="input min-h-16 w-full" placeholder="Short description (optional)" value={round.description} onChange={(e) => setRound({ ...round, description: e.target.value })} />
           <div className="grid grid-cols-2 gap-2 text-sm">
             <label className="space-y-1"><span className="label">Start (your time)</span><input type="datetime-local" className="input w-full" value={round.start} onChange={(e) => setRound({ ...round, start: e.target.value })} /></label>
             <label className="space-y-1"><span className="label">Length (minutes)</span><input type="number" min={10} max={10080} className="input w-full" value={round.duration} onChange={(e) => setRound({ ...round, duration: Number(e.target.value) })} /></label>
           </div>
+          <label className="block space-y-1 text-sm"><span className="label">Division</span>
+            <select className="input w-full" value={round.division} onChange={(e) => setRound({ ...round, division: e.target.value })}>
+              {DIVISIONS.map((d) => <option key={d.id} value={d.id}>{d.emoji} {d.name} — {d.who}</option>)}
+            </select>
+          </label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={round.rated} onChange={(e) => setRound({ ...round, rated: e.target.checked })} /> Rated</label>
           <div>
             <p className="label">Problems in order ({picked.length}/10)</p>

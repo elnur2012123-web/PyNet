@@ -5,6 +5,7 @@ import { loadContest } from "./data";
 import { contestPhase } from "@/lib/server/arena";
 import { RichText } from "@/components/arena/Statement";
 import { LocalTime } from "@/components/arena/Countdown";
+import { DivisionChip } from "@/components/arena/DivisionChip";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,8 @@ export default async function ContestPage({ params }: { params: Promise<{ id: st
     <div className="space-y-4">
       <div className="card p-5">
         <h1 className="text-2xl font-semibold">{c.title}</h1>
-        <p className="mt-1 text-sm text-muted">Starts <LocalTime iso={c.starts_at} withWeekday /> · {c.duration_minutes} minutes · {c.rated ? "rated" : "unrated"}</p>
+        <div className="mt-2"><DivisionChip division={c.division} long /></div>
+        <p className="mt-2 text-sm text-muted">Starts <LocalTime iso={c.starts_at} withWeekday /> · {c.duration_minutes} minutes · {c.rated ? "rated" : "unrated"}</p>
         {c.description && <div className="mt-3 space-y-2 text-sm"><RichText text={c.description} /></div>}
       </div>
 

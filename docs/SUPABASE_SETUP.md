@@ -28,6 +28,7 @@ npx supabase db push
 | `0004`–`0008` | Owner title, monthly hiding, announcements, roles & bans, badges |
 | `0009_arena.sql` | Arena: problems, hidden tests, submissions, contests, registrations, rating changes and their functions |
 | `0010_01` … `0010_06_problemset_seed.sql` | 24 public problems with their hidden tests (split into parts under 260 KB so the SQL Editor accepts them) |
+| `0013_divisions.sql` | Hatchling / Fledgling / Soaring divisions; renames the first two rounds |
 | `0012_cheat_detector.sql` | Cheat flags, contest disqualifications; standings leave out disqualified users |
 | `0011_01` … `0011_04_contests_seed.sql` | 12 contest problems + PyNest Round #1 and #2 (the first Saturday more than a day away, 14:00 UTC, then a week later) |
 

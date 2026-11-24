@@ -1,6 +1,7 @@
 import "server-only";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { computeRatingChanges, placesFromRanks } from "@/lib/arena/rating";
+import { isEligible } from "@/lib/arena/divisions";
 
 export interface ContestRow {
   id: number;
@@ -10,6 +11,7 @@ export interface ContestRow {
   duration_minutes: number;
   rated: boolean;
   rating_applied: boolean;
+  division?: string;
 }
 
 export const endsAt = (c: Pick<ContestRow, "starts_at" | "duration_minutes">) =>
@@ -32,7 +34,7 @@ const REVIEW_WINDOW_MS = 48 * 3600e3;
 export async function finalizeFinishedContests() {
   const admin = getAdminSupabase();
   if (!admin) return;
-  const { data } = await admin.from("contests").select("id, starts_at, duration_minutes, rated, rating_applied, checked_at")
+  const { data } = await admin.from("contests").select("id, starts_at, duration_minutes, rated, rating_applied, checked_at, division")
     .or("checked_at.is.null,and(rated.eq.true,rating_applied.eq.false)");
   for (const c of (data ?? []) as (ContestRow & { checked_at: string | null })[]) {
     if (contestPhase(c) !== "finished") continue;
@@ -44,7 +46,11 @@ export async function finalizeFinishedContests() {
     const { count } = await admin.from("cheat_flags").select("id", { count: "exact", head: true }).eq("contest_id", c.id).eq("status", "open").neq("severity", "low");
     if ((count ?? 0) > 0 && Date.now() < endsAt(c).getTime() + REVIEW_WINDOW_MS) continue;
     const { data: rows } = await admin.rpc("get_contest_standings", { p_contest: c.id });
-    const standings = (rows ?? []) as { rank: number; user_id: string; rating: number | null }[];
+    // Only contestants inside the division's rating limit are rated; re-rank among them.
+    const all = (rows ?? []) as { rank: number; user_id: string; rating: number | null; solved: number; penalty: number }[];
+    const standings = all.filter((r) => isEligible(c.division, r.rating));
+    let prev = "", rank = 0;
+    standings.forEach((r, i) => { const key = `${r.solved}:${r.penalty}`; if (key !== prev) { rank = i + 1; prev = key; } r.rank = rank; });
     const places = placesFromRanks(standings.map((r) => Number(r.rank)));
     const changes = computeRatingChanges(standings.map((r, i) => ({ userId: r.user_id, place: places[i], rating: r.rating })))
       .map((ch, i) => ({ ...ch, rank: Number(standings[i].rank) }));

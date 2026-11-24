@@ -3,6 +3,7 @@ import { getServerSupabase } from "@/lib/supabase/server";
 import { loadContest } from "../data";
 import { contestPhase } from "@/lib/server/arena";
 import { Handle } from "@/components/arena/Handle";
+import { isEligible, divisionOf } from "@/lib/arena/divisions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Standings" };
@@ -28,7 +29,7 @@ export default async function StandingsPage({ params }: { params: Promise<{ id: 
     <div className="card overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
         <h1 className="font-semibold">{c.title} — {phase === "running" ? "live standings" : "final standings"}</h1>
-        <span className="text-xs text-muted">{standings.length} contestant{standings.length === 1 ? "" : "s"} with submissions</span>
+        <span className="text-xs text-muted">{standings.length} contestant{standings.length === 1 ? "" : "s"} with submissions{divisionOf(c.division).ratedBelow ? ` · * = out of competition (rating ${divisionOf(c.division).ratedBelow}+)` : ""}</span>
       </div>
       <div className="thin-scroll overflow-x-auto">
         <table className="w-full min-w-[560px] text-sm">
@@ -48,7 +49,7 @@ export default async function StandingsPage({ params }: { params: Promise<{ id: 
               return (
                 <tr key={r.user_id} className={`border-t border-border/60 text-center ${r.user_id === me ? "bg-accent/10" : i % 2 ? "bg-elevated/30" : ""}`}>
                   <td className="px-3 py-2">{r.rank}</td>
-                  <td className="px-3 py-2 text-left"><Handle username={r.username} rating={ch ? ch.old_rating : r.rating} /></td>
+                  <td className="px-3 py-2 text-left"><Handle username={r.username} rating={ch ? ch.old_rating : r.rating} />{c.rated && !ch && !isEligible(c.division, r.rating) && <span className="ml-1 text-muted" title="Out of competition: rating is above this division's limit">*</span>}</td>
                   <td className="px-2 py-2 font-semibold">{r.solved}</td>
                   <td className="px-2 py-2 tabular-nums">{r.penalty}</td>
                   {problems.map((p) => {
