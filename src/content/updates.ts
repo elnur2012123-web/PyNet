@@ -17,7 +17,7 @@ export const CODE_UPDATES: UpdateEntry[] = [
     date: "2026-11-24T23:30:00Z",
     kind: "feature",
     title: "New: Problemset, Contests and Rating",
-    body: "PyNest now has a competitive side! Solve problems with hidden tests and real verdicts (Accepted, Wrong answer on test 3…). Join timed rounds with a live scoreboard and earn a contest rating, from Newbie to Legendary Grandmaster. Register for the first PyNest Hatchling Round on the Contests page!",
+    body: "PyNest now has a competitive side! Solve problems with hidden tests and real verdicts (Accepted, Wrong answer on test 3…). Join timed rounds with a live scoreboard and earn a contest rating, from Egg to Phoenix. Register for the first PyNest Hatchling Round on the Contests page!",
     link: "/contests",
   },
   {
