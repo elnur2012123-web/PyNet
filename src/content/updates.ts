@@ -13,6 +13,14 @@ export interface UpdateEntry {
 
 export const CODE_UPDATES: UpdateEntry[] = [
   {
+    id: "2026-11-24-pybuddy-dictionary",
+    date: "2026-11-24T20:00:00Z",
+    kind: "feature",
+    title: "PyBuddy knows a lot more now",
+    body: "Ask PyBuddy what any built-in function, method or keyword does — len(), zip(), .split(), .get(), lambda, yield and 100+ more — and you'll get an example with its real output. New: say \"quiz me on loops\" for a quick quiz, compare things like \"sort vs sorted\", and press \"Open in Playground\" under any code example to run it.",
+    link: "/tutor",
+  },
+  {
     id: "2026-11-24-whats-new",
     date: "2026-11-24T18:00:00Z",
     kind: "feature",

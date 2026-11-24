@@ -4,6 +4,7 @@ import { Inline } from "@/components/lesson/RichText";
 
 /** Minimal, safe markdown renderer for tutor replies (no raw HTML). */
 export function Markdown({ text }: { text: string }) {
+  text = text.replace(/\s*_\(quiz [^)]*\)_/g, ""); // hidden quiz-state marker
   const parts = text.split(/```(\w*)\n?([\s\S]*?)(?:```|$)/g);
   const nodes: React.ReactNode[] = [];
   for (let i = 0; i < parts.length; i += 3) {
@@ -11,7 +12,19 @@ export function Markdown({ text }: { text: string }) {
     if (prose) nodes.push(<Prose key={`p${i}`} text={prose} />);
     if (i + 2 < parts.length) {
       const code = parts[i + 2].replace(/\n$/, "");
-      if (code) nodes.push(<CodeBlock key={`c${i}`} code={code} className="my-3" />);
+      const lang = parts[i + 1];
+      if (code && lang === "text") nodes.push(<pre key={`c${i}`} className="code-block my-2 overflow-x-auto rounded-xl border border-border p-3 font-mono text-[13px] leading-6">{code}</pre>);
+      else if (code) nodes.push(
+        <div key={`c${i}`} className="my-3">
+          <CodeBlock code={code} />
+          <button
+            onClick={() => { try { localStorage.setItem("pn-playground", code); } catch {} window.location.href = "/playground"; }}
+            className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+          >
+            ▶ Open in Playground
+          </button>
+        </div>,
+      );
     }
   }
   return <div className="prose-lite text-[14.5px]">{nodes}</div>;

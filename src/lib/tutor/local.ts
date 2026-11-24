@@ -2,10 +2,13 @@ import "server-only";
 import { MODULES } from "@/content/curriculum";
 import { PY_ERRORS } from "@/content/errors";
 import { EXERCISES } from "@/content/exercises";
+import { MODULE_QUIZZES } from "@/content/quizzes";
 import type { Lesson } from "@/content/types";
 import type { AiFeature } from "@/lib/plans";
 import { GLOSSARY, type GlossaryEntry } from "./glossary";
 import { HOWTOS } from "./howtos";
+import { REFERENCE } from "./reference";
+import { EXTRA_ERRORS } from "./reference/errors-extra";
 import { analogyFor } from "./analogies";
 
 /**
@@ -17,7 +20,7 @@ import { analogyFor } from "./analogies";
 
 // ----------------------------------------------------------------- text utils
 const STOP = new Set(
-  "whats hows whos wats wat dont didnt cant wont doesnt isnt understand understood explain know want need make get got still thing things mean okay yeah really bro pls plz thanks today a an the is are was were be been do does did i me my you your it its this that these those to of in on at for with and or but how what why when where which who can could should would will please explain tell show give mean means meaning use used using about like just so than then there here some any very much more most also as by from into python pythons programming code".split(" "),
+  "whats hows whos wats wat dont didnt cant wont doesnt isnt understand understood explain know want need make got still thing things mean okay yeah really bro pls plz thanks today a an the is are was were be been do does did i me my you your it its this that these those to of in on at for with and or but how what why when where which who can could should would will please explain tell show give mean means meaning use used using about like just so than then there here some any very much more most also as by from into python pythons programming code".split(" "),
 );
 const SYNONYMS: Record<string, string[]> = {
   loop: ["loops"], loops: ["loop"], iterate: ["for", "loop"], repeat: ["loop", "for", "while"],
@@ -71,6 +74,7 @@ interface Doc {
 
 const DOCS: Doc[] = [
   ...HOWTOS.map((g) => ({ kind: "glossary" as const, id: g.id, title: g.title, head: `${g.title} ${g.keywords.join(" ")}`.toLowerCase(), body: g.answer.toLowerCase(), glossary: g })),
+  ...REFERENCE.map((g) => ({ kind: "glossary" as const, id: g.id, title: g.title, head: `${g.title} ${g.keywords.join(" ")}`.toLowerCase(), body: g.answer.toLowerCase(), glossary: g })),
   ...GLOSSARY.map((g) => ({ kind: "glossary" as const, id: g.id, title: g.title, head: `${g.title} ${g.keywords.join(" ")}`.toLowerCase(), body: g.answer.toLowerCase(), glossary: g })),
   ...MODULES.flatMap((m) =>
     m.lessons.filter((l) => l.kind !== "project").map((l) => ({
@@ -87,6 +91,7 @@ const PY_VOCAB = new Set<string>([
   ..."python code coding program programming script syntax error errors bug debug traceback exception variable variables value string strings int integer float boolean bool list lists tuple set dict dictionary key keys value values loop loops for while if elif else def function functions return parameter argument arguments class classes object objects method methods self init import module modules package pip library file files open read write print input range len type str index slicing slice append insert remove pop sort sorted reverse split join replace strip upper lower find format fstring f-string lambda map filter zip enumerate comprehension generator yield iterator recursion decorator try except finally raise assert indentation indent colon bracket brackets quotes comment comments operator operators modulus modulo exponent division floor true false none and or not in is break continue pass global local scope pyodide pycharm vscode ide interpreter terminal oop inheritance encapsulation polymorphism json csv random math datetime os sys exercise exercises practice quiz algorithm algorithms nameerror typeerror valueerror indexerror keyerror zerodivisionerror attributeerror syntaxerror indentationerror importerror modulenotfounderror filenotfounderror recursionerror".split(" "),
   ...DOCS.filter((d) => !d.id.startsWith("howto-")).flatMap((d) => terms(d.title)),
   ...GLOSSARY.flatMap((g) => g.keywords.map((k) => k.toLowerCase())),
+  ...REFERENCE.flatMap((g) => g.keywords.flatMap((k) => k.toLowerCase().split(/\s+/))),
 ]);
 
 const escapeRe = (t: string) => t.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
@@ -301,8 +306,13 @@ function errorAnswer(msg: string, code: string | null): string | null {
     out.push("", "**Example — broken:**", fence(e.badCode), "**Fixed:**", fence(e.fixedCode));
     out.push("", "**How to avoid it:**", ...e.prevent.map((w) => `- ${w}`));
     out.push("", `👉 More practice: open \`/errors/${e.slug}\` in the Error Explorer.`);
+  } else if (EXTRA_ERRORS[name]) {
+    const x = EXTRA_ERRORS[name];
+    out.push(`**${name}**${detail ? `: ${detail}` : ""}`, "", `**What it means:** ${x.meaning}`, "", `**How to fix it:** ${x.fix}`);
+    if (x.example) out.push("", fence(x.example));
+    if (lineNo) out.push("", `The problem is on **line ${lineNo}** — look at that line and the one just before it.`);
   } else {
-    out.push(`**${name}**${detail ? `: ${detail}` : ""}`, "", "Read the last line of the error: it names the problem. The `line N` part shows where it happened. Check that line and the one before it.");
+    out.push(`**${name}**${detail ? `: ${detail}` : ""}`, "", "Read the last line of the error: it names the problem. The `line N` part shows where it happened. Check that line and the one before it.", "", "If you paste your code together with the full error, I can point at the exact problem.");
   }
   if (code) {
     const issues = findIssues(code);
@@ -340,7 +350,7 @@ function hintAnswer(msg: string): string | null {
 function compareAnswer(q: string): string | null {
   const m = /(?:difference|differences|compare|vs\.?|versus)\s+(?:between\s+)?(.+?)\s+(?:and|vs\.?|versus|or)\s+(.+?)[?.!]*$/i.exec(q) ?? /^(.+?)\s+(?:vs\.?|versus)\s+(.+?)[?.!]*$/i.exec(q);
   if (!m) return null;
-  const special = GLOSSARY.find((g) => g.compare && g.compare.every((c) => new RegExp(`\\b${c}\\b`, "i").test(q)));
+  const special = [...GLOSSARY, ...REFERENCE].find((g) => g.compare && g.compare.every((c) => new RegExp(`\\b${c}\\b`, "i").test(q)));
   if (special) return special.answer;
   const a = search(m[1], undefined, 1)[0]?.d, b = search(m[2], undefined, 1)[0]?.d;
   if (!a || !b || a.id === b.id) return null;
@@ -521,6 +531,65 @@ function styleReview(code: string): string[] {
   return tips;
 }
 
+// ----------------------------------------------------------------- interactive quiz
+interface QQ { q: string; code?: string; options: string[]; answer: number; explain: string }
+function quizPool(lessonId: string): QQ[] {
+  const hit = lessonById(lessonId);
+  if (!hit) return [];
+  const own: QQ[] = hit.l.quiz;
+  const mod = MODULE_QUIZZES.find((q) => q.moduleId === hit.m.id)?.questions ?? [];
+  const extra = mod.filter((q): q is QQ & { type: "mcq" | "output" | "error" } => q.type === "mcq" || q.type === "output" || q.type === "error");
+  return [...own, ...extra].slice(0, 5);
+}
+const LETTERS = ["A", "B", "C", "D", "E"];
+function askQuestion(lessonId: string, title: string, i: number, score: number, prefix = ""): string {
+  const pool = quizPool(lessonId);
+  const q = pool[i];
+  return [
+    prefix,
+    `**Quiz: ${title}** — question ${i + 1} of ${pool.length}`,
+    "",
+    q.q,
+    ...(q.code ? [fence(q.code)] : []),
+    "",
+    ...q.options.map((o, j) => `- **${LETTERS[j]})** ${o}`),
+    "",
+    `Reply with **${LETTERS.slice(0, q.options.length).join(", ")}**. _(quiz ${lessonId} q${i + 1} score ${score})_`,
+  ].filter((x, k) => k > 0 || x).join("\n");
+}
+function startQuiz(lessonId: string, title: string): string {
+  return askQuestion(lessonId, title, 0, 0, `Let's see what you remember about **${title}**. No pressure — wrong answers are how you learn. 🙂\n`);
+}
+/** If the last assistant turn asked a quiz question and the user replied with a letter, grade it. */
+function quizReply(messages: Turn[], raw: string): string | null {
+  const last = [...messages].slice(0, -1).reverse().find((m) => m.role === "assistant");
+  const m = last && /\(quiz (m\d+-[a-z0-9-]+) q(\d+) score (\d+)\)/.exec(last.content);
+  if (!m) return null;
+  const letter = /^\s*(?:(?:my )?answer(?: is)?:?\s*)?\(?([a-e])\)?(?:[.)!]|\s|$)/i.exec(raw.trim());
+  if (!letter) return null;
+  const [, lessonId, qn, sc] = m;
+  const hit = lessonById(lessonId);
+  if (!hit) return null;
+  const pool = quizPool(lessonId);
+  const i = Number(qn) - 1;
+  const q = pool[i];
+  const pick = LETTERS.indexOf(letter[1].toUpperCase());
+  const right = pick === q.answer;
+  const score = Number(sc) + (right ? 1 : 0);
+  const feedback = right
+    ? `✅ **Correct!** ${q.explain}`
+    : `❌ **Not quite** — the answer is **${LETTERS[q.answer]}) ${q.options[q.answer]}**. ${q.explain}`;
+  if (i + 1 < pool.length) return askQuestion(lessonId, hit.l.title, i + 1, score, feedback + "\n\n---\n");
+  const pct = Math.round((score / pool.length) * 100);
+  const verdict = pct === 100 ? "Perfect score! 🏆" : pct >= 60 ? "Nice work! 👏" : "Good effort — let's review it together.";
+  return [
+    feedback, "", "---", "",
+    `**You got ${score} out of ${pool.length}** (${pct}%). ${verdict}`, "",
+    pct < 60 ? `Want me to explain **${hit.l.title}** again in a simpler way? Just say "explain it simpler".` : `Ready for the full module quiz? It's at \`/quizzes/${hit.m.id}\` and gives you XP. Or say "quiz me" again for another round.`,
+    "", `Lesson: \`/learn/${lessonId}\``,
+  ].join("\n");
+}
+
 // ----------------------------------------------------------------- main
 export function localTutorAnswer(messages: Turn[], feature: AiFeature): string {
   const raw = messages[messages.length - 1].content.trim();
@@ -535,6 +604,15 @@ export function localTutorAnswer(messages: Turn[], feature: AiFeature): string {
   }
   if (/^(thanks|thank you|thx|rahmat|спасибо)\b/.test(lower) && msg.length < 40) return "You're welcome! 😊 Keep going — every bug you fix makes you a better programmer. Ask me anything else whenever you're ready.";
   if (/(what can you do|how can you help|who are you|what are you|help me|^help\b)/.test(lower) && !code && msg.length < 60) return CAPABILITIES;
+
+  // 0. answering a quiz question, or starting a quiz
+  const graded = quizReply(messages, raw);
+  if (graded) return graded;
+  if (/\b(quiz|test) me\b|\bquiz\b.*\b(on|about)\b|^quiz\b/.test(lower)) {
+    const t = (() => { const o = topicOf(msg.replace(/\b(quiz|test|me|on|about)\b/gi, " ")); return o ? docToLesson(o.doc) : null; })() ?? prev;
+    if (t) return startQuiz(t.lesson.id, t.lesson.title);
+    return "Sure! Which topic should I quiz you on? For example: \"quiz me on loops\", \"quiz me on strings\" or \"quiz me on functions\".";
+  }
 
   // 1. error messages
   const err = /\b[A-Z][A-Za-z]*(Error|Exception)\b/.test(msg) ? errorAnswer(msg, code) : null;
@@ -586,6 +664,18 @@ export function localTutorAnswer(messages: Turn[], feature: AiFeature): string {
     const t = own ? docToLesson(own.doc) : prev;
     if (t) return lessonPractice(t.lesson);
     return practiceAnswer(msg);
+  }
+
+  // 5b. a specific method/function named in the question: ".get()", "split()", "what does zip do"
+  const named = /(?:^|\s|`)\.?([a-z_]{2,})\(\)/i.exec(raw) ?? /(?:^|\s|`)\.([a-z_]{2,})\b/i.exec(raw);
+  if (named) {
+    const name = named[1].toLowerCase();
+    const ref = REFERENCE.find((g) => g.keywords.some((k) => k.toLowerCase() === `.${name}()` || k.toLowerCase() === `${name}()`))
+      ?? REFERENCE.find((g) => g.keywords.some((k) => k.toLowerCase() === name));
+    if (ref) {
+      const lt = ref.lesson ? lessonById(ref.lesson) : null;
+      return ref.answer + (lt ? `\n\n**Learn more:** the lesson **${lt.l.title}** covers this with practice — \`/learn/${lt.l.id}\`` + SUGGEST(lt.l.title) : "");
+    }
   }
 
   // 6. comparisons
