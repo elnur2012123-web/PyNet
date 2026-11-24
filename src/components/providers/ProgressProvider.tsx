@@ -38,6 +38,7 @@ export interface Profile {
   onboarded: boolean;
   created_at: string;
   special_title?: string | null;
+  role?: "user" | "admin" | "co_founder" | "founder";
   hidden_from_weekly?: boolean;
 }
 export interface DayActivity { date: string; xp: number; lessons: number; exercises: number; minutes: number }

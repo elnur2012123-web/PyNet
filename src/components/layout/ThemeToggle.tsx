@@ -6,7 +6,7 @@ import { Monitor, Moon, Sun } from "lucide-react";
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => { setMounted(true); }, []);
   const next = theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
   const Icon = !mounted ? Monitor : theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
   return (

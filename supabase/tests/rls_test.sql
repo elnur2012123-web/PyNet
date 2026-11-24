@@ -220,3 +220,67 @@ do $$ begin
 end $$;
 reset role;
 select 'ANNOUNCEMENT TESTS PASSED' as result;
+
+-- roles & bans (migration 0007)
+update profiles set role = 'founder' where username = 'alice';
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('33333333-3333-3333-3333-333333333333', 'cy@example.com', '{"username":"cyadmin"}'),
+  ('44444444-4444-4444-4444-444444444444', 'dee@example.com', '{"username":"dee"}');
+set role service_role;
+do $$ begin
+  perform public.mod_set_role('11111111-1111-1111-1111-111111111111', 'cyadmin', 'admin');
+  -- admin bans a normal user for a day
+  perform public.mod_ban('33333333-3333-3333-3333-333333333333', 'dee', 'spam', now() + interval '1 day');
+  if not public.is_banned('44444444-4444-4444-4444-444444444444') then raise exception 'ban failed'; end if;
+  -- banned user earns no XP and no AI
+  begin
+    perform public.award_activity('44444444-4444-4444-4444-444444444444', 'lesson', 'm1-print', 20, 100);
+    raise exception 'banned user got XP';
+  exception when raise_exception then if sqlerrm not like '%banned%' then raise; end if; end;
+  if (public.consume_ai_quota('44444444-4444-4444-4444-444444444444', 'chat', 100)->>'allowed')::boolean then raise exception 'banned user used AI'; end if;
+  -- admin cannot ban the founder, nor another admin-level or higher
+  begin
+    perform public.mod_ban('33333333-3333-3333-3333-333333333333', 'alice', 'x', null);
+    raise exception 'admin banned founder';
+  exception when raise_exception then if sqlerrm not like '%founder%' then raise; end if; end;
+  -- a normal user cannot ban
+  begin
+    perform public.mod_ban('44444444-4444-4444-4444-444444444444', 'bob', 'x', null);
+    raise exception 'user banned someone';
+  exception when raise_exception then if sqlerrm not like '%not allowed%' then raise; end if; end;
+  -- only the founder can set roles
+  begin
+    perform public.mod_set_role('33333333-3333-3333-3333-333333333333', 'bob', 'admin');
+    raise exception 'admin set a role';
+  exception when raise_exception then if sqlerrm not like '%Only the founder%' then raise; end if; end;
+  if (select count(*) from public.mod_list_bans()) <> 1 then raise exception 'list bans'; end if;
+  if (select count(*) from public.mod_log(10)) < 2 then raise exception 'log'; end if;
+end $$;
+reset role;
+-- banned user is hidden from boards and cannot write
+set role authenticated;
+select set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', false);
+do $$ begin
+  if exists (select 1 from get_leaderboard('global', 50) where username = 'dee') then raise exception 'banned user on leaderboard'; end if;
+  if not (select banned from my_moderation()) then raise exception 'my_moderation'; end if;
+  begin
+    insert into saved_code (user_id, title, code) values (auth.uid(), 'x', 'print(1)');
+    raise exception 'banned user saved code';
+  exception when insufficient_privilege then null; end;
+  begin
+    update profiles set role = 'founder' where id = auth.uid();
+    raise exception 'user changed own role';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.mod_ban(auth.uid(), 'bob', 'x', null);
+    raise exception 'browser called mod_ban';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+set role service_role;
+do $$ begin
+  perform public.mod_unban('33333333-3333-3333-3333-333333333333', 'dee');
+  if public.is_banned('44444444-4444-4444-4444-444444444444') then raise exception 'unban failed'; end if;
+end $$;
+reset role;
+select 'BAN SYSTEM TESTS PASSED' as result;

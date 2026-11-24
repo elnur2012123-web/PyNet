@@ -56,7 +56,7 @@ export function GlobalSearch() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
   useEffect(() => { if (open) { setQ(""); setActive(0); setTimeout(() => inputRef.current?.focus(), 10); } }, [open]);
-  useEffect(() => setActive(0), [q]);
+  useEffect(() => { setActive(0); }, [q]);
 
   const go = (href: string) => { setOpen(false); router.push(href); };
   const icon = (t: Item["type"]) => t === "Lesson" ? <BookOpen className="h-4 w-4" /> : t === "Exercise" ? <Code2 className="h-4 w-4" /> : t === "Error" ? <AlertTriangle className="h-4 w-4" /> : t === "Quiz" ? <FileQuestion className="h-4 w-4" /> : <Compass className="h-4 w-4" />;

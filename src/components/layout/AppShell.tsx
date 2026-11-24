@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  AlertTriangle, Award, BookOpen, Bot, Code2, Crown, Flame, LayoutDashboard, ListChecks, Menu, Play, Settings, Trophy, Users, X, Zap,
+  AlertTriangle, Award, ShieldCheck, BookOpen, Bot, Code2, Crown, Flame, LayoutDashboard, ListChecks, Menu, Play, Settings, Trophy, Users, X, Zap,
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -73,6 +73,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             <p className="mt-0.5 text-xs text-muted">{p.plan === "FREE" ? "Hard challenges, more projects — $5/month." : "Code reviews and every project."}</p>
           </Link>
         )}
+        {p.profile?.role && p.profile.role !== "user" && (
+          <Link href="/admin" onClick={onNavigate} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${path.startsWith("/admin") ? "bg-danger/10 font-medium text-danger" : "text-muted hover:bg-elevated hover:text-fg"}`}>
+            <ShieldCheck className="h-[18px] w-[18px]" /> Admin panel
+          </Link>
+        )}
         <Link href="/settings" onClick={onNavigate} className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted hover:bg-elevated hover:text-fg">
           <Settings className="h-[18px] w-[18px]" /> Settings
         </Link>
@@ -85,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const p = useProgress();
   const path = usePathname();
-  useEffect(() => setOpen(false), [path]);
+  useEffect(() => { setOpen(false); }, [path]);
 
   return (
     <div className="min-h-screen lg:pl-64">

@@ -41,6 +41,25 @@ Users see a bell with a red badge and a one-time popup whenever there's somethin
 
 Run `supabase/migrations/0006_announcements.sql` once to create the table.
 
+## Moderation (roles & bans)
+
+There are three staff roles: **Founder**, **Co-Founder** and **Admin**. Staff can type commands in the **Admin panel** (`/admin`) or straight into the **PyBuddy chat**:
+
+| Command | Who can use it |
+|---|---|
+| `/ban @user [30m\|12h\|7d\|2w\|perm] [reason]` (default 1 day) | Admin and above. Only users of a lower rank can be banned, and the Founder never can. |
+| `/unban @user` | Admin and above |
+| `/bans`, `/log`, `/staff`, `/help` | Admin and above |
+| `/role @user admin\|co_founder\|user` | Founder only |
+
+Staff also see **Ban/Unban** buttons on profiles. Banned users only see a suspension page with the reason and end date. They can't earn XP, use PyBuddy, save code or send friend requests, and they're hidden from leaderboards and search. Their progress is kept. Every action is written to `moderation_log`.
+
+Run `supabase/migrations/0007_roles_and_bans.sql`, then make yourself Founder in the SQL editor:
+
+```sql
+update public.profiles set role = 'founder' where username = 'YOUR_USERNAME';
+```
+
 ## Quick start (local)
 
 ```bash

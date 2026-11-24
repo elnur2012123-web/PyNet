@@ -8,6 +8,7 @@ import { useProgress } from "@/components/providers/ProgressProvider";
 import { AI_FEATURE_MIN_PLAN, planAtLeast, type AiFeature } from "@/lib/plans";
 import { Notice } from "@/components/ui/States";
 import { TUTOR_EVENT, takePendingTutorRequest } from "./bus";
+import { sendCommand } from "@/components/admin/useCommand";
 
 interface Msg { role: "user" | "assistant"; content: string; error?: boolean }
 
@@ -59,6 +60,16 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
   const send = useCallback(async (text: string, feature: AiFeature = mode) => {
     const content = text.trim();
     if (!content || busy) return;
+    // Staff moderation commands: /ban, /unban, /bans, /log, /staff, /role, /help
+    if (/^\/[a-z]+\b/i.test(content)) {
+      setInput("");
+      setMessages((m) => [...m, { role: "user", content }, { role: "assistant", content: "" }]);
+      setBusy(true);
+      const r = await sendCommand(content);
+      setMessages((m) => [...m.slice(0, -1), { role: "assistant", content: r.message, error: !r.ok }]);
+      setBusy(false);
+      return;
+    }
     if (engine !== "lite" && !planAtLeast(p.plan, AI_FEATURE_MIN_PLAN[feature])) {
       setNotice({ kind: "info", text: `${MODES.find((m) => m.id === feature)?.label} is part of the ${AI_FEATURE_MIN_PLAN[feature]} plan.`, cta: "upgrade" });
       return;
