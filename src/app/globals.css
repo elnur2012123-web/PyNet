@@ -71,7 +71,7 @@ body {
   .chip { @apply inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-2.5 py-0.5 text-xs font-medium text-muted; }
   .kbd { @apply rounded-md border border-border bg-elevated px-1.5 py-0.5 font-mono text-[11px] text-muted; }
   .link { @apply text-accent underline-offset-4 hover:underline; }
-  .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.14em] text-accent; }
+  .eyebrow { @apply text-sm font-medium text-accent; }
   .h1 { @apply text-3xl font-semibold tracking-tight sm:text-4xl; }
   .h2 { @apply text-xl font-semibold tracking-tight sm:text-2xl; }
   .prose-lite p { @apply my-3 leading-7; }
@@ -112,3 +112,4 @@ body {
 }
 
 .dark .cm-pynest { --cm-kw: #d39bff !important; --cm-str: #8fd49a !important; --cm-num: #f0b37e !important; --cm-fn: #7cb0ff !important; --cm-def: #5fd4e2 !important; }
+.prose-lite pre code { background: transparent; padding: 0; border-radius: 0; font-size: inherit; }

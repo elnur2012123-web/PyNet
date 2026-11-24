@@ -5,6 +5,8 @@ import { EXERCISES } from "@/content/exercises";
 import type { Lesson } from "@/content/types";
 import type { AiFeature } from "@/lib/plans";
 import { GLOSSARY, type GlossaryEntry } from "./glossary";
+import { HOWTOS } from "./howtos";
+import { analogyFor } from "./analogies";
 
 /**
  * PyBuddy Lite — a free, rule-based Python tutor. No API key, no cost.
@@ -15,10 +17,10 @@ import { GLOSSARY, type GlossaryEntry } from "./glossary";
 
 // ----------------------------------------------------------------- text utils
 const STOP = new Set(
-  "a an the is are was were be been do does did i me my you your it its this that these those to of in on at for with and or but how what why when where which who can could should would will please explain tell show give mean means meaning use used using about like just so than then there here some any very much more most also as by from into python pythons programming code".split(" "),
+  "whats hows whos wats wat dont didnt cant wont doesnt isnt understand understood explain know want need make get got still thing things mean okay yeah really bro pls plz thanks today a an the is are was were be been do does did i me my you your it its this that these those to of in on at for with and or but how what why when where which who can could should would will please explain tell show give mean means meaning use used using about like just so than then there here some any very much more most also as by from into python pythons programming code".split(" "),
 );
 const SYNONYMS: Record<string, string[]> = {
-  loop: ["for", "while", "loops"], loops: ["for", "while", "loop"], iterate: ["for", "loop"], repeat: ["loop", "for", "while"],
+  loop: ["loops"], loops: ["loop"], iterate: ["for", "loop"], repeat: ["loop", "for", "while"],
   array: ["list"], arrays: ["list"], lists: ["list"], dictionary: ["dict", "dictionaries"], dictionaries: ["dict", "dictionary"], dict: ["dictionary"], hashmap: ["dict"],
   function: ["def", "functions"], functions: ["def", "function"], method: ["methods", "function"], methods: ["method"],
   variable: ["variables"], variables: ["variable"], string: ["strings", "str", "text"], strings: ["string", "str"], text: ["string"],
@@ -38,7 +40,11 @@ function words(s: string): string[] {
 function termGroups(s: string): string[][] {
   const groups: string[][] = [];
   const seen = new Set<string>();
-  for (const w of words(s)) {
+  const ws = words(s);
+  ws.forEach((w, i) => {
+    if ((w === "for" || w === "while") && /^loops?$/.test(ws[i + 1] ?? "")) groups.push(w === "for" ? ["for", "range"] : ["while"]);
+  });
+  for (const w of ws) {
     const base = w.replace(/\(\)$/, "");
     if (STOP.has(base) || (base.length < 2 && !/[%*/=<>]/.test(base)) || seen.has(base)) continue;
     seen.add(base);
@@ -64,6 +70,7 @@ interface Doc {
 }
 
 const DOCS: Doc[] = [
+  ...HOWTOS.map((g) => ({ kind: "glossary" as const, id: g.id, title: g.title, head: `${g.title} ${g.keywords.join(" ")}`.toLowerCase(), body: g.answer.toLowerCase(), glossary: g })),
   ...GLOSSARY.map((g) => ({ kind: "glossary" as const, id: g.id, title: g.title, head: `${g.title} ${g.keywords.join(" ")}`.toLowerCase(), body: g.answer.toLowerCase(), glossary: g })),
   ...MODULES.flatMap((m) =>
     m.lessons.filter((l) => l.kind !== "project").map((l) => ({
@@ -78,7 +85,7 @@ const DOCS: Doc[] = [
 /** Words that make a question count as "about Python". */
 const PY_VOCAB = new Set<string>([
   ..."python code coding program programming script syntax error errors bug debug traceback exception variable variables value string strings int integer float boolean bool list lists tuple set dict dictionary key keys value values loop loops for while if elif else def function functions return parameter argument arguments class classes object objects method methods self init import module modules package pip library file files open read write print input range len type str index slicing slice append insert remove pop sort sorted reverse split join replace strip upper lower find format fstring f-string lambda map filter zip enumerate comprehension generator yield iterator recursion decorator try except finally raise assert indentation indent colon bracket brackets quotes comment comments operator operators modulus modulo exponent division floor true false none and or not in is break continue pass global local scope pyodide pycharm vscode ide interpreter terminal oop inheritance encapsulation polymorphism json csv random math datetime os sys exercise exercises practice quiz algorithm algorithms nameerror typeerror valueerror indexerror keyerror zerodivisionerror attributeerror syntaxerror indentationerror importerror modulenotfounderror filenotfounderror recursionerror".split(" "),
-  ...DOCS.flatMap((d) => terms(d.title)),
+  ...DOCS.filter((d) => !d.id.startsWith("howto-")).flatMap((d) => terms(d.title)),
   ...GLOSSARY.flatMap((g) => g.keywords.map((k) => k.toLowerCase())),
 ]);
 
@@ -99,13 +106,40 @@ function score(d: Doc, groups: string[][]) {
   return s;
 }
 
-function search(q: string, kinds?: Doc["kind"][], limit = 3) {
+function search(q: string, kinds?: Doc["kind"][], limit = 3, min = 5) {
   const groups = termGroups(q);
   return DOCS.filter((d) => !kinds || kinds.includes(d.kind))
     .map((d) => ({ d, s: score(d, groups) }))
-    .filter((r) => r.s >= 5)
+    .filter((r) => r.s >= min)
     .sort((a, b) => b.s - a.s)
     .slice(0, limit);
+}
+
+// ----------------------------------------------------------------- typo correction
+const VOCAB_WORDS = [...new Set(DOCS.flatMap((d) => d.head.split(/[^a-z_]+/)).concat([...PY_VOCAB]).filter((w) => w.length >= 4))];
+function editDistance(a: string, b: string) {
+  if (Math.abs(a.length - b.length) > 2) return 9;
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+        i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1] ? dp[i - 2][j - 2] + 1 : 99);
+  return dp[a.length][b.length];
+}
+/** Fix common misspellings ("lamda" -> "lambda", "dictonary" -> "dictionary"). */
+function correctTypos(msg: string): string {
+  return msg.replace(/[A-Za-z]{4,}/g, (w) => {
+    const lw = w.toLowerCase();
+    if (STOP.has(lw) || VOCAB_WORDS.includes(lw)) return w;
+    const max = lw.length >= 7 ? 2 : 1;
+    let best: string | null = null, bestD = max + 1;
+    for (const v of VOCAB_WORDS) {
+      const d = editDistance(lw, v);
+      if (d < bestD) { best = v; bestD = d; }
+    }
+    return best ?? w;
+  });
 }
 
 // ----------------------------------------------------------------- helpers
@@ -277,16 +311,6 @@ function errorAnswer(msg: string, code: string | null): string | null {
   return out.join("\n");
 }
 
-function lessonAnswer(l: Lesson, moduleTitle: string, brief = false): string {
-  const out = [`### ${l.title}`, "", firstParagraphs(l.intro, brief ? 1 : 2)];
-  if (l.syntax && !brief) out.push("", "**Syntax:**", fence(l.syntax));
-  const ex = l.examples[0];
-  if (ex) out.push("", `**Example — ${ex.title}:**`, fence(ex.code), ...(ex.note ? [ex.note] : []));
-  if (!brief && l.mistakes[0] && /\n|[=(]/.test(l.mistakes[0].wrong)) out.push("", `**Common mistake:** ${l.mistakes[0].why}`);
-  out.push("", `${lessonLink(l)} (Module: ${moduleTitle}).`);
-  return out.join("\n");
-}
-
 function practiceAnswer(q: string): string {
   const hit = search(q, ["lesson"], 1)[0]?.d;
   const lesson = hit?.lesson ?? MODULES[0].lessons[4];
@@ -324,66 +348,283 @@ function compareAnswer(q: string): string | null {
   return [`Good question! Let's compare them one at a time.`, "", brief(a), "", "---", "", brief(b)].join("\n");
 }
 
+// ----------------------------------------------------------------- rich lesson answers
+type Turn = { role: string; content: string };
+
+const LESSON_INDEX = MODULES.flatMap((m) => m.lessons.map((l, i) => ({ l, m, i })));
+const lessonById = (id: string) => LESSON_INDEX.find((x) => x.l.id === id);
+
+const SUGGEST = (topic: string) =>
+  `\n\n---\n**What next?** You can reply with:\n- "explain it simpler" — if something wasn't clear\n- "another example"\n- "why would I use this?"\n- "give me practice on ${topic.toLowerCase()}"`;
+
+/** Split a paragraph into sentences for step-by-step explanations. */
+const sentences = (t: string) => t.replace(/\n/g, " ").split(/(?<=[.!?])\s+(?=[A-Z`*])/).map((x) => x.trim()).filter(Boolean);
+
+function codeWalkthrough(code: string, limit = 8) {
+  return code.split("\n").filter((l) => l.trim()).slice(0, limit)
+    .map((l, i) => `${i + 1}. \`${l.trim()}\` — ${explainLine(l) ?? "runs this statement."}`).join("\n");
+}
+
+function mistakeBlock(l: Lesson, n = 2) {
+  const out: string[] = [];
+  for (const mk of l.mistakes.slice(0, n)) {
+    const code = /\n|[=(]/.test(mk.wrong) && !/[.!?]$/.test(mk.wrong.trim());
+    if (code) out.push("❌ Wrong:", fence(mk.wrong), "✅ Right:", fence(mk.right), mk.why, "");
+    else out.push(`- ❌ ${mk.wrong}\n  ✅ ${mk.right} — ${mk.why}`);
+  }
+  return out.join("\n").trim();
+}
+
+function lessonAnswer(l: Lesson, moduleTitle: string, brief = false): string {
+  if (brief) {
+    const ex = l.examples[0];
+    return [`### ${l.title}`, "", firstParagraphs(l.intro, 1), ...(ex ? ["", fence(ex.code)] : [])].join("\n");
+  }
+  const analogy = analogyFor(l.id);
+  const out = [`### ${l.title}`, "", l.intro.trim()];
+  if (analogy) out.push("", `💡 **Think of it like this:** ${analogy}`);
+  if (l.syntax) out.push("", "**The basic pattern:**", fence(l.syntax));
+  l.examples.slice(0, 2).forEach((ex, i) => {
+    out.push("", `**Example ${i + 1} — ${ex.title}:**`, fence(ex.code));
+    if (ex.note) out.push(ex.note);
+  });
+  out.push("", `**Where you'll see this in real life:** ${l.realWorld}`);
+  if (l.mistakes.length) out.push("", "**A mistake almost everyone makes at first:**", mistakeBlock(l, 1));
+  out.push("", "**Try it yourself** — paste this into the Playground, run it, then change something and run it again:", fence(l.tryIt));
+  out.push("", `${lessonLink(l)} · Module: ${moduleTitle}`);
+  return out.join("\n") + SUGGEST(l.title);
+}
+
+function simplerAnswer(l: Lesson): string {
+  const analogy = analogyFor(l.id);
+  const first = sentences(firstParagraphs(l.intro, 1));
+  const ex = l.examples[0];
+  const out = [`No problem — let's slow down and go step by step through **${l.title}**. 🙂`, ""];
+  if (analogy) out.push(`💡 **Picture it like this:** ${analogy}`, "");
+  out.push("**The idea in small steps:**");
+  first.slice(0, 5).forEach((sn, i) => out.push(`${i + 1}. ${sn}`));
+  if (ex) {
+    out.push("", "**Now a tiny example, one line at a time:**", fence(ex.code), codeWalkthrough(ex.code));
+    if (ex.note) out.push("", `**What you'll see:** ${ex.note}`);
+  }
+  out.push("", `**In one sentence:** ${first[0] ?? l.title}`);
+  out.push("", "Still fuzzy? Tell me **which word or line** confuses you (for example \"what does the `=` do here?\") and I'll explain just that part.");
+  return out.join("\n");
+}
+
+function moreAnswer(l: Lesson, moduleTitle: string): string {
+  const out = [`Let's go deeper into **${l.title}**.`, ""];
+  const paras = l.intro.trim().split(/\n\s*\n/);
+  if (paras.length > 2) out.push(paras.slice(2).join("\n\n"), "");
+  const extra = l.examples.slice(1);
+  extra.forEach((ex) => { out.push(`**${ex.title}:**`, fence(ex.code), ...(ex.note ? [ex.note] : []), ""); });
+  if (l.mistakes.length) out.push("**Common mistakes to watch for:**", mistakeBlock(l, 3), "");
+  const idx = LESSON_INDEX.findIndex((x) => x.l.id === l.id);
+  const next = LESSON_INDEX[idx + 1];
+  if (next) out.push(`**What comes next:** after this, learners usually study **${next.l.title}** (\`/learn/${next.l.id}\`).`);
+  out.push(`Module: ${moduleTitle}`);
+  return out.join("\n") + SUGGEST(l.title);
+}
+
+function exampleAnswer(l: Lesson): string {
+  const out = [`Here are more examples of **${l.title}** — run each one and look at the output.`, ""];
+  [...l.examples].reverse().forEach((ex) => out.push(`**${ex.title}:**`, fence(ex.code), ...(ex.note ? [ex.note] : []), ""));
+  out.push("**And one to play with:**", fence(l.tryIt), "Change a value, run it again, and see what changes — that's the fastest way to learn.");
+  return out.join("\n") + SUGGEST(l.title);
+}
+
+function whyAnswer(l: Lesson): string {
+  const analogy = analogyFor(l.id);
+  return [
+    `Good question — knowing **why** makes it stick. Here's why **${l.title.toLowerCase()}** matters:`, "",
+    l.realWorld, "",
+    ...(analogy ? [`💡 ${analogy}`, ""] : []),
+    "Without it, you'd have to repeat yourself, write much longer code, or your program would break in situations it doesn't expect.",
+    ...(l.mistakes[0] ? ["", `It also helps you avoid problems like this: ${l.mistakes[0].why}`] : []),
+  ].join("\n") + SUGGEST(l.title);
+}
+
+function lessonPractice(l: Lesson): string {
+  return [
+    `Here's some practice on **${l.title}**. Try each one before looking anything up:`, "",
+    ...l.practice.map((t, i) => `**${i + 1}.** ${t.prompt}${t.tests[0]?.input?.length ? `\n   Example input: \`${t.tests[0].input.join(" / ")}\`` : ""}\n   Expected output: \`${t.tests[0]?.expected.split("\n").join(" ⏎ ") || "(nothing)"}\``),
+    "",
+    ...l.quiz.map((q, i) => `**Quick check ${i + 1}:** ${q.q}${q.code ? "\n" + fence(q.code) : ""}\n${q.options.map((o, j) => `   ${String.fromCharCode(65 + j)}) ${o}`).join("\n")}`),
+    "",
+    `The practice tasks are checked automatically in the lesson: \`/learn/${l.id}\`. Stuck on one? Say **"hint for question 1"**.`,
+  ].join("\n");
+}
+
+function practiceHint(l: Lesson, n: number): string {
+  const t = l.practice[Math.min(Math.max(n - 1, 0), l.practice.length - 1)];
+  return `**Hint for question ${n}:** ${t.hint}\n\nTry it now. If it still doesn't work, paste your code here and I'll check it with you.`;
+}
+
+// ----------------------------------------------------------------- follow-ups & context
+type Follow = "simpler" | "more" | "example" | "why" | "practice" | "mistakes" | "hint" | null;
+function followUpType(msg: string): Follow {
+  const m = msg.toLowerCase().trim();
+  if (/\b(didn'?t|did not|dont|don'?t|do not|cant|can'?t|still not)\s+(really\s+)?(understand|get|follow)|not (clear|understand)|confus|simpler|easier|simple(r)? words|explain (it )?(again|differently|better|slower)|i'?m lost|lost me|^what\?*$|^huh|^again|tushunmadim|tushunarsiz|не понял|непонятно|eli5|like i'?m (5|five|10|ten)/.test(m)) return "simpler";
+  if (/\bhint\b/.test(m)) return "hint";
+  if (/(another|more|other|one more|second)\s+example|^examples?\??$|show me (an )?example|give (me )?(an )?example/.test(m)) return "example";
+  if (/^why\b|why (do|would|should) (i|we)|what('?s| is) (it|this) (for|used for)|when (do|should|would) i use|use case|why (is|does) (it|this) (matter|useful)/.test(m)) return "why";
+  if (/(practice|exercise|task|quiz me|test me|questions)/.test(m)) return "practice";
+  if (/(mistake|avoid|careful|common error|pitfall)/.test(m)) return "mistakes";
+  if (/^(more|tell me more|go on|continue|go deeper|deeper|details?|next|and\??|keep going|what else)\b|explain more|more detail|in detail/.test(m)) return "more";
+  if (/^(yes|yeah|yep|yup|sure|ok(ay)?|please|go ahead|ha|xa)\b[.!]*$/.test(m)) return "more";
+  return null;
+}
+
+interface Topic { kind: "lesson"; lesson: Lesson; moduleTitle: string } 
+function topicOf(text: string): { doc: Doc; score: number } | null {
+  const r = search(text, undefined, 1)[0];
+  return r ? { doc: r.d, score: r.s } : null;
+}
+function docToLesson(d: Doc): Topic | null {
+  if (d.lesson) return { kind: "lesson", lesson: d.lesson, moduleTitle: d.moduleTitle! };
+  const id = d.glossary?.lesson;
+  const hit = id ? lessonById(id) : null;
+  return hit ? { kind: "lesson", lesson: hit.l, moduleTitle: hit.m.title } : null;
+}
+/** The topic of the conversation so far (newest first), used for follow-ups. */
+function historyTopic(messages: Turn[]): Topic | null {
+  for (let i = messages.length - 2; i >= 0; i--) {
+    const t = messages[i];
+    if (t.role === "assistant") {
+      const m = /\/learn\/(m\d+-[a-z0-9-]+)/.exec(t.content);
+      if (m && lessonById(m[1])) { const h = lessonById(m[1])!; return { kind: "lesson", lesson: h.l, moduleTitle: h.m.title }; }
+      continue;
+    }
+    if (followUpType(t.content)) continue;
+    const found = topicOf(t.content);
+    const lt = found ? docToLesson(found.doc) : null;
+    if (lt) return lt;
+  }
+  return null;
+}
+
 const OFF_TOPIC =
-  "I'm PyBuddy Lite, and I can only help with **Python and programming** questions. 🐍\n\nTry asking things like:\n- What is a variable?\n- How does a for loop work?\n- Why do I get `NameError`?\n- Explain this code (paste it in)\n- Give me practice questions about lists";
+  "I'm your Python tutor, so I stick to **Python and programming** — that's where I can really help. 🐍\n\nHere are some things you can ask me:\n- \"What is a variable?\"\n- \"How does a for loop work?\"\n- \"Why do I get NameError?\"\n- \"How do I reverse a string?\"\n- Paste your code and ask \"explain this\" or \"why doesn't this work?\"\n- \"Give me practice questions about lists\"";
+
+const CAPABILITIES =
+  "I'm **PyBuddy**, your Python tutor. Here's how I can help:\n\n- **Explain any topic** — \"what is a dictionary?\", \"how does `range()` work?\"\n- **Go at your pace** — say \"I didn't understand\" or \"explain it simpler\" and I'll slow down; say \"another example\" or \"more\" to go deeper\n- **Read your errors** — paste the error message and I'll tell you what it means and how to fix it\n- **Read your code** — paste it and I'll explain it line by line, or say \"it doesn't work\" and I'll look for bugs\n- **How-to questions** — \"how do I sort a list?\", \"how do I read a file?\"\n- **Practice** — \"give me practice on loops\", and I'll give hints instead of answers\n\nWhat would you like to learn first?";
+
+function styleReview(code: string): string[] {
+  const tips: string[] = [];
+  if (/^\s*[a-z]\s*=/m.test(code)) tips.push("Use descriptive variable names (`total_price` instead of `t`) — your future self will thank you.");
+  if (/"\s*\+\s*str\(/.test(code)) tips.push("Joining text with `+ str(...)` works, but an f-string is cleaner: `f\"Total: {total}\"`.");
+  if (/for \w+ in range\(len\((\w+)\)\)/.test(code)) tips.push("`for i in range(len(items))` can usually be `for item in items` (or `enumerate(items)` if you need the index).");
+  if (/==\s*True|==\s*False/.test(code)) tips.push("You can write `if done:` instead of `if done == True:`.");
+  if (!/^\s*#/m.test(code) && code.split("\n").length > 8) tips.push("Add a short comment above tricky parts to explain *why* the code does something.");
+  if (/except\s*:/.test(code)) tips.push("Catch a specific error (`except ValueError:`) instead of a bare `except:` so real bugs aren't hidden.");
+  if (/open\(/.test(code) && !/with open/.test(code)) tips.push("Use `with open(...) as f:` so the file closes automatically.");
+  return tips;
+}
 
 // ----------------------------------------------------------------- main
-export function localTutorAnswer(messages: { role: string; content: string }[], feature: AiFeature): string {
-  const msg = messages[messages.length - 1].content.trim();
-  const lower = msg.toLowerCase();
-  const code = extractCode(msg);
+export function localTutorAnswer(messages: Turn[], feature: AiFeature): string {
+  const raw = messages[messages.length - 1].content.trim();
+  const msg = extractCode(raw) || /\b[A-Z][A-Za-z]*(Error|Exception)\b/.test(raw) ? raw : correctTypos(raw);
+  const lower = raw.toLowerCase();
+  const code = extractCode(raw);
+  const follow = followUpType(raw);
+  const prev = messages.length > 1 ? historyTopic(messages) : null;
 
   if (/^(hi|hello|hey|salom|assalomu|privet|good (morning|evening|afternoon))\b/.test(lower) && msg.length < 40) {
-    return "Hi! I'm **PyBuddy Lite**, your free Python helper. 👋\n\nAsk me what any Python word or symbol means, paste an error message, or paste code and I'll explain it line by line.";
+    return "Hi! 👋 I'm **PyBuddy**, your Python tutor.\n\nYou can ask me about any Python topic, paste an error message, or paste your code and I'll walk through it with you. If anything I say isn't clear, just tell me \"I didn't understand\" and I'll explain it another way.\n\nWhat are you learning right now?";
   }
-  if (/^(thanks|thank you|thx|rahmat|ok|okay)\b/.test(lower) && msg.length < 30) return "You're welcome! Keep going — every bug you fix makes you a better programmer. 🚀";
+  if (/^(thanks|thank you|thx|rahmat|спасибо)\b/.test(lower) && msg.length < 40) return "You're welcome! 😊 Keep going — every bug you fix makes you a better programmer. Ask me anything else whenever you're ready.";
+  if (/(what can you do|how can you help|who are you|what are you|help me|^help\b)/.test(lower) && !code && msg.length < 60) return CAPABILITIES;
 
   // 1. error messages
   const err = /\b[A-Z][A-Za-z]*(Error|Exception)\b/.test(msg) ? errorAnswer(msg, code) : null;
   if (err) return err;
 
-  // 2. hints for exercises (from the "Ask PyBuddy for a hint" button)
+  // 2. hints: for exercises by name, or for practice questions of the current topic
   if (/hint/.test(lower)) {
     const h = hintAnswer(msg);
     if (h) return h;
+    const n = Number(/(\d)/.exec(lower)?.[1] ?? 1);
+    if (prev) return practiceHint(prev.lesson, n);
   }
 
   // 3. code: explain / debug / review
   if (code) {
-    if (feature === "debug" || /(not working|doesn'?t work|wrong|bug|fix|broken|error)/.test(lower)) {
+    if (feature === "debug" || /(not working|doesn'?t work|wrong|bug|fix|broken|error|why .*(not|wrong))/.test(lower)) {
       const issues = findIssues(code);
       return issues.length
-        ? ["I checked your code. Here's what looks wrong:", "", ...issues.map((x) => `- ${x}`), "", "Fix these one at a time, then press **Run** again. If there's still an error, paste the **full error message** and I'll explain it."].join("\n")
-        : "I couldn't spot an obvious mistake by reading it. 🔍\n\nPlease run it and paste the **exact error message** (the last line is the most important). If there's no error but the output is wrong, tell me what you **expected** and what you **got** — then add `print()` lines to see your variables' values step by step.";
+        ? ["I went through your code carefully. Here's what looks wrong:", "", ...issues.map((x) => `- ${x}`), "", "Fix them **one at a time** and press **Run** after each fix — that way you'll know exactly which change helped.", "", "If there's still an error, paste the **full error message** (especially the last line) and I'll explain it."].join("\n")
+        : "I read your code line by line and couldn't spot an obvious mistake. 🔍\n\nTo find it together:\n1. Run it and paste the **exact error message** here, if there is one.\n2. If there's no error but the result is wrong, tell me what you **expected** and what you **got**.\n3. Add `print()` lines to see the values of your variables at each step — most bugs show up immediately that way.\n\nHere's what your code does, so you can compare it with what you intended:\n\n" + codeWalkthrough(code, 15);
     }
-    return explainCode(code);
+    const out = explainCode(code);
+    if (feature === "review") {
+      const tips = styleReview(code);
+      return out + (tips.length ? "\n\n**Ways to make it even better:**\n" + tips.map((t) => `- ${t}`).join("\n") : "\n\n**Style:** this already looks clean and readable — nice work! ✨");
+    }
+    return out;
   }
 
-  // 4. practice questions
-  if (/(practice|exercise|questions?|quiz me|task|challenge)s?\b/.test(lower) && /(give|make|create|generate|some|more|\d)/.test(lower)) return practiceAnswer(msg);
+  // 4. follow-ups that refer to the previous topic ("I didn't understand", "another example", …)
+  const own = topicOf(msg);
+  const ownIsWeak = !own || own.score < 6 || msg.split(/\s+/).length <= 6;
+  if (follow && prev && ownIsWeak) {
+    const { lesson: l, moduleTitle } = prev;
+    switch (follow) {
+      case "simpler": return simplerAnswer(l);
+      case "more": return moreAnswer(l, moduleTitle);
+      case "example": return exampleAnswer(l);
+      case "why": return whyAnswer(l);
+      case "practice": return lessonPractice(l);
+      case "mistakes": return `Here are the mistakes beginners make most often with **${l.title}**:\n\n${mistakeBlock(l, 3)}` + SUGGEST(l.title);
+      case "hint": return practiceHint(l, 1);
+    }
+  }
+  if (follow === "simpler" && !prev) return "No worries! Tell me **which topic** you'd like me to explain more simply — for example \"variables\", \"for loops\" or \"functions\" — and I'll take it step by step.";
 
-  // 5. comparisons
+  // 5. practice questions on a named topic
+  if ((follow === "practice" || feature === "generate") && /(give|make|create|generate|some|more|\d|on|about)/.test(lower)) {
+    const t = own ? docToLesson(own.doc) : prev;
+    if (t) return lessonPractice(t.lesson);
+    return practiceAnswer(msg);
+  }
+
+  // 6. comparisons
   const cmp = compareAnswer(msg);
   if (cmp) return cmp;
 
-  // 6. topic gate
+  // 7. topic gate
   const qt = terms(msg);
   const pythonish = qt.some((t) => PY_VOCAB.has(t)) || /[%*/=<>]{1,2}|\w+\(\)|`[^`]+`/.test(msg);
-  const results = search(msg);
-  if (!pythonish || results.length === 0) {
-    return pythonish
-      ? `I'm not sure about that one yet. 🤔 Try rephrasing with the Python word you're asking about (for example "what is a dictionary" or "how does range work"), or browse the **Course** and **Error Explorer** pages.`
-      : OFF_TOPIC;
+  const results = pythonish || prev ? search(msg) : [];
+  if (results.length === 0) {
+    const near = search(msg, ["lesson"], 3, 1);
+    if (pythonish) {
+      return near.length
+        ? `I want to make sure I answer the right thing. 🤔 Did you mean one of these?\n\n${near.map((r) => `- **${r.d.title}** — ask me "explain ${r.d.title.toLowerCase().replace(/[?]/g, "")}"`).join("\n")}\n\nOr rephrase your question with the Python word you're curious about (for example "how does a while loop stop?").`
+        : `I'm not sure I understood that question. Could you rephrase it with the Python word you're asking about? For example: "what is a list", "how do I use input()", or paste your code and I'll take a look.`;
+    }
+    return OFF_TOPIC;
   }
 
-  // 7. best match
+  // 8. best match — give the full, rich answer
   const best = results[0].d;
   if (best.glossary) {
-    const related = results.slice(1).find((r) => r.d.lesson)?.d;
-    return best.glossary.answer + (related?.lesson ? `\n\n${lessonLink(related.lesson)}` : best.glossary.lesson ? `\n\n👉 Learn more: open \`/learn/${best.glossary.lesson}\`` : "");
+    const lessonHit = search(msg, ["lesson"], 1)[0];
+    const lt = lessonHit && lessonHit.s >= 5 ? docToLesson(lessonHit.d) : docToLesson(best);
+    if (!lt) return best.glossary.answer;
+    const l = lt.lesson;
+    const analogy = analogyFor(l.id);
+    const out = [best.glossary.answer];
+    if (analogy && !best.id.startsWith("howto-")) out.push("", `💡 **Think of it like this:** ${analogy}`);
+    const ex = l.examples.find((e) => !best.glossary!.answer.includes(e.code.split("\n")[0]));
+    if (ex) out.push("", `**Another example — ${ex.title}:**`, fence(ex.code), ...(ex.note ? [ex.note] : []));
+    if (l.mistakes.length) out.push("", "**Watch out for this common mistake:**", mistakeBlock(l, 1));
+    out.push("", "**Try it yourself:**", fence(l.tryIt));
+    out.push("", `${lessonLink(l)} · Module: ${lt.moduleTitle}`);
+    return out.join("\n") + SUGGEST(l.title);
   }
   if (best.kind === "error") return errorAnswer(best.title, null)!;
   const answer = lessonAnswer(best.lesson!, best.moduleTitle!);
-  const also = results.slice(1).filter((r) => r.d.lesson).map((r) => `\`/learn/${r.d.id}\` (${r.d.title})`);
-  return answer + (also.length ? `\n\nRelated lessons: ${also.join(", ")}` : "");
+  const also = results.slice(1).filter((r) => r.d.lesson).map((r) => `**${r.d.title}** (\`/learn/${r.d.id}\`)`);
+  return answer + (also.length ? `\n\nRelated: ${also.join(", ")}` : "");
 }

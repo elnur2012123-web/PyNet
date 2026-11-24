@@ -7,10 +7,10 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useProgress } from "@/components/providers/ProgressProvider";
 
 const LINKS = [
-  { href: "/learn", label: "Curriculum" },
+  { href: "/learn", label: "Course" },
+  { href: "/practice", label: "Practice" },
   { href: "/playground", label: "Playground" },
-  { href: "/errors", label: "Error Explorer" },
-  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/tutor", label: "PyBuddy" },
   { href: "/pricing", label: "Pricing" },
 ];
 

@@ -1,22 +1,32 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, Bot, Code2, Flame, Gauge, Layers, MessageSquareCode, Play, Sparkles, Target, Trophy, Zap } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { getCatalog } from "@/content/server";
 import { HighlightedCode } from "@/components/editor/CodeBlock";
-import { Icon } from "@/components/ui/Icon";
 
-const HERO_CODE = `# Your first steps in Python
-name = input("What's your name? ")
-skills = ["variables", "loops", "functions"]
+const STAGES = [
+  {
+    name: "The basics",
+    range: [1, 5],
+    blurb: "What code is, how to store information, do math, work with text and talk to the user. By the end you'll have built a small calculator.",
+  },
+  {
+    name: "Thinking like a programmer",
+    range: [6, 10],
+    blurb: "Decisions, loops, lists and dictionaries, your own functions — and how to read error messages instead of fearing them.",
+  },
+  {
+    name: "Building real things",
+    range: [11, 15],
+    blurb: "Files, modules, classes and the tricks experienced developers use. Then ten projects, from a guessing game to an expense tracker.",
+  },
+] as const;
 
-print(f"Welcome to PyNest, {name}!")
-for i, skill in enumerate(skills, start=1):
-    print(f"{i}. Learn {skill}")`;
-
-const HERO_OUTPUT = `What's your name? Aziza
-Welcome to PyNest, Aziza!
-1. Learn variables
-2. Learn loops
-3. Learn functions`;
+const FAQ = [
+  ["I've never written code. Is this really for me?", "Yes — that's exactly who it's for. The first lesson starts with “what is a program?” and every new word is explained the first time it appears."],
+  ["Do I need to install anything?", "No. Python runs right inside your browser, on a laptop or a phone. When you want to build projects on your own computer, lesson 3 shows you how to install it."],
+  ["Is it actually free?", "The whole course, the editor, the exercises and the quizzes are free. Pro and Max add harder challenges, extra projects and more help from PyBuddy."],
+  ["What if I get stuck?", "Ask PyBuddy, the built-in tutor. Paste your error or your code, or just say “I didn't understand” — it explains things a different way."],
+];
 
 export default function Landing() {
   const catalog = getCatalog();
@@ -25,155 +35,175 @@ export default function Landing() {
   return (
     <>
       {/* ---------------------------------------------------------------- hero */}
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 opacity-70 [background:radial-gradient(60%_50%_at_70%_0%,rgb(var(--accent)/0.12),transparent),radial-gradient(40%_40%_at_10%_20%,rgb(var(--accent2)/0.10),transparent)]" />
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-14 sm:px-6 md:pt-20 lg:grid-cols-[1.05fr_1fr]">
-          <div className="animate-fade-up">
-            <p className="chip mb-5"><Sparkles className="h-3.5 w-3.5 text-accent2" /> Real Python in your browser · AI tutor included</p>
-            <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl lg:text-[56px]">
-              Learn Python.<br /><span className="bg-gradient-to-r from-accent to-accent2 bg-clip-text text-transparent">From Zero to Developer.</span>
-            </h1>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted">
-              Master Python step by step with interactive lessons, real coding exercises, and your personal AI tutor.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/learn/m1-what-is-programming" className="btn-primary px-5 py-3 text-[15px]">Start Learning <ArrowRight className="h-4 w-4" /></Link>
-              <Link href="/learn" className="btn-secondary px-5 py-3 text-[15px]">Explore Curriculum</Link>
-            </div>
-            <dl className="mt-10 grid max-w-md grid-cols-3 gap-4 text-sm">
-              <div><dt className="text-muted">Modules</dt><dd className="text-2xl font-semibold">{catalog.modules.length}</dd></div>
-              <div><dt className="text-muted">Lessons</dt><dd className="text-2xl font-semibold">{lessonCount}</dd></div>
-              <div><dt className="text-muted">Challenges</dt><dd className="text-2xl font-semibold">{catalog.exercises.length}</dd></div>
-            </dl>
+      <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-20 pt-14 sm:px-6 md:pt-20 lg:grid-cols-[1fr_1.05fr]">
+        <div>
+          <h1 className="text-[40px] font-semibold leading-[1.1] tracking-tight sm:text-5xl">
+            Learn Python the way you&apos;d want a friend to{" "}
+            <span className="relative whitespace-nowrap text-accent">
+              teach you
+              <svg className="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M2 7 C 50 2, 120 2, 198 6" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+              </svg>
+            </span>
+            .
+          </h1>
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted">
+            Short lessons in plain English, real code you run in your browser, and a tutor who doesn&apos;t mind explaining the same thing three times.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link href="/learn/m1-what-is-programming" className="btn-primary px-5 py-3 text-[15px]">Start the first lesson <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/learn" className="btn-ghost px-4 py-3 text-[15px]">See all {lessonCount} lessons</Link>
           </div>
-
-          <div className="animate-fade-up [animation-delay:120ms]">
-            <div className="card overflow-hidden">
-              <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-                <span className="h-3 w-3 rounded-full bg-danger/70" /><span className="h-3 w-3 rounded-full bg-warn/70" /><span className="h-3 w-3 rounded-full bg-success/70" />
-                <span className="ml-2 font-mono text-xs text-muted">main.py</span>
-                <Link href="/playground" className="btn-primary btn-sm ml-auto"><Play className="h-3.5 w-3.5" /> Run it live</Link>
-              </div>
-              <pre className="code-block overflow-x-auto p-5 font-mono text-[13px] leading-6"><code><HighlightedCode code={HERO_CODE} /></code></pre>
-              <div className="border-t border-border bg-surface px-5 py-4">
-                <p className="mb-1.5 text-xs font-medium text-muted">Output</p>
-                <pre className="whitespace-pre-wrap font-mono text-[13px] leading-6 text-fg/90">{HERO_OUTPUT}</pre>
-              </div>
-            </div>
-            <div className="card -mt-6 ml-6 mr-[-8px] hidden p-4 sm:block lg:ml-10">
-              <p className="flex items-center gap-2 text-sm font-semibold"><Bot className="h-4 w-4 text-accent" /> PyBuddy</p>
-              <p className="mt-1.5 text-sm text-muted">“<span className="font-mono text-fg">enumerate()</span> gives you a counter and each item together — like numbering a shopping list as you read it.”</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------------- why */}
-      <section className="border-y border-border bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <p className="eyebrow">Why learn here</p>
-          <h2 className="mt-2 max-w-2xl text-3xl font-semibold tracking-tight">Built for people who have never written a line of code.</h2>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { icon: Sparkles, title: "Beginner-friendly explanations", body: "Plain English, real-life analogies and no jargon without a definition." },
-              { icon: Code2, title: "Interactive code editor", body: "Real Python 3 runs right in your browser. No installs, no setup." },
-              { icon: Bot, title: "AI-powered tutor", body: "PyBuddy explains code line by line, debugs errors and gives hints — not just answers." },
-              { icon: Target, title: "Real coding challenges", body: "Automatic tests check your program's actual output, from Very Easy to Hard." },
-              { icon: BarChart3, title: "Progress tracking", body: "XP, streaks, levels, leagues and achievements that reflect what you really learned." },
-              { icon: Gauge, title: "Learn at your own pace", body: "Short lessons of 5–10 minutes. Pick up exactly where you left off." },
-            ].map((f) => (
-              <div key={f.title} className="card-flat p-6">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent/10 text-accent"><f.icon className="h-5 w-5" /></span>
-                <h3 className="mt-4 font-semibold">{f.title}</h3>
-                <p className="mt-1.5 text-sm leading-6 text-muted">{f.body}</p>
-              </div>
+          <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted">
+            {["Free to start", "Nothing to install", "Works on your phone"].map((t) => (
+              <li key={t} className="flex items-center gap-1.5"><Check className="h-4 w-4 text-success" /> {t}</li>
             ))}
+          </ul>
+        </div>
+
+        {/* a real lesson, not a mock-up */}
+        <div className="relative">
+          <div className="card overflow-hidden">
+            <div className="border-b border-border px-5 py-3 text-xs text-muted">Module 2 · Lesson 1 · What are variables?</div>
+            <div className="px-5 pt-4 text-[15px] leading-7 text-fg/90">
+              Imagine a <strong>variable</strong> as a labelled box. You give the box a name, put something inside, and look at it later.
+            </div>
+            <pre className="code-block mx-5 mt-4 overflow-x-auto rounded-xl border border-border p-4 font-mono text-[13px] leading-6"><code><HighlightedCode code={'name = "Aziza"\nage = 14\nprint(name, "is", age)'} /></code></pre>
+            <div className="mx-5 mb-5 mt-3 rounded-xl bg-elevated/70 px-4 py-3 font-mono text-[13px]">
+              <span className="text-muted">Output → </span>Aziza is 14
+            </div>
+          </div>
+          <div className="card ml-auto mr-2 mt-4 max-w-sm p-4 text-sm sm:-mt-6 sm:mr-[-12px] lg:mr-[-28px]">
+            <p className="text-muted"><span className="font-medium text-fg">You:</span> I didn&apos;t understand</p>
+            <p className="mt-2 leading-6"><span className="font-medium text-accent">PyBuddy:</span> No problem, let&apos;s go slower. The <code className="rounded bg-elevated px-1 font-mono text-[12px]">=</code> doesn&apos;t mean &ldquo;equals&rdquo; here — it means &ldquo;put this value in the box called <code className="rounded bg-elevated px-1 font-mono text-[12px]">name</code>&rdquo;.</p>
           </div>
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- roadmap */}
-      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-        <p className="eyebrow">Learning roadmap</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight">From complete beginner to confident Python programmer.</h2>
-        <ol className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {catalog.modules.map((m) => (
-            <li key={m.id}>
-              <Link href={`/learn#m${m.number}`} className="card-flat group flex h-full items-start gap-4 p-4 transition hover:border-accent/50">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-elevated text-accent"><Icon name={m.icon} className="h-5 w-5" /></span>
-                <span className="min-w-0">
-                  <span className="text-xs text-muted">Module {m.number} · {m.lessons.length} lessons</span>
-                  <span className="block font-medium group-hover:text-accent">{m.title}</span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {/* ---------------------------------------------------------------- how it works */}
+      {/* ---------------------------------------------------------------- how a lesson works */}
       <section className="border-y border-border bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <p className="eyebrow">How it works</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight">Five steps, repeated until it clicks.</h2>
-          <div className="mt-10 grid gap-4 md:grid-cols-5">
-            {[
-              { icon: Layers, t: "Learn a concept", d: "A short, simple explanation." },
-              { icon: MessageSquareCode, t: "See examples", d: "Practical code you can run." },
-              { icon: Code2, t: "Write your own code", d: "Try it in the live editor." },
-              { icon: Target, t: "Complete exercises", d: "Automatic tests check your work." },
-              { icon: Trophy, t: "Track your progress", d: "Earn XP, streaks and badges." },
-            ].map((s, i) => (
-              <div key={s.t} className="relative rounded-2xl border border-border p-5">
-                <span className="text-xs font-semibold text-accent">Step {i + 1}</span>
-                <s.icon className="mt-3 h-5 w-5 text-muted" />
-                <p className="mt-2 font-semibold">{s.t}</p>
-                <p className="mt-1 text-sm text-muted">{s.d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------------- dashboard preview */}
-      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-        <div className="grid items-center gap-10 lg:grid-cols-2">
+        <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2">
           <div>
-            <p className="eyebrow">Your dashboard</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight">See exactly where you are — and what to learn next.</h2>
-            <p className="mt-4 text-muted">Your dashboard recommends the next lesson, shows your streak, quiz scores and league, and maps your progress through all {catalog.modules.length} modules.</p>
-            <Link href="/dashboard" className="btn-secondary mt-6">Open your dashboard <ArrowRight className="h-4 w-4" /></Link>
-          </div>
-          <div className="card p-5" aria-label="Illustration of the dashboard (example data)">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="font-semibold">Welcome back 👋</p>
-              <span className="chip">Example</span>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {[{ i: Flame, l: "Streak", v: "5 days" }, { i: Zap, l: "XP", v: "640" }, { i: Trophy, l: "League", v: "Silver" }].map((s) => (
-                <div key={s.l} className="rounded-xl bg-elevated p-3"><s.i className="h-4 w-4 text-accent" /><p className="mt-2 text-xs text-muted">{s.l}</p><p className="font-semibold">{s.v}</p></div>
+            <h2 className="text-3xl font-semibold tracking-tight">Every lesson works the same way</h2>
+            <p className="mt-3 max-w-md text-muted">About ten minutes each. You always know what&apos;s coming, so you can focus on the idea instead of the website.</p>
+            <ol className="mt-8 space-y-6">
+              {[
+                ["Read a short explanation", "One idea at a time, with an everyday comparison and a real-world example."],
+                ["Run the examples", "Press Run and see what happens. Change a number and run it again."],
+                ["Make it break, then fix it", "Each lesson shows the mistakes beginners make most, so you recognise them when they happen to you."],
+                ["Solve three small tasks", "Your code is run and checked against the expected output automatically."],
+                ["Answer two quick questions", "Get them right to finish the lesson and earn XP."],
+              ].map(([t, d], i) => (
+                <li key={t} className="flex gap-4">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border font-mono text-sm">{i + 1}</span>
+                  <div><p className="font-medium">{t}</p><p className="mt-0.5 text-sm text-muted">{d}</p></div>
+                </li>
               ))}
+            </ol>
+          </div>
+
+          <div className="self-center">
+            <p className="mb-3 text-sm font-medium text-muted">What it looks like when something goes wrong</p>
+            <div className="card overflow-hidden">
+              <pre className="code-block overflow-x-auto p-4 font-mono text-[13px] leading-6"><code><HighlightedCode code={'age = 14\nprint("I am " + age + " years old")'} /></code></pre>
+              <div className="border-t border-danger/30 bg-danger/5 p-4 text-sm">
+                <p className="font-semibold text-danger">TypeError <span className="font-normal text-muted">on line 2</span></p>
+                <p className="mt-1 font-mono text-[12.5px]">can only concatenate str (not &quot;int&quot;) to str</p>
+                <p className="mt-3 leading-6">
+                  <span className="font-medium">What this means:</span> you&apos;re gluing text and a number together with <code className="rounded bg-elevated px-1 font-mono text-[12px]">+</code>. Python can&apos;t add words to numbers. Write <code className="rounded bg-elevated px-1 font-mono text-[12px]">str(age)</code>, or use an f-string: <code className="rounded bg-elevated px-1 font-mono text-[12px]">f&quot;I am {"{age}"} years old&quot;</code>.
+                </p>
+              </div>
             </div>
-            <div className="mt-4 rounded-xl border border-border p-3">
-              <p className="text-xs text-muted">Recommended next</p>
-              <p className="font-medium">for loops and range()</p>
-              <div className="mt-2 h-2 rounded-full bg-elevated"><div className="h-2 w-2/5 rounded-full bg-gradient-to-r from-accent to-accent2" /></div>
-            </div>
-            <div className="mt-3 grid grid-cols-15 gap-1" style={{ gridTemplateColumns: "repeat(15, minmax(0, 1fr))" }}>
-              {Array.from({ length: 15 }).map((_, i) => <span key={i} className={`h-6 rounded ${i < 6 ? "bg-accent" : i === 6 ? "bg-accent/40" : "bg-elevated"}`} />)}
-            </div>
+            <p className="mt-3 text-sm text-muted">Every error message gets a plain-English explanation. There&apos;s a whole <Link href="/errors" className="link">error guide</Link> too.</p>
           </div>
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- CTA */}
-      <section className="px-4 pb-20 sm:px-6">
-        <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-gradient-to-br from-accent to-accent2 p-10 text-white sm:p-14">
-          <h2 className="max-w-xl text-3xl font-semibold tracking-tight">Your first program is 5 minutes away.</h2>
-          <p className="mt-3 max-w-xl text-white/80">Free forever plan. No credit card. No installation.</p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link href="/learn/m1-what-is-programming" className="btn bg-white px-5 py-3 text-accent hover:bg-white/90">Start the first lesson</Link>
-            <Link href="/pricing" className="btn border border-white/40 px-5 py-3 text-white hover:bg-white/10">See plans</Link>
+      {/* ---------------------------------------------------------------- curriculum in 3 stages */}
+      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-semibold tracking-tight">What you&apos;ll learn</h2>
+            <p className="mt-2 max-w-xl text-muted">{catalog.modules.length} modules in three stages. Go in order, or jump to the part you need.</p>
+          </div>
+          <Link href="/learn" className="btn-secondary">Open the course</Link>
+        </div>
+        <div className="mt-10 grid gap-6 lg:grid-cols-3">
+          {STAGES.map((stage, si) => {
+            const mods = catalog.modules.filter((m) => m.number >= stage.range[0] && m.number <= stage.range[1]);
+            return (
+              <div key={stage.name} className="rounded-2xl border border-border p-6">
+                <p className="text-sm text-muted">Stage {si + 1}</p>
+                <h3 className="mt-1 text-lg font-semibold">{stage.name}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted">{stage.blurb}</p>
+                <ol className="mt-5 space-y-1 border-t border-border pt-4">
+                  {mods.map((m) => (
+                    <li key={m.id}>
+                      <Link href={`/learn#m${m.number}`} className="flex items-baseline gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-elevated">
+                        <span className="w-5 shrink-0 font-mono text-xs text-muted">{m.number}</span>
+                        <span className="flex-1">{m.title}</span>
+                        <span className="text-xs text-muted">{m.lessons.length}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- tools */}
+      <section className="border-y border-border bg-surface">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6 md:grid-cols-3">
+          <div>
+            <h3 className="font-semibold">A real Python editor</h3>
+            <p className="mt-2 text-sm leading-6 text-muted">Not a simulation — actual Python 3 running in your browser. Use it inside lessons or in the <Link href="/playground" className="link">playground</Link> to try your own ideas.</p>
+          </div>
+          <div>
+            <h3 className="font-semibold">A tutor that explains again</h3>
+            <p className="mt-2 text-sm leading-6 text-muted"><Link href="/tutor" className="link">PyBuddy</Link> answers Python questions, explains your code line by line and gives hints before answers. Ask as many “why?”s as you like.</p>
+          </div>
+          <div>
+            <h3 className="font-semibold">Practice that checks itself</h3>
+            <p className="mt-2 text-sm leading-6 text-muted">{catalog.exercises.length} <Link href="/practice" className="link">challenges</Link> and a quiz for every module. Your code is tested on real inputs, so you know it actually works.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- progress + plans */}
+      <section className="mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Keep going, a little every day</h2>
+          <p className="mt-3 leading-7 text-muted">
+            You earn XP for every lesson, challenge and quiz, keep a daily streak, and climb weekly leagues from Bronze to Master. Add friends and see who&apos;s learning the most this week on the <Link href="/leaderboard" className="link">leaderboard</Link>. It&apos;s only there to keep you coming back — the real reward is the day your first program works.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-border p-6">
+          <h2 className="text-2xl font-semibold tracking-tight">Free is enough to learn Python</h2>
+          <p className="mt-3 leading-7 text-muted">
+            All {lessonCount} lessons are free. If you want more, <strong className="text-fg">Pro</strong> ($5/month) adds hard challenges, more projects and more PyBuddy help, and <strong className="text-fg">Max</strong> ($20/month) adds code reviews and the full project library.
+          </p>
+          <Link href="/pricing" className="btn-secondary mt-5">Compare plans</Link>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- FAQ */}
+      <section className="border-t border-border">
+        <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
+          <h2 className="text-2xl font-semibold tracking-tight">Questions people ask before starting</h2>
+          <dl className="mt-8 divide-y divide-border">
+            {FAQ.map(([q, a]) => (
+              <div key={q} className="py-5">
+                <dt className="font-medium">{q}</dt>
+                <dd className="mt-2 text-sm leading-6 text-muted">{a}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="mt-12 rounded-2xl border border-border bg-surface p-8 text-center">
+            <p className="text-xl font-semibold">Ready to write your first line of code?</p>
+            <p className="mt-2 text-sm text-muted">The first lesson takes about five minutes.</p>
+            <Link href="/learn/m1-what-is-programming" className="btn-primary mt-5">Start learning <ArrowRight className="h-4 w-4" /></Link>
           </div>
         </div>
       </section>

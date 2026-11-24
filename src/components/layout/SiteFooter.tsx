@@ -2,10 +2,10 @@ import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 
 const COLS = [
-  { title: "Learn", links: [["Curriculum", "/learn"], ["Practice", "/practice"], ["Quizzes", "/quizzes"], ["Projects", "/learn/m15-number-guessing"]] },
-  { title: "Tools", links: [["Playground", "/playground"], ["PyBuddy tutor", "/tutor"], ["Error Explorer", "/errors"], ["Leaderboard", "/leaderboard"]] },
-  { title: "Account", links: [["Dashboard", "/dashboard"], ["Pricing", "/pricing"], ["Billing", "/billing"], ["Settings", "/settings"]] },
-  { title: "Legal", links: [["Terms of Service", "/terms"], ["Privacy Policy", "/privacy"]] },
+  { title: "Learn", links: [["Course", "/learn"], ["Practice", "/practice"], ["Quizzes", "/quizzes"], ["Projects", "/learn/m15-number-guessing"]] },
+  { title: "Tools", links: [["Playground", "/playground"], ["PyBuddy", "/tutor"], ["Error guide", "/errors"]] },
+  { title: "Community", links: [["Leaderboard", "/leaderboard"], ["Friends", "/friends"], ["Achievements", "/achievements"]] },
+  { title: "PyNest", links: [["Pricing", "/pricing"], ["Terms", "/terms"], ["Privacy", "/privacy"]] },
 ];
 
 export function SiteFooter() {
@@ -14,7 +14,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_repeat(4,1fr)]">
         <div>
           <Logo />
-          <p className="mt-3 max-w-xs text-sm text-muted">Learn Python from absolute zero with interactive lessons, real code and a patient AI tutor.</p>
+          <p className="mt-3 max-w-xs text-sm leading-6 text-muted">A friendly place to learn Python from scratch — short lessons, real code, and help whenever you get stuck.</p>
         </div>
         {COLS.map((c) => (
           <div key={c.title}>
@@ -25,7 +25,7 @@ export function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="border-t border-border py-5 text-center text-xs text-muted">© {new Date().getFullYear()} PyNest. Python is a trademark of the Python Software Foundation.</div>
+      <div className="border-t border-border py-5 text-center text-xs text-muted">© {new Date().getFullYear()} PyNest · Made for people learning their first programming language. “Python” is a trademark of the Python Software Foundation.</div>
     </footer>
   );
 }

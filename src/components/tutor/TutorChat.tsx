@@ -13,11 +13,11 @@ interface Msg { role: "user" | "assistant"; content: string; error?: boolean }
 
 const SUGGESTIONS = [
   "What is a variable?",
-  "Explain a for loop like I'm 10",
-  "What's the difference between a list and a tuple?",
+  "How does a for loop work?",
+  "List vs tuple — what's the difference?",
   "Why do I get TypeError: can only concatenate str?",
-  "Give me 3 practice questions about if statements",
-  "What does the % symbol mean in Python?",
+  "How do I reverse a string?",
+  "Give me practice questions about if statements",
 ];
 
 const MODES: { id: AiFeature; label: string; hint: string }[] = [
@@ -128,7 +128,7 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
     return () => window.removeEventListener(TUTOR_EVENT, handler);
   }, [listen, send]);
 
-  const aiLabel = engine === "lite" ? "PyBuddy Lite · free" : p.mode === "account" ? `${Math.max(0, p.ai.limit - p.ai.used)} of ${p.ai.limit} messages left today` : p.authConfigured ? "Sign in to chat" : "Demo mode";
+  const aiLabel = engine === "lite" ? "Free · unlimited" : p.mode === "account" ? `${Math.max(0, p.ai.limit - p.ai.used)} of ${p.ai.limit} messages left today` : p.authConfigured ? "Sign in to chat" : "Demo mode";
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -152,8 +152,8 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
         {messages.length === 0 && (
           <div className="mx-auto max-w-lg py-4 text-center">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-accent to-accent2 text-white"><Bot className="h-6 w-6" /></span>
-            <p className="mt-3 font-semibold">Hi! I'm {engine === "lite" ? "PyBuddy Lite" : "PyBuddy"}, your Python tutor.</p>
-            <p className="mt-1 text-sm text-muted">Ask me anything — no question is too small. You can paste code too.</p>
+            <p className="mt-3 font-semibold">Hi! I'm PyBuddy, your Python tutor.</p>
+            <p className="mt-1 text-sm text-muted">Ask about any Python topic, paste an error, or paste your code. If something I say isn&apos;t clear, just tell me &ldquo;I didn&apos;t understand&rdquo;.</p>
             <div className="mt-5 grid gap-2 sm:grid-cols-2">
               {SUGGESTIONS.slice(0, compact ? 4 : 6).map((s) => (
                 <button key={s} onClick={() => send(s, "chat")} className="rounded-xl border border-border bg-surface px-3 py-2 text-left text-sm hover:border-accent/50 hover:bg-elevated">{s}</button>
@@ -204,7 +204,7 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
             <button type="submit" disabled={!input.trim()} className="btn-primary h-9 w-9 !p-0" aria-label="Send"><ArrowUp className="h-4 w-4" /></button>
           )}
         </div>
-        <p className="mt-1.5 px-1 text-[11px] text-muted">{engine === "lite" ? "PyBuddy Lite answers from PyNest's lessons and only covers Python — free, no limits." : "PyBuddy can make mistakes — run the code to check. Fair-use daily limits apply."}</p>
+        <p className="mt-1.5 px-1 text-[11px] text-muted">{engine === "lite" ? "PyBuddy answers from PyNest's lessons and covers Python topics only. Run the code to check it." : "PyBuddy can make mistakes — run the code to check. Fair-use daily limits apply."}</p>
       </form>
     </div>
   );
