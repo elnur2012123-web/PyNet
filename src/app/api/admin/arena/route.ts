@@ -15,6 +15,9 @@ export async function POST(req: Request) {
   const body = await readJson<Record<string, unknown>>(req, 3_000_000);
   if (!body) return error("Invalid request");
 
+  const need = body.action === "create_problem" ? "create_problems" : "host_contests";
+  if (!staff.can(need)) return error(need === "create_problems" ? "Your role can't create problems." : "Your role can't host contests.", 403);
+
   if (body.action === "create_contest") {
     const title = str(body.title, 100).trim();
     const starts = new Date(String(body.startsAt));

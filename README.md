@@ -43,49 +43,29 @@ Run `supabase/migrations/0006_announcements.sql` once to create the table.
 
 ## Moderation (roles & bans)
 
-There are three staff roles: **Founder**, **Co-Founder** and **Admin**. Staff can type commands in the **Admin panel** (`/admin`) or straight into the **PyBuddy chat**:
+**Custom roles.** In **Admin panel → Staff & roles**, the Founder (or anyone whose role has *Manage roles*) can create roles. Each role has a name, a colour, a **rank** and permission checkboxes:
 
-| Command | Who can use it |
+| Permission | Allows |
 |---|---|
-| `/ban @user [30m\|12h\|7d\|2w\|perm] [reason]` (default 1 day) | Admin and above. Only users of a lower rank can be banned, and the Founder never can. |
-| `/unban @user` | Admin and above |
-| `/bans`, `/log`, `/staff`, `/help` | Admin and above |
-| `/role @user admin\|co_founder` | Founder only |
-| `/unrole @user` (take the role away) | Founder only |
+| Ban and unban users | Quick ban, `/ban`, `/unban`, Ban buttons on profiles |
+| See bans and the moderation log | Active bans, `/bans`, `/log` |
+| Read everyone's code | Any submission, even during a running contest |
+| Host contests | Schedule and delete rounds (and see their hidden problems) |
+| Create problems | Write problems (and see hidden ones) |
+| Review cheating | The cheat detector (banning from it also needs *Ban users*) |
+| Manage roles | Create/edit roles and give or remove roles ranked below their own |
 
-Staff also see **Ban/Unban** buttons on profiles. The Admin panel has a **Staff & roles** box, where the Founder can give roles or press **Remove role**. Banned users only see a suspension page with the reason and end date. They can't earn XP, use PyBuddy, save code or send friend requests, and they're hidden from leaderboards and search. Their progress is kept. Every action is written to `moderation_log`.
+A role with no permissions is just a title. **Rank** decides who outranks whom: you can only ban someone, or give, edit or remove roles, below your own rank, and you can't give a permission you don't have. The Founder role has every permission and can't be edited, deleted or banned. Co-Founder (80) and Admin (60) are ready-made roles you can edit. Each staff member sees only the Admin panel tools their role allows.
 
-Run `supabase/migrations/0007_roles_and_bans.sql`, then make yourself Founder in the SQL editor:
+Commands (Admin panel console or the PyBuddy chat): `/ban @user [30m|12h|7d|2w|perm] [reason]`, `/unban @user`, `/bans`, `/log`, `/staff`, `/roles`, `/role @user <role>`, `/unrole @user`, `/help`.
+
+Banned users only see a suspension page with the reason and end date. They can't earn XP, use PyBuddy, save code or send friend requests, and they're hidden from leaderboards and search. Their progress is kept. Every action is written to `moderation_log`.
+
+Run `supabase/migrations/0007_roles_and_bans.sql` and `0016_custom_roles.sql`, then make yourself Founder in the SQL editor:
 
 ```sql
 update public.profiles set role = 'founder' where username = 'YOUR_USERNAME';
 ```
-
-## Badges
-
-Every achievement has a tier: **Bronze**, **Silver**, **Gold** or **Legendary**. Your rarest earned badge shows next to your name on the leaderboard, your profile and your dashboard. Learners can pick a different one on the Achievements page ("Show on my profile"). The database only accepts badges the user has actually earned.
-
-Run `supabase/migrations/0008_badges.sql` once to turn badges on.
-
-## Arena (problemset, contests, rating)
-
-PyNest also has a competitive-programming side:
-
-- **Problemset** (`/problemset`): problems with hidden tests, a difficulty rating (800–3500), tags, solve counts and filters. Each solution is checked on every test: **Accepted**, **Wrong answer on test N**, **Runtime error**, **Time limit exceeded** or **Compilation error**. Your first Accepted gives XP.
-- **Contests** (`/contests`): timed rounds with registration, a countdown, a live scoreboard (ICPC rules: solved, then penalty = minutes + 20 per wrong try) and final standings. Problems are hidden until the round starts, then move into the problemset when it ends.
-- **C++ submissions:** choose **C++20 (Clang 21)** next to the editor. A real Clang/LLD toolchain compiled to WebAssembly (`@yowasp/clang`) compiles the code in the browser. It's stored gzipped in `public/cpp` (≈27 MB, created by `postinstall`) and downloaded once. Programs run in a separate worker that's stopped on the time limit. Flags: `-std=c++20 -O2 -fno-exceptions`. `bits/stdc++.h` is provided. Run `0015_cpp_submissions.sql`.
-- **Small rounds** (fewer than 8 rated contestants) use a pairwise Elo: solving more problems than an opponent is a full win, beating them on penalty only is a narrow win (0.6), and new players (fewer than 5 rated rounds) move faster. Big rounds use the expected-place formula.
-- **Divisions:** rounds are 🐣 **Hatchling** (beginners, rated below 1600), 🐦 **Fledgling** (rated below 2100) or 🦅 **Soaring** (rated for everyone). Stronger players can still join, but they play out of competition and their rating doesn't change. Run `0013_divisions.sql`.
-- **Rating** (`/rating`): an Elo-style rating that changes after every rated round. Ranks run from Egg to Phoenix, and usernames are coloured by rank across the site.
-- **Status** (`/submissions`) shows every verdict. Code stays private: you can read someone's solution only after you solve that problem yourself, and never while a round with that problem is running. Only staff (Founder, Co-Founder, Admin) can read everyone's code at any time.
-- **Calendar** (`/calendar`) shows every round in your own time zone.
-- **Profiles** show the rank, contest rating (and max), a rating graph, an activity heatmap and solved-problem stats.
-- **Cheat detector** (Admin panel → Arena): when a round ends, every pair of Accepted solutions to the same problem is compared after removing comments and spacing and renaming every variable, so disguised copies are caught. Hard problems solved suspiciously fast are flagged too. Staff compare the two programs side by side, then **Ban** (which also removes the user from the standings), **Disqualify** or mark **Not cheating**. Ratings for a round wait until its medium/high flags are reviewed (or 48 hours pass). Staff can read any submission's code. Run `0012_cheat_detector.sql` to enable it.
-- **Staff** schedule rounds and write new problems in the **Admin panel → Arena**. Expected outputs are computed by running a reference solution in the browser.
-
-**How judging works:** the browser downloads only the test *inputs* and runs the code in Pyodide. The server compares the outputs with expected answers that never leave the database (`problem_tests` has no browser grants). Problem bank source: `scripts/problems/data.ts`. `npm run build:problems` re-runs every reference solution and regenerates the `0010_*`/`0011_*` seed parts.
-
-Run `supabase/migrations/0009_arena.sql`, then every `0010_*` part and every `0011_*` part, in order, to turn it on. The seed parts are safe to re-run.
 
 ## Quick start (local)
 

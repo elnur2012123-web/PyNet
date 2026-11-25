@@ -248,11 +248,11 @@ do $$ begin
     perform public.mod_ban('44444444-4444-4444-4444-444444444444', 'bob', 'x', null);
     raise exception 'user banned someone';
   exception when raise_exception then if sqlerrm not like '%not allowed%' then raise; end if; end;
-  -- only the founder can set roles
+  -- an admin (no manage_roles permission) cannot set roles
   begin
     perform public.mod_set_role('33333333-3333-3333-3333-333333333333', 'bob', 'admin');
     raise exception 'admin set a role';
-  exception when raise_exception then if sqlerrm not like '%Only the founder%' then raise; end if; end;
+  exception when raise_exception then if sqlerrm not like '%not allowed to change roles%' then raise; end if; end;
   if (select count(*) from public.mod_list_bans()) <> 1 then raise exception 'list bans'; end if;
   if (select count(*) from public.mod_log(10)) < 2 then raise exception 'log'; end if;
 end $$;
@@ -474,3 +474,66 @@ do $$ begin
 end $$;
 reset role;
 select 'CPP TESTS PASSED' as result;
+
+-- custom roles (migration 0016)
+\set f '55555555-5555-5555-5555-555555555555'
+\set m '66666666-6666-6666-6666-666666666666'
+insert into auth.users (id, email, raw_user_meta_data) values
+  (:'f', 'boss@example.com', '{"username":"boss"}'), (:'m', 'mod@example.com', '{"username":"modder"}');
+update profiles set role = 'founder' where username = 'boss';
+set role service_role;
+do $$
+declare v_id text;
+begin
+  -- founder creates a role that can only ban, ranked 40
+  v_id := public.mod_save_role('55555555-5555-5555-5555-555555555555', null, 'Moderator', 'green', 40, array['ban_users'], true);
+  if v_id <> 'moderator' then raise exception 'role id %', v_id; end if;
+  perform public.mod_set_role('55555555-5555-5555-5555-555555555555', 'modder', 'moderator');
+  if (select special_title from profiles where username = 'modder') <> 'Moderator' then raise exception 'title not set'; end if;
+  if not public.has_perm('66666666-6666-6666-6666-666666666666', 'ban_users') then raise exception 'moderator lacks ban_users'; end if;
+  if public.has_perm('66666666-6666-6666-6666-666666666666', 'view_code') then raise exception 'moderator has view_code'; end if;
+  -- the moderator can ban a normal user ...
+  perform public.mod_ban('66666666-6666-6666-6666-666666666666', 'bob', 'test', now() + interval '1 hour');
+  perform public.mod_unban('66666666-6666-6666-6666-666666666666', 'bob');
+  -- ... but can't manage roles or host contests
+  begin
+    perform public.mod_save_role('66666666-6666-6666-6666-666666666666', null, 'Evil', 'red', 10, array['ban_users'], true);
+    raise exception 'moderator created a role';
+  exception when raise_exception then if sqlerrm not like '%not allowed%' then raise; end if; end;
+  -- give the moderator manage_roles: still can't create roles at/above own rank or with perms they lack
+  perform public.mod_save_role('55555555-5555-5555-5555-555555555555', 'moderator', 'Moderator', 'green', 40, array['ban_users','manage_roles'], true);
+  begin
+    perform public.mod_save_role('66666666-6666-6666-6666-666666666666', null, 'Helper', 'teal', 50, array['ban_users'], true);
+    raise exception 'created a role above own rank';
+  exception when raise_exception then if sqlerrm not like '%below your own%' then raise; end if; end;
+  begin
+    perform public.mod_save_role('66666666-6666-6666-6666-666666666666', null, 'Helper', 'teal', 10, array['view_code'], true);
+    raise exception 'granted a permission they lack';
+  exception when raise_exception then if sqlerrm not like '%don''t have%' then raise; end if; end;
+  -- renaming the role renames members' titles; deleting it makes them users
+  perform public.mod_save_role('55555555-5555-5555-5555-555555555555', 'moderator', 'Guardian', 'green', 40, array['ban_users'], true);
+  if (select special_title from profiles where username = 'modder') <> 'Guardian' then raise exception 'title not renamed'; end if;
+  perform public.mod_delete_role('55555555-5555-5555-5555-555555555555', 'moderator');
+  if (select role || '|' || coalesce(special_title, '-') from profiles where username = 'modder') <> 'user|-' then raise exception 'delete did not reset member'; end if;
+  begin
+    perform public.mod_delete_role('55555555-5555-5555-5555-555555555555', 'founder');
+    raise exception 'deleted founder role';
+  exception when raise_exception then if sqlerrm not like '%can''t be deleted%' then raise; end if; end;
+end $$;
+reset role;
+-- roles are public to read, never writable from the browser
+set role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
+do $$ begin
+  if (select count(*) from roles) < 4 then raise exception 'roles not readable'; end if;
+  begin
+    update roles set permissions = all_permissions() where id = 'user';
+    raise exception 'user edited roles';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.mod_save_role(auth.uid(), null, 'Hacker', 'red', 99, all_permissions(), true);
+    raise exception 'browser called mod_save_role';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+select 'CUSTOM ROLE TESTS PASSED' as result;

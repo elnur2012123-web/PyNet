@@ -1,15 +1,15 @@
 "use client";
 import { ArenaAdmin } from "./ArenaAdmin";
-import { StaffRoles } from "./StaffRoles";
+import { RolesManager } from "./RolesManager";
+import type { Permission } from "@/lib/permissions";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Gavel, ShieldCheck, Terminal } from "lucide-react";
 import { Markdown } from "@/components/tutor/Markdown";
 import { sendCommand } from "./useCommand";
 import { Spinner } from "@/components/ui/States";
 
-const ROLE_LABEL: Record<string, string> = { admin: "Admin", co_founder: "Co-Founder", founder: "Founder" };
-
-export function AdminConsole({ role, username }: { role: string; username: string }) {
+export function AdminConsole({ roleName, username, permissions }: { role: string; roleName: string; username: string; permissions: Permission[] }) {
+  const can = (p: Permission) => permissions.includes(p);
   const [history, setHistory] = useState<{ cmd: string; ok: boolean; message: string }[]>([]);
   const [cmd, setCmd] = useState("");
   const [busy, setBusy] = useState(false);
@@ -20,9 +20,12 @@ export function AdminConsole({ role, username }: { role: string; username: strin
   const endRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(async () => {
-    const [b, l] = await Promise.all([sendCommand("/bans"), sendCommand("/log 15")]);
+    const [b, l] = await Promise.all([
+      permissions.includes("ban_users") || permissions.includes("view_logs") ? sendCommand("/bans") : Promise.resolve({ message: "" }),
+      permissions.includes("view_logs") ? sendCommand("/log 15") : Promise.resolve({ message: "" }),
+    ]);
     setBans(b.message); setLog(l.message);
-  }, []);
+  }, [permissions]);
   useEffect(() => { refresh(); }, [refresh]);
   useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [history]);
 
@@ -41,7 +44,7 @@ export function AdminConsole({ role, username }: { role: string; username: strin
         <span className="grid h-11 w-11 place-items-center rounded-2xl bg-danger/10 text-danger"><ShieldCheck className="h-6 w-6" /></span>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Admin panel</h1>
-          <p className="text-sm text-muted">Signed in as @{username} · {ROLE_LABEL[role]}. Every action here is recorded in the moderation log.</p>
+          <p className="text-sm text-muted">Signed in as @{username} · {roleName}. You see the tools your role allows. Every action is recorded in the moderation log.</p>
         </div>
       </div>
 
@@ -65,7 +68,7 @@ export function AdminConsole({ role, username }: { role: string; username: strin
         </section>
 
         <div className="space-y-6">
-          <section className="card p-5">
+          {can("ban_users") && <section className="card p-5">
             <h2 className="flex items-center gap-2 font-semibold"><Gavel className="h-4 w-4" /> Quick ban</h2>
             <form className="mt-4 space-y-3" onSubmit={(e) => { e.preventDefault(); run(`/ban @${form.user.replace(/^@/, "")} ${form.duration} ${form.reason}`); setForm({ user: "", duration: "1d", reason: "" }); }}>
               <input className="input" placeholder="Username" value={form.user} onChange={(e) => setForm({ ...form, user: e.target.value })} required aria-label="Username" />
@@ -78,13 +81,13 @@ export function AdminConsole({ role, username }: { role: string; username: strin
                 <button type="button" className="btn-secondary flex-1" disabled={busy || !form.user} onClick={() => { run(`/unban @${form.user.replace(/^@/, "")}`); setForm({ ...form, user: "" }); }}>Unban</button>
               </div>
             </form>
-          </section>
-          <StaffRoles role={role} run={run} version={version} />
-          <section className="card p-5"><h2 className="mb-2 font-semibold">Active bans</h2><Markdown text={bans || "Loading…"} /></section>
-          <section className="card p-5"><h2 className="mb-2 font-semibold">Moderation log</h2><Markdown text={log || "Loading…"} /></section>
+          </section>}
+          <RolesManager run={run} version={version} />
+          {(can("ban_users") || can("view_logs")) && <section className="card p-5"><h2 className="mb-2 font-semibold">Active bans</h2><Markdown text={bans || "Loading…"} /></section>}
+          {can("view_logs") && <section className="card p-5"><h2 className="mb-2 font-semibold">Moderation log</h2><Markdown text={log || "Loading…"} /></section>}
         </div>
       </div>
-      <ArenaAdmin />
+      {(can("host_contests") || can("create_problems") || can("review_cheating")) && <ArenaAdmin permissions={permissions} />}
     </div>
   );
 }

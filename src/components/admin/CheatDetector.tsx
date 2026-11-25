@@ -17,7 +17,7 @@ function Who({ u }: { u: U | null }) {
   return <Link href={`/profile/${u.username}`} className={`font-semibold hover:underline ${rankFor(u.rating).className}`}>{u.username}</Link>;
 }
 
-export function CheatDetector() {
+export function CheatDetector({ canBan = true }: { canBan?: boolean }) {
   const [flags, setFlags] = useState<Flag[] | null>(null);
   const [rounds, setRounds] = useState<{ id: number; title: string }[]>([]);
   const [status, setStatus] = useState("open");
@@ -87,8 +87,8 @@ export function CheatDetector() {
                     <select className="input w-auto py-1 text-xs" value={duration} onChange={(e) => setDuration(e.target.value)} aria-label="Ban length">
                       <option value="7d">7 days</option><option value="30d">30 days</option><option value="perm">Permanent</option>
                     </select>
-                    <button className="btn-danger btn-sm" disabled={!!busy} onClick={() => act({ action: "ban", id: f.id, who: "user", duration }, `b${f.id}`)}><Ban className="h-4 w-4" /> Ban {f.user?.username}</button>
-                    {f.other && <button className="btn-danger btn-sm" disabled={!!busy} onClick={() => act({ action: "ban", id: f.id, who: "other", duration }, `o${f.id}`)}><Ban className="h-4 w-4" /> Ban {f.other.username}</button>}
+                    {canBan && <button className="btn-danger btn-sm" disabled={!!busy} onClick={() => act({ action: "ban", id: f.id, who: "user", duration }, `b${f.id}`)}><Ban className="h-4 w-4" /> Ban {f.user?.username}</button>}
+                    {canBan && f.other && <button className="btn-danger btn-sm" disabled={!!busy} onClick={() => act({ action: "ban", id: f.id, who: "other", duration }, `o${f.id}`)}><Ban className="h-4 w-4" /> Ban {f.other.username}</button>}
                     {f.contest_id && <button className="btn-secondary btn-sm" disabled={!!busy} onClick={() => act({ action: "disqualify", id: f.id, who: "user" }, `d${f.id}`)}><UserX className="h-4 w-4" /> Disqualify {f.user?.username}</button>}
                     <button className="btn-ghost btn-sm" disabled={!!busy} onClick={() => act({ action: "dismiss", id: f.id }, `x${f.id}`)}><Check className="h-4 w-4" /> Not cheating</button>
                   </>

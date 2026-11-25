@@ -21,7 +21,8 @@ async function post(body: Record<string, unknown>) {
 }
 const splitBlocks = (t: string) => t.split(/^===\s*$/m).map((x) => x.replace(/^\n/, "")).filter((x) => x.trim()).map((x) => (x.endsWith("\n") ? x : x + "\n"));
 
-export function ArenaAdmin() {
+export function ArenaAdmin({ permissions }: { permissions: string[] }) {
+  const can = (p: string) => permissions.includes(p);
   const [problems, setProblems] = useState<P[]>([]);
   const [used, setUsed] = useState<Map<number, number[]>>(new Map());
   const [contests, setContests] = useState<C[]>([]);
@@ -94,10 +95,10 @@ export function ArenaAdmin() {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Arena</h2>
-      <CheatDetector />
+      {can("review_cheating") && <CheatDetector canBan={can("ban_users")} />}
       {msg && <p className={`card p-3 text-sm ${msg.ok ? "text-success" : "text-danger"}`}>{msg.text}</p>}
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="card space-y-3 p-5">
+        {can("host_contests") && <section className="card space-y-3 p-5">
           <h3 className="flex items-center gap-2 font-semibold"><CalendarPlus className="h-4 w-4" /> Schedule a round</h3>
           <input className="input w-full" placeholder="PyNest Hatchling Round #3" value={round.title} onChange={(e) => setRound({ ...round, title: e.target.value })} />
           <textarea className="input min-h-16 w-full" placeholder="Short description (optional)" value={round.description} onChange={(e) => setRound({ ...round, description: e.target.value })} />
@@ -145,9 +146,9 @@ export function ArenaAdmin() {
               </ul>
             </div>
           )}
-        </section>
+        </section>}
 
-        <section className="card space-y-3 p-5">
+        {can("create_problems") && <section className="card space-y-3 p-5">
           <h3 className="flex items-center gap-2 font-semibold"><FilePlus2 className="h-4 w-4" /> Write a problem</h3>
           <input className="input w-full" placeholder="Title" value={pf.title} onChange={(e) => setPf({ ...pf, title: e.target.value })} />
           <div className="grid grid-cols-3 gap-2 text-sm">
@@ -167,7 +168,7 @@ export function ArenaAdmin() {
           <div className="overflow-hidden rounded-xl border border-border"><CodeEditor value={ref} onChange={setRef} minHeight="160px" ariaLabel="Reference solution" /></div>
           <p className="text-xs text-muted">Expected outputs are computed by running your reference solution here in the browser. Examples become tests 1, 2, ….</p>
           <button className="btn-primary btn-sm" disabled={busy === "problem" || !pf.title || !pf.statement} onClick={saveProblem}>{busy === "problem" && <Loader2 className="h-4 w-4 animate-spin" />} Run reference &amp; save</button>
-        </section>
+        </section>}
       </div>
     </div>
   );

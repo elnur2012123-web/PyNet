@@ -43,9 +43,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   }
   const unlocked = new Set(prof.achievements.map((a) => a.id));
   const { data: me } = await supabase.rpc("my_moderation");
-  const myRole = (Array.isArray(me) ? me[0] : me)?.role ?? "user";
+  const myPerms: string[] = (Array.isArray(me) ? me[0] : me)?.permissions ?? [];
   const { data: auth } = await supabase.auth.getUser();
-  const canModerate = myRole !== "user" && auth.user?.id !== prof.id;
+  const canModerate = myPerms.includes("ban_users") && auth.user?.id !== prof.id;
   const [{ data: hist }, { data: act }, { data: solvedData }] = await Promise.all([
     supabase.rpc("get_rating_history", { p_username: prof.username }),
     supabase.rpc("get_activity", { p_username: prof.username }),

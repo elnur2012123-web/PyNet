@@ -9,5 +9,5 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const staff = await getStaff();
   if (!staff) notFound(); // non-staff don't even learn that this page exists
-  return <AdminConsole role={staff.role} username={staff.username} />;
+  return <AdminConsole role={staff.role} roleName={staff.roleName} username={staff.username} permissions={staff.permissions} />;
 }

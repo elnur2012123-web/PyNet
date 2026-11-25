@@ -13,7 +13,7 @@ interface FlagRow {
 /** Cheat flags for staff, newest first, with both programs attached. */
 export async function GET(req: Request) {
   const staff = await getStaff();
-  if (!staff) return error("Staff only", 403);
+  if (!staff || !staff.can("review_cheating")) return error("Your role can't use the cheat detector.", 403);
   const { admin } = staff;
   const status = new URL(req.url).searchParams.get("status") ?? "open";
   let q = admin.from("cheat_flags").select("*").order("created_at", { ascending: false }).limit(100);
@@ -48,7 +48,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return error("Bad origin", 403);
   const staff = await getStaff();
-  if (!staff) return error("Staff only", 403);
+  if (!staff || !staff.can("review_cheating")) return error("Your role can't use the cheat detector.", 403);
   const { admin, user } = staff;
   const body = await readJson<{ action?: string; id?: number; contestId?: number; who?: "user" | "other"; duration?: string }>(req);
   if (!body) return error("Invalid request");
@@ -79,6 +79,7 @@ export async function POST(req: Request) {
   }
   if (!target || !tp) return error("User not found", 404);
 
+  if (body.action === "ban" && !staff.can("ban_users")) return error("Your role can't ban users.", 403);
   if (body.action === "disqualify" || body.action === "ban") {
     if (f.contest_id) {
       await admin.from("contest_disqualifications").upsert({ contest_id: f.contest_id, user_id: target, reason, created_by: user.id });

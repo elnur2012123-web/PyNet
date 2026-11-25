@@ -13,6 +13,7 @@ import { UpdatesBell } from "@/components/updates/UpdatesBell";
 import { useProgress } from "@/components/providers/ProgressProvider";
 import { FloatingTutor } from "@/components/tutor/FloatingTutor";
 import { formatXp } from "@/lib/xp";
+import { getBrowserSupabase } from "@/lib/supabase/client";
 
 const NAV_GROUPS = [
   { label: null, items: [{ href: "/dashboard", label: "Home", icon: LayoutDashboard }] },
@@ -52,9 +53,26 @@ const NAV_GROUPS = [
   },
 ];
 
+/** True when the signed-in user's role has at least one staff permission. */
+function useHasAdmin() {
+  const p = useProgress();
+  const role = p.profile?.role;
+  const [has, setHas] = useState(false);
+  useEffect(() => {
+    if (!role || role === "user") { setHas(false); return; }
+    const sb = getBrowserSupabase();
+    sb?.rpc("my_moderation").then(({ data }) => {
+      const row = Array.isArray(data) ? data[0] : data;
+      setHas(Boolean(row?.permissions?.length) && !row?.banned);
+    });
+  }, [role]);
+  return has;
+}
+
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const path = usePathname();
   const p = useProgress();
+  const hasAdmin = useHasAdmin();
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center px-5"><Logo href="/" /></div>
@@ -83,7 +101,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             <p className="mt-0.5 text-xs text-muted">{p.plan === "FREE" ? "Hard challenges, more projects — $5/month." : "Code reviews and every project."}</p>
           </Link>
         )}
-        {p.profile?.role && p.profile.role !== "user" && (
+        {hasAdmin && (
           <Link href="/admin" onClick={onNavigate} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${path.startsWith("/admin") ? "bg-danger/10 font-medium text-danger" : "text-muted hover:bg-elevated hover:text-fg"}`}>
             <ShieldCheck className="h-[18px] w-[18px]" /> Admin panel
           </Link>

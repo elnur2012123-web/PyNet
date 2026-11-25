@@ -39,7 +39,7 @@ export interface Profile {
   created_at: string;
   special_title?: string | null;
   featured_badge?: string | null;
-  role?: "user" | "admin" | "co_founder" | "founder";
+  role?: string;
   hidden_from_weekly?: boolean;
   rating?: number | null;
   max_rating?: number | null;
