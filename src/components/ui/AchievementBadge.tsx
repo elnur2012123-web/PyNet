@@ -1,3 +1,4 @@
+import { T } from "@/components/i18n/T";
 import { achievementById, tierOf, TIER_LABEL, type Tier } from "@/lib/achievements";
 import { Icon } from "@/components/ui/Icon";
 
@@ -31,7 +32,7 @@ export function BadgeChip({ id, className = "" }: { id: string | null | undefine
   const tier = tierOf(id);
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${STYLE[tier].chip} ${className}`} title={`${a.description} · ${TIER_LABEL[tier]} badge`}>
-      <Icon name={a.icon} className="h-3 w-3" /> {a.name}
+      <Icon name={a.icon} className="h-3 w-3" /> <T k={a.name} />
     </span>
   );
 }

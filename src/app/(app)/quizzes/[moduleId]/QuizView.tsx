@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/components/i18n/LocaleProvider";
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, CheckCircle2, RotateCcw, Trophy, XCircle } from "lucide-react";
@@ -14,6 +16,7 @@ import { looksLikeCodeOption } from "@/lib/looks-like-code";
 const TYPE_LABEL: Record<PublicQuestion["type"], string> = { mcq: "Multiple choice", output: "Predict the output", error: "Find the error", blank: "Fill in the blank", code: "Coding challenge" };
 
 export function QuizView({ moduleId, moduleNumber, title, questions }: { moduleId: string; moduleNumber: number; title: string; questions: PublicQuestion[] }) {
+  const tx = useT();
   const p = useProgress();
   const [answers, setAnswers] = useState<(number | string | boolean | null)[]>(questions.map(() => null));
   const [graded, setGraded] = useState<GradedResponse | null>(null);
@@ -37,11 +40,11 @@ export function QuizView({ moduleId, moduleNumber, title, questions }: { moduleI
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <Link href="/quizzes" className="btn-ghost btn-sm"><ArrowLeft className="h-4 w-4" /> All quizzes</Link>
+      <Link href="/quizzes" className="btn-ghost btn-sm"><ArrowLeft className="h-4 w-4" /> <T k="All quizzes" /></Link>
       <header>
-        <p className="text-sm text-muted">Module {moduleNumber} quiz</p>
+        <p className="text-sm text-muted"><T k="Module" />{" "}{moduleNumber} <T k="quiz" /></p>
         <h1 className="h1">{title}</h1>
-        <p className="mt-1 text-sm text-muted">{questions.length} questions · pass mark 60% · +50 XP the first time you pass</p>
+        <p className="mt-1 text-sm text-muted">{questions.length} <T k="questions · pass mark 60% · +50 XP the first time you pass" /></p>
       </header>
 
       {graded && (
@@ -49,10 +52,10 @@ export function QuizView({ moduleId, moduleNumber, title, questions }: { moduleI
           <div className="flex flex-wrap items-center gap-5">
             <Ring value={graded.percent} size={88} stroke={8}><span className="text-lg">{graded.percent}%</span></Ring>
             <div className="flex-1">
-              <p className="flex items-center gap-2 text-lg font-semibold">{passed ? <><Trophy className="h-5 w-5 text-warn" /> Quiz passed!</> : "Not passed yet"}</p>
-              <p className="text-sm text-muted">{graded.score} of {graded.total} correct. {passed ? "Great work — review the explanations below." : "You need 60% to pass. Review the explanations and try again."}</p>
+              <p className="flex items-center gap-2 text-lg font-semibold">{passed ? <><Trophy className="h-5 w-5 text-warn" /> <T k="Quiz passed!" /></> : tx("Not passed yet")}</p>
+              <p className="text-sm text-muted">{graded.score} <T k="of" />{" "}{graded.total} <T k="correct." />{" "}{passed ? tx("Great work — review the explanations below.") : tx("You need 60% to pass. Review the explanations and try again.")}</p>
             </div>
-            <button onClick={retake} className="btn-secondary"><RotateCcw className="h-4 w-4" /> Retake quiz</button>
+            <button onClick={retake} className="btn-secondary"><RotateCcw className="h-4 w-4" /> <T k="Retake quiz" /></button>
           </div>
         </div>
       )}
@@ -80,22 +83,22 @@ export function QuizView({ moduleId, moduleNumber, title, questions }: { moduleI
               {q.type === "blank" && (
                 <div>
                   <CodeBlock code={q.code.replace(/_{2,}/, "▢")} className="mb-2" copy={false} />
-                  <input className="input max-w-xs font-mono" placeholder="Your answer for ▢" value={(answers[i] as string) ?? ""} disabled={Boolean(graded)} onChange={(e) => set(i, e.target.value)} aria-label={`Answer for question ${i + 1}`} />
+                  <input className="input max-w-xs font-mono" placeholder={tx("Your answer for ▢")} value={(answers[i] as string) ?? ""} disabled={Boolean(graded)} onChange={(e) => set(i, e.target.value)} aria-label={`Answer for question ${i + 1}`} />
                 </div>
               )}
 
               {q.type === "code" && (
                 <div>
                   <TestRunner starter={q.starter} tests={q.tests} checkLabel="Run tests" onChecked={(ok) => set(i, ok)} minHeight="140px" />
-                  <p className="mt-2 text-xs text-muted">{answers[i] === true ? "✓ Your code passes — it will count when you submit." : "Run the tests: your answer counts as correct if all tests pass."}</p>
+                  <p className="mt-2 text-xs text-muted">{answers[i] === true ? tx("✓ Your code passes — it will count when you submit.") : tx("Run the tests: your answer counts as correct if all tests pass.")}</p>
                 </div>
               )}
 
               {r && (
                 <div className={`mt-3 rounded-xl px-3.5 py-2.5 text-sm ${r.correct ? "bg-success/10" : "bg-danger/10"}`}>
-                  <p className="flex items-center gap-1.5 font-medium">{r.correct ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-danger" />}{r.correct ? "Correct" : "Incorrect"}</p>
-                  {!r.correct && q.type !== "code" && <p className="mt-1">Correct answer: <code className="font-mono">{r.correctAnswer}</code></p>}
-                  {!r.correct && q.type === "code" && <CodeBlock code={r.correctAnswer} title="One possible solution" className="mt-2" />}
+                  <p className="flex items-center gap-1.5 font-medium">{r.correct ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-danger" />}{r.correct ? tx("Correct") : tx("Incorrect")}</p>
+                  {!r.correct && q.type !== "code" && <p className="mt-1"><T k="Correct answer:" />{" "}<code className="font-mono">{r.correctAnswer}</code></p>}
+                  {!r.correct && q.type === "code" && <CodeBlock code={r.correctAnswer} title={tx("One possible solution")} className="mt-2" />}
                   <p className="mt-1 text-fg/80">{r.explain}</p>
                 </div>
               )}
@@ -107,8 +110,8 @@ export function QuizView({ moduleId, moduleNumber, title, questions }: { moduleI
       {err && <Notice kind="error">{err}</Notice>}
       {!graded && (
         <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface/95 p-3 shadow-lg backdrop-blur">
-          <span className="text-sm text-muted">{answered}/{questions.length} answered</span>
-          <button onClick={submit} disabled={busy || answered === 0} className="btn-primary">{busy && <Spinner />} Submit quiz</button>
+          <span className="text-sm text-muted">{answered}/{questions.length} <T k="answered" /></span>
+          <button onClick={submit} disabled={busy || answered === 0} className="btn-primary">{busy && <Spinner />} <T k="Submit quiz" /></button>
         </div>
       )}
     </div>

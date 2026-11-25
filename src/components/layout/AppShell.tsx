@@ -1,9 +1,12 @@
 "use client";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { useT } from "@/components/i18n/LocaleProvider";
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Activity, AlertTriangle, Award, BarChart3, CalendarDays, ListOrdered, Swords, ShieldCheck, BookOpen, Bot, Code2, Crown, Flame, LayoutDashboard, ListChecks, Menu, Play, Settings, Trophy, Users, X, Zap,
+  Activity, AlertTriangle, Lightbulb, Award, BarChart3, CalendarDays, ListOrdered, Swords, ShieldCheck, BookOpen, Bot, Code2, Crown, Flame, LayoutDashboard, ListChecks, Menu, Play, Settings, Trophy, Users, X, Zap,
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -70,23 +73,24 @@ function useHasAdmin() {
 }
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+  const tx = useT();
   const path = usePathname();
   const p = useProgress();
   const hasAdmin = useHasAdmin();
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center px-5"><Logo href="/" /></div>
-      <nav className="thin-scroll flex-1 overflow-y-auto px-3" aria-label="Main">
+      <nav className="thin-scroll flex-1 overflow-y-auto px-3" aria-label={tx("Main")}>
         {NAV_GROUPS.map((g) => (
           <div key={g.label ?? "top"} className={g.label ? "mt-5" : ""}>
-            {g.label && <p className="mb-1 px-3 text-xs font-medium text-muted/80">{g.label}</p>}
+            {g.label && <p className="mb-1 px-3 text-xs font-medium text-muted/80"><T k={g.label} /></p>}
             <div className="space-y-0.5">
               {g.items.map((n) => {
                 const active = path === n.href || path.startsWith(n.href + "/");
                 return (
                   <Link key={n.href} href={n.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
                     className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition ${active ? "bg-accent/10 font-medium text-accent" : "text-muted hover:bg-elevated hover:text-fg"}`}>
-                    <n.icon className="h-[18px] w-[18px]" /> {n.label}
+                    <n.icon className="h-[18px] w-[18px]" /> <T k={n.label} />
                   </Link>
                 );
               })}
@@ -97,24 +101,26 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="space-y-2 p-3">
         {p.plan !== "MAX" && (
           <Link href="/pricing" onClick={onNavigate} className="block rounded-2xl border border-border p-3.5 hover:bg-elevated">
-            <p className="flex items-center gap-1.5 text-sm font-semibold"><Crown className="h-4 w-4 text-accent2" /> {p.plan === "FREE" ? "Try Pro" : "Try Max"}</p>
-            <p className="mt-0.5 text-xs text-muted">{p.plan === "FREE" ? "Hard challenges, more projects — $5/month." : "Code reviews and every project."}</p>
+            <p className="flex items-center gap-1.5 text-sm font-semibold"><Crown className="h-4 w-4 text-accent2" /> {p.plan === "FREE" ? tx("Try Pro") : tx("Try Max")}</p>
+            <p className="mt-0.5 text-xs text-muted">{p.plan === "FREE" ? tx("Hard challenges, more projects — $5/month.") : tx("Code reviews and every project.")}</p>
           </Link>
         )}
         {hasAdmin && (
           <Link href="/admin" onClick={onNavigate} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${path.startsWith("/admin") ? "bg-danger/10 font-medium text-danger" : "text-muted hover:bg-elevated hover:text-fg"}`}>
-            <ShieldCheck className="h-[18px] w-[18px]" /> Admin panel
-          </Link>
+            <ShieldCheck className="h-[18px] w-[18px]" /> <T k="Admin panel" /></Link>
         )}
-        <Link href="/settings" onClick={onNavigate} className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted hover:bg-elevated hover:text-fg">
-          <Settings className="h-[18px] w-[18px]" /> Settings
+        <Link href="/suggest" onClick={onNavigate} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${path.startsWith("/suggest") ? "bg-accent/10 font-medium text-accent" : "text-muted hover:bg-elevated hover:text-fg"}`}>
+          <Lightbulb className="h-[18px] w-[18px]" /> <T k="Suggestions" />
         </Link>
+        <Link href="/settings" onClick={onNavigate} className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted hover:bg-elevated hover:text-fg">
+          <Settings className="h-[18px] w-[18px]" /> <T k="Settings" /></Link>
       </div>
     </div>
   );
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const tx = useT();
   const [open, setOpen] = useState(false);
   const p = useProgress();
   const path = usePathname();
@@ -127,20 +133,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
           <aside className="absolute inset-y-0 left-0 w-72 animate-fade-up border-r border-border bg-surface">
-            <button onClick={() => setOpen(false)} className="btn-ghost btn-sm absolute right-3 top-4" aria-label="Close menu"><X className="h-4 w-4" /></button>
+            <button onClick={() => setOpen(false)} className="btn-ghost btn-sm absolute right-3 top-4" aria-label={tx("Close menu")}><X className="h-4 w-4" /></button>
             <SidebarContent onNavigate={() => setOpen(false)} />
           </aside>
         </div>
       )}
       <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-bg/80 px-4 backdrop-blur-md sm:px-6">
-        <button onClick={() => setOpen(true)} className="btn-ghost btn-sm h-9 w-9 !p-0 lg:hidden" aria-label="Open menu"><Menu className="h-5 w-5" /></button>
+        <button onClick={() => setOpen(true)} className="btn-ghost btn-sm h-9 w-9 !p-0 lg:hidden" aria-label={tx("Open menu")}><Menu className="h-5 w-5" /></button>
         <div className="flex-1"><GlobalSearch /></div>
         {p.ready && (
           <div className="hidden items-center gap-2 md:flex">
-            <span className="chip" title="Learning streak"><Flame className="h-3.5 w-3.5 text-warn" /> {p.streak} day{p.streak === 1 ? "" : "s"}</span>
-            <span className="chip" title="Total XP"><Zap className="h-3.5 w-3.5 text-accent" /> {formatXp(p.xp)} XP</span>
+            <span className="chip" title={tx("Learning streak")}><Flame className="h-3.5 w-3.5 text-warn" /> {p.streak} <T k="day" />{p.streak === 1 ? "" : "s"}</span>
+            <span className="chip" title={tx("Total XP")}><Zap className="h-3.5 w-3.5 text-accent" /> {formatXp(p.xp)} <T k="XP" /></span>
           </div>
         )}
+        <LanguageSwitcher />
         <UpdatesBell />
         <ThemeToggle />
         <UserMenu />
@@ -148,9 +155,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {p.ready && p.mode === "guest" && (
         <div className="border-b border-border bg-elevated/60 px-4 py-2 text-center text-xs text-muted sm:px-6">
           {p.authConfigured ? (
-            <>You&apos;re browsing as a guest. <Link href="/signup" className="link">Create a free account</Link> to open lessons, practise and chat with PyBuddy.</>
+            <><T k="You're browsing as a guest." />{" "}<Link href="/signup" className="link"><T k="Create a free account" /></Link> <T k="to open lessons, practise and chat with PyBuddy." /></>
           ) : (
-            <>Local mode — accounts are not configured on this deployment, so progress is saved only in this browser.</>
+            <><T k="Local mode — accounts are not configured on this deployment, so progress is saved only in this browser." /></>
           )}
         </div>
       )}

@@ -1,0 +1,10 @@
+import { T1 } from "./t1";
+import { T2 } from "./t2";
+import { T3 } from "./t3";
+import { T4 } from "./t4";
+import { T5 } from "./t5";
+import { T6 } from "./t6";
+import { T7 } from "./t7";
+import { T8 } from "./t8";
+import { T9 } from "./t9";
+export const TRIPLES: [string, string, string][] = [...T1, ...T2, ...T3, ...T4, ...T5, ...T6, ...T7, ...T8, ...T9];

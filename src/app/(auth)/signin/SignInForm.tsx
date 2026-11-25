@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -33,23 +34,23 @@ export function SignInForm() {
 
   return (
     <div className="card p-6 sm:p-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-      <p className="mt-1 text-sm text-muted">Sign in to continue learning.</p>
+      <h1 className="text-2xl font-semibold tracking-tight"><T k="Welcome back" /></h1>
+      <p className="mt-1 text-sm text-muted"><T k="Sign in to continue learning." /></p>
       <div className="mt-6"><GoogleButton next={next} /></div>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <div>
-          <label className="label" htmlFor="id">Email or username</label>
+          <label className="label" htmlFor="id"><T k="Email or username" /></label>
           <input id="id" className="input" value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" required autoFocus />
         </div>
         <div>
-          <div className="flex items-center justify-between"><label className="label" htmlFor="pw">Password</label><Link href="/forgot-password" className="mb-1.5 text-xs text-accent hover:underline">Forgot password?</Link></div>
+          <div className="flex items-center justify-between"><label className="label" htmlFor="pw"><T k="Password" /></label><Link href="/forgot-password" className="mb-1.5 text-xs text-accent hover:underline"><T k="Forgot password?" /></Link></div>
           <PasswordInput id="pw" value={password} onChange={setPassword} autoComplete="current-password" />
         </div>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me on this device</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> <T k="Remember me on this device" /></label>
         {error && <Notice kind="error">{error}</Notice>}
-        <button className="btn-primary w-full" disabled={busy || !identifier || !password}>{busy && <Spinner />} Sign in</button>
+        <button className="btn-primary w-full" disabled={busy || !identifier || !password}>{busy && <Spinner />} <T k="Sign in" /></button>
       </form>
-      <p className="mt-6 text-center text-sm text-muted">New to PyNest? <Link href={`/signup${next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : ""}`} className="link font-medium">Create an account</Link></p>
+      <p className="mt-6 text-center text-sm text-muted"><T k="New to PyNest?" />{" "}<Link href={`/signup${next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : ""}`} className="link font-medium"><T k="Create an account" /></Link></p>
     </div>
   );
 }

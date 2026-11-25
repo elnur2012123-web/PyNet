@@ -1,8 +1,10 @@
 "use client";
+import { useT } from "@/components/i18n/LocaleProvider";
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 export function Modal({ open, onClose, title, children, wide = false }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; wide?: boolean }) {
+  const tx = useT();
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -22,7 +24,7 @@ export function Modal({ open, onClose, title, children, wide = false }: { open: 
       <div ref={ref} role="dialog" aria-modal="true" aria-label={title} className={`card w-full animate-fade-up ${wide ? "max-w-2xl" : "max-w-md"}`}>
         <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
           <h2 className="font-semibold">{title}</h2>
-          <button onClick={onClose} className="btn-ghost btn-sm" aria-label="Close"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} className="btn-ghost btn-sm" aria-label={tx("Close")}><X className="h-4 w-4" /></button>
         </div>
         <div className="p-5">{children}</div>
       </div>

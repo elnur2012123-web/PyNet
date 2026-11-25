@@ -9,7 +9,7 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "@/lib/env
  */
 export const PROTECTED_PREFIXES = [
   "/dashboard", "/learn/", "/practice", "/quizzes", "/playground", "/tutor", "/errors",
-  "/achievements", "/onboarding", "/billing", "/friends", "/settings", "/updates", "/admin", "/banned",
+  "/achievements", "/onboarding", "/billing", "/friends", "/settings", "/updates", "/admin", "/banned", "/suggest",
 ];
 /** Pages a banned user may still open. */
 const BAN_EXEMPT = ["/banned", "/terms", "/privacy", "/auth", "/api"];

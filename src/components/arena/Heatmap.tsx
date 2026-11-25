@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/components/i18n/T";
 import { useMemo } from "react";
 
 const DAY = 86400e3;
@@ -45,7 +46,7 @@ export function Heatmap({ days, solved }: { days: { day: string; count: number }
         </div>
         <div className="flex min-w-[680px] gap-[2px]">
           <div className="mr-1 grid w-7 grid-rows-7 gap-[2px] text-[10px] text-muted">
-            <span /> <span>Mon</span> <span /> <span>Wed</span> <span /> <span>Fri</span> <span />
+            <span /> <span><T k="Mon" /></span> <span /> <span><T k="Wed" /></span> <span /> <span><T k="Fri" /></span> <span />
           </div>
           {weeks.map((col, w) => (
             <div key={w} className="grid grid-rows-7 gap-[2px]">
@@ -57,14 +58,14 @@ export function Heatmap({ days, solved }: { days: { day: string; count: number }
       <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
         {solved && (
           <>
-            <div><p className="text-2xl font-semibold">{solved.all_time} problems</p><p className="text-xs text-muted">solved for all time</p></div>
-            <div><p className="text-2xl font-semibold">{solved.last_year} problems</p><p className="text-xs text-muted">solved for the last year</p></div>
-            <div><p className="text-2xl font-semibold">{solved.last_month} problems</p><p className="text-xs text-muted">solved for the last month</p></div>
+            <div><p className="text-2xl font-semibold">{solved.all_time} <T k="problems" /></p><p className="text-xs text-muted"><T k="solved for all time" /></p></div>
+            <div><p className="text-2xl font-semibold">{solved.last_year} <T k="problems" /></p><p className="text-xs text-muted"><T k="solved for the last year" /></p></div>
+            <div><p className="text-2xl font-semibold">{solved.last_month} <T k="problems" /></p><p className="text-xs text-muted"><T k="solved for the last month" /></p></div>
           </>
         )}
-        <div><p className="text-2xl font-semibold">{stats.all} day{stats.all === 1 ? "" : "s"}</p><p className="text-xs text-muted">in a row max.</p></div>
-        <div><p className="text-2xl font-semibold">{stats.year} day{stats.year === 1 ? "" : "s"}</p><p className="text-xs text-muted">in a row for the last year</p></div>
-        <div><p className="text-2xl font-semibold">{stats.month} day{stats.month === 1 ? "" : "s"}</p><p className="text-xs text-muted">in a row for the last month</p></div>
+        <div><p className="text-2xl font-semibold">{stats.all} <T k="day" />{stats.all === 1 ? "" : "s"}</p><p className="text-xs text-muted"><T k="in a row max." /></p></div>
+        <div><p className="text-2xl font-semibold">{stats.year} <T k="day" />{stats.year === 1 ? "" : "s"}</p><p className="text-xs text-muted"><T k="in a row for the last year" /></p></div>
+        <div><p className="text-2xl font-semibold">{stats.month} <T k="day" />{stats.month === 1 ? "" : "s"}</p><p className="text-xs text-muted"><T k="in a row for the last month" /></p></div>
       </div>
     </div>
   );

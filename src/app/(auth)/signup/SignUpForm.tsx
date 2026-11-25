@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/components/i18n/LocaleProvider";
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -13,6 +15,7 @@ import { passwordStrength } from "@/lib/password";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export function SignUpForm() {
+  const tx = useT();
   const router = useRouter();
   const params = useSearchParams();
   const rawNext = params.get("next") ?? "";
@@ -89,50 +92,50 @@ export function SignUpForm() {
 
   return (
     <div className="card p-6 sm:p-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
-      <p className="mt-1 text-sm text-muted">{next ? "Create a free account to start this lesson — it takes 30 seconds." : "Free forever. Your progress is saved and you can learn on any device."}</p>
+      <h1 className="text-2xl font-semibold tracking-tight"><T k="Create your account" /></h1>
+      <p className="mt-1 text-sm text-muted">{next ? tx("Create a free account to start this lesson — it takes 30 seconds.") : tx("Free forever. Your progress is saved and you can learn on any device.")}</p>
       <div className="mt-6"><GoogleButton next="/onboarding" /></div>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => fileRef.current?.click()} className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border border-dashed border-border bg-elevated text-muted hover:border-accent" aria-label="Choose a profile picture (optional)">
+          <button type="button" onClick={() => fileRef.current?.click()} className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border border-dashed border-border bg-elevated text-muted hover:border-accent" aria-label={tx("Choose a profile picture (optional)")}>
             {avatar ? <img src={URL.createObjectURL(avatar)} alt="" className="h-full w-full object-cover" /> : <Camera className="h-5 w-5" />}
           </button>
           <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f && f.size <= 2 * 1024 * 1024) setAvatar(f); }} />
-          <p className="text-xs text-muted">Profile picture <span className="text-muted/80">(optional, max 2 MB)</span>. You can also add it later in Settings.</p>
+          <p className="text-xs text-muted"><T k="Profile picture" />{" "}<span className="text-muted/80"><T k="(optional, max 2 MB)" /></span><T k=". You can also add it later in Settings." /></p>
         </div>
         <div>
-          <label className="label" htmlFor="su-user">Username</label>
+          <label className="label" htmlFor="su-user"><T k="Username" /></label>
           <div className="relative">
             <input id="su-user" className="input pr-9" value={username} onChange={(e) => setUsername(e.target.value.trim())} autoComplete="username" maxLength={20} required aria-describedby="su-user-msg" />
             <span className="absolute right-3 top-1/2 -translate-y-1/2">{uname.state === "checking" ? <Spinner /> : uname.state === "ok" ? <Check className="h-4 w-4 text-success" /> : uname.state === "taken" || uname.state === "invalid" ? <X className="h-4 w-4 text-danger" /> : null}</span>
           </div>
-          <p id="su-user-msg" className={`mt-1 text-xs ${uname.state === "ok" ? "text-success" : uname.msg ? "text-danger" : "text-muted"}`}>{uname.state === "ok" ? "Username is available" : uname.msg ?? "Shown on your public profile and the leaderboard"}</p>
+          <p id="su-user-msg" className={`mt-1 text-xs ${uname.state === "ok" ? "text-success" : uname.msg ? "text-danger" : "text-muted"}`}>{uname.state === "ok" ? tx("Username is available") : uname.msg ?? tx("Shown on your public profile and the leaderboard")}</p>
         </div>
         <div>
-          <label className="label" htmlFor="su-email">Email address</label>
+          <label className="label" htmlFor="su-email"><T k="Email address" /></label>
           <input id="su-email" type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value.trim())} autoComplete="email" required />
           {(touched || email) && errors.email && <p className="mt-1 text-xs text-danger">{errors.email}</p>}
         </div>
         <div>
-          <label className="label" htmlFor="su-pw">Password</label>
+          <label className="label" htmlFor="su-pw"><T k="Password" /></label>
           <PasswordInput id="su-pw" value={password} onChange={setPassword} autoComplete="new-password" />
           <StrengthMeter password={password} />
           {errors.password && <p className="mt-1 text-xs text-danger">{errors.password}</p>}
         </div>
         <div>
-          <label className="label" htmlFor="su-pw2">Confirm password</label>
+          <label className="label" htmlFor="su-pw2"><T k="Confirm password" /></label>
           <PasswordInput id="su-pw2" value={confirm} onChange={setConfirm} autoComplete="new-password" />
           {errors.confirm && <p className="mt-1 text-xs text-danger">{errors.confirm}</p>}
         </div>
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" className="mt-0.5" checked={terms} onChange={(e) => setTerms(e.target.checked)} required />
-          <span>I agree to the <Link href="/terms" className="link" target="_blank">Terms of Service</Link> and <Link href="/privacy" className="link" target="_blank">Privacy Policy</Link>.</span>
+          <span><T k="I agree to the" />{" "}<Link href="/terms" className="link" target="_blank"><T k="Terms of Service" /></Link> <T k="and" />{" "}<Link href="/privacy" className="link" target="_blank"><T k="Privacy Policy" /></Link>.</span>
         </label>
-        {touched && !terms && <p className="-mt-2 text-xs text-danger">Please accept the terms to continue.</p>}
+        {touched && !terms && <p className="-mt-2 text-xs text-danger"><T k="Please accept the terms to continue." /></p>}
         {error && <Notice kind="error">{error}</Notice>}
-        <button className="btn-primary w-full" disabled={busy}>{busy && <Spinner />} Create account</button>
+        <button className="btn-primary w-full" disabled={busy}>{busy && <Spinner />} <T k="Create account" /></button>
       </form>
-      <p className="mt-6 text-center text-sm text-muted">Already have an account? <Link href={next ? `/signin?next=${encodeURIComponent(next)}` : "/signin"} className="link font-medium">Sign in</Link></p>
+      <p className="mt-6 text-center text-sm text-muted"><T k="Already have an account?" />{" "}<Link href={next ? `/signin?next=${encodeURIComponent(next)}` : "/signin"} className="link font-medium"><T k="Sign in" /></Link></p>
     </div>
   );
 }

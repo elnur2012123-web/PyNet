@@ -1,3 +1,4 @@
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Handle } from "./Handle";
@@ -7,7 +8,7 @@ import { contestPhase, endsAt, listContests, topRated, type ContestListRow } fro
 export function SideBox({ title, children, footer }: { title: string; children: React.ReactNode; footer?: React.ReactNode }) {
   return (
     <section className="card overflow-hidden">
-      <h2 className="flex items-center gap-1.5 border-b border-border px-4 py-2.5 text-sm font-semibold text-accent"><ArrowRight className="h-4 w-4" /> {title}</h2>
+      <h2 className="flex items-center gap-1.5 border-b border-border px-4 py-2.5 text-sm font-semibold text-accent"><ArrowRight className="h-4 w-4" /> <T k={title} /></h2>
       <div className="p-4">{children}</div>
       {footer && <div className="border-t border-border px-4 py-2 text-right text-xs">{footer}</div>}
     </section>
@@ -23,11 +24,11 @@ export function NextContestBox({ contests }: { contests: ContestListRow[] }) {
   return (
     <SideBox title="Pay attention">
       <div className="text-center">
-        <p className="font-semibold">{live ? "Contest is running" : "Before contest"}</p>
+        <p className="font-semibold">{live ? <T k="Contest is running" /> : <T k="Before contest" />}</p>
         <Link href={`/contests/${c.id}`} className="link text-sm">{c.title}</Link>
         <p className="mt-1 text-sm text-muted"><Countdown to={live ? endsAt(c).toISOString() : c.starts_at} /></p>
-        {!live && !c.registered && <Link href={`/contests/${c.id}`} className="link mt-1 inline-block text-sm font-medium">Register now »</Link>}
-        {c.registered && <p className="mt-1 text-xs text-success">You are registered ✓</p>}
+        {!live && !c.registered && <Link href={`/contests/${c.id}`} className="link mt-1 inline-block text-sm font-medium"><T k="Register now »" /></Link>}
+        {c.registered && <p className="mt-1 text-xs text-success"><T k="You are registered ✓" /></p>}
       </div>
     </SideBox>
   );
@@ -35,12 +36,12 @@ export function NextContestBox({ contests }: { contests: ContestListRow[] }) {
 
 export function TopRatedBox({ rows }: { rows: Awaited<ReturnType<typeof topRated>> }) {
   return (
-    <SideBox title="Top rated" footer={<Link href="/rating" className="link">View all →</Link>}>
+    <SideBox title="Top rated" footer={<Link href="/rating" className="link"><T k="View all →" /></Link>}>
       {rows.length === 0 ? (
-        <p className="text-sm text-muted">Nobody is rated yet. Take part in a rated round to be the first!</p>
+        <p className="text-sm text-muted"><T k="Nobody is rated yet. Take part in a rated round to be the first!" /></p>
       ) : (
         <table className="w-full text-sm">
-          <thead><tr className="text-xs text-muted"><th className="w-8 text-left">#</th><th className="text-left">User</th><th className="text-right">Rating</th></tr></thead>
+          <thead><tr className="text-xs text-muted"><th className="w-8 text-left">#</th><th className="text-left"><T k="User" /></th><th className="text-right"><T k="Rating" /></th></tr></thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.username} className="border-t border-border/60">

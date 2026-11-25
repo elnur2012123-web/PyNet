@@ -1,3 +1,4 @@
+import { T } from "@/components/i18n/T";
 import { LEAGUES } from "@/lib/xp";
 
 export function LeagueBadge({ league, size = 36, showLabel = false }: { league: string; size?: number; showLabel?: boolean }) {
@@ -12,7 +13,7 @@ export function LeagueBadge({ league, size = 36, showLabel = false }: { league: 
           <circle key={i} cx={20 + (i - Math.min(tier, 5) / 2) * 4.2} cy={20} r="1.6" fill="white" />
         ))}
       </svg>
-      {showLabel && <span className="text-sm font-medium">{def.name}</span>}
+      {showLabel && <span className="text-sm font-medium"><T k={def.name} /></span>}
     </span>
   );
 }

@@ -1,3 +1,5 @@
+import { getT } from "@/i18n/server";
+import { T } from "@/components/i18n/T";
 import type { Metadata } from "next";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { loadContest } from "../data";
@@ -11,10 +13,11 @@ export const metadata: Metadata = { title: "Standings" };
 const hm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
 export default async function StandingsPage({ params }: { params: Promise<{ id: string }> }) {
+  const tx = await getT();
   const data = (await loadContest(Number((await params).id)))!;
   const { contest: c, problems, standings, me } = data;
   const phase = contestPhase(c);
-  if (phase === "upcoming") return <div className="card p-8 text-center text-muted">Standings appear when the round starts.</div>;
+  if (phase === "upcoming") return <div className="card p-8 text-center text-muted"><T k="Standings appear when the round starts." /></div>;
   let changes = new Map<string, { old_rating: number; new_rating: number }>();
   if ((c as { rating_applied?: boolean }).rating_applied) {
     const sb = (await getServerSupabase())!;
@@ -29,24 +32,24 @@ export default async function StandingsPage({ params }: { params: Promise<{ id: 
     <div className="card overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
         <h1 className="font-semibold">{c.title} — {phase === "running" ? "live standings" : "final standings"}</h1>
-        <span className="text-xs text-muted">{standings.length} contestant{standings.length === 1 ? "" : "s"} with submissions{divisionOf(c.division).ratedBelow ? ` · * = out of competition (rating ${divisionOf(c.division).ratedBelow}+)` : ""}</span>
+        <span className="text-xs text-muted">{standings.length} <T k="contestant" />{standings.length === 1 ? "" : "s"} <T k="with submissions" />{divisionOf(c.division).ratedBelow ? ` · * = out of competition (rating ${divisionOf(c.division).ratedBelow}+)` : ""}</span>
       </div>
       {phase === "finished" && c.rated && c.rating_applied && changes.size === 0 && (
-        <p className="border-b border-border bg-elevated/50 px-4 py-2 text-xs text-muted">Ratings didn&apos;t change in this round: a rated round needs at least {MIN_RATED_CONTESTANTS} contestants inside the division limit.</p>
+        <p className="border-b border-border bg-elevated/50 px-4 py-2 text-xs text-muted"><T k="Ratings didn't change in this round: a rated round needs at least" />{" "}{MIN_RATED_CONTESTANTS} <T k="contestants inside the division limit." /></p>
       )}
       {phase === "finished" && c.rated && !c.rating_applied && (
-        <p className="border-b border-border bg-elevated/50 px-4 py-2 text-xs text-muted">Rating changes are waiting for the anti-cheat review. They&apos;ll appear here soon.</p>
+        <p className="border-b border-border bg-elevated/50 px-4 py-2 text-xs text-muted"><T k="Rating changes are waiting for the anti-cheat review. They'll appear here soon." /></p>
       )}
       <div className="thin-scroll overflow-x-auto">
         <table className="w-full min-w-[560px] text-sm">
           <thead className="bg-elevated/60 text-xs text-muted">
             <tr>
               <th className="px-3 py-2">#</th>
-              <th className="px-3 py-2 text-left">Who</th>
-              <th className="px-2 py-2" title="Problems solved">=</th>
-              <th className="px-2 py-2">Penalty</th>
+              <th className="px-3 py-2 text-left"><T k="Who" /></th>
+              <th className="px-2 py-2" title={tx("Problems solved")}>=</th>
+              <th className="px-2 py-2"><T k="Penalty" /></th>
               {problems.map((p) => <th key={p.letter} className="px-2 py-2"><a href={`/contests/${c.id}/problem/${p.letter}`} className="hover:text-fg" title={p.title}>{p.letter}</a></th>)}
-              {showDelta && <th className="px-3 py-2">Δ rating</th>}
+              {showDelta && <th className="px-3 py-2"><T k="Δ rating" /></th>}
             </tr>
           </thead>
           <tbody>
@@ -55,7 +58,7 @@ export default async function StandingsPage({ params }: { params: Promise<{ id: 
               return (
                 <tr key={r.user_id} className={`border-t border-border/60 text-center ${r.user_id === me ? "bg-accent/10" : i % 2 ? "bg-elevated/30" : ""}`}>
                   <td className="px-3 py-2">{r.rank}</td>
-                  <td className="px-3 py-2 text-left"><Handle username={r.username} rating={ch ? ch.old_rating : r.rating} />{c.rated && !ch && !isEligible(c.division, r.rating) && <span className="ml-1 text-muted" title="Out of competition: rating is above this division's limit">*</span>}</td>
+                  <td className="px-3 py-2 text-left"><Handle username={r.username} rating={ch ? ch.old_rating : r.rating} />{c.rated && !ch && !isEligible(c.division, r.rating) && <span className="ml-1 text-muted" title={tx("Out of competition: rating is above this division's limit")}>*</span>}</td>
                   <td className="px-2 py-2 font-semibold">{r.solved}</td>
                   <td className="px-2 py-2 tabular-nums">{r.penalty}</td>
                   {problems.map((p) => {
@@ -71,12 +74,12 @@ export default async function StandingsPage({ params }: { params: Promise<{ id: 
                 </tr>
               );
             })}
-            {standings.length === 0 && <tr><td colSpan={5 + problems.length} className="px-4 py-10 text-center text-muted">No submissions yet.</td></tr>}
+            {standings.length === 0 && <tr><td colSpan={5 + problems.length} className="px-4 py-10 text-center text-muted"><T k="No submissions yet." /></td></tr>}
           </tbody>
           {standings.length > 0 && (
             <tfoot className="border-t border-border text-center text-xs">
-              <tr><td colSpan={4} className="px-3 py-1.5 text-right text-success">Accepted</td>{problems.map((p) => <td key={p.letter} className="text-success">{accepted(p.letter)}</td>)}{showDelta && <td />}</tr>
-              <tr><td colSpan={4} className="px-3 py-1.5 text-right text-muted">Tried</td>{problems.map((p) => <td key={p.letter} className="text-muted">{tried(p.letter)}</td>)}{showDelta && <td />}</tr>
+              <tr><td colSpan={4} className="px-3 py-1.5 text-right text-success"><T k="Accepted" /></td>{problems.map((p) => <td key={p.letter} className="text-success">{accepted(p.letter)}</td>)}{showDelta && <td />}</tr>
+              <tr><td colSpan={4} className="px-3 py-1.5 text-right text-muted"><T k="Tried" /></td>{problems.map((p) => <td key={p.letter} className="text-muted">{tried(p.letter)}</td>)}{showDelta && <td />}</tr>
             </tfoot>
           )}
         </table>

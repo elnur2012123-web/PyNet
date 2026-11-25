@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/components/i18n/LocaleProvider";
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { useState } from "react";
 import { CheckCircle2, Lock } from "lucide-react";
@@ -8,6 +10,7 @@ import { planAtLeast } from "@/lib/plans";
 import { XP_RULES } from "@/lib/xp";
 
 export default function PracticePage() {
+  const tx = useT();
   const catalog = useCatalog();
   const p = useProgress();
   const [filter, setFilter] = useState<string>("all");
@@ -16,13 +19,13 @@ export default function PracticePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="h1">Practice challenges</h1>
-        <p className="mt-1 text-muted">Write real programs. Automatic tests run your code and check its exact output. {p.exercises.size}/{catalog.exercises.length} solved.</p>
+        <h1 className="h1"><T k="Practice challenges" /></h1>
+        <p className="mt-1 text-muted"><T k="Write real programs. Automatic tests run your code and check its exact output." />{" "}{p.exercises.size}/{catalog.exercises.length} <T k="solved." /></p>
       </div>
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Difficulty">
-        {[{ id: "all", label: "All" }, ...EXERCISE_LEVELS].map((d) => (
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label={tx("Difficulty")}>
+        {[{ id: "all", label: tx("All") }, ...EXERCISE_LEVELS].map((d) => (
           <button key={d.id} role="tab" aria-selected={filter === d.id} onClick={() => setFilter(d.id)} className={`rounded-xl px-3.5 py-1.5 text-sm ${filter === d.id ? "bg-accent text-white" : "border border-border bg-surface text-muted hover:text-fg"}`}>
-            {d.label}
+            <T k={d.label} />
           </button>
         ))}
       </div>
@@ -31,7 +34,7 @@ export default function PracticePage() {
         if (!list.length) return null;
         return (
           <section key={d.id}>
-            <h2 className="mb-3 flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${d.dot}`} /> {d.label} <span className="text-sm font-normal text-muted">· {XP_RULES.exercise[d.id]} XP each</span></h2>
+            <h2 className="mb-3 flex items-center gap-2 font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${d.dot}`} /> <T k={d.label} /> <span className="text-sm font-normal text-muted">· {XP_RULES.exercise[d.id]} <T k="XP each" /></span></h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {list.map((e) => {
                 const solved = p.exercises.has(e.id);
@@ -39,10 +42,10 @@ export default function PracticePage() {
                 return (
                   <Link key={e.id} href={`/practice/${e.id}`} className="card-flat group flex items-start gap-3 p-4 transition hover:border-accent/50">
                     <span className="min-w-0 flex-1">
-                      <span className="block font-medium group-hover:text-accent">{e.title}</span>
-                      <span className="text-xs text-muted">{e.topic}</span>
+                      <span className="block font-medium group-hover:text-accent"><T k={e.title} /></span>
+                      <span className="text-xs text-muted"><T k={e.topic} /></span>
                     </span>
-                    {solved ? <CheckCircle2 className="h-5 w-5 text-success" aria-label="Solved" /> : locked ? <span className="chip"><Lock className="h-3 w-3" /> Pro</span> : null}
+                    {solved ? <CheckCircle2 className="h-5 w-5 text-success" aria-label={tx("Solved")} /> : locked ? <span className="chip"><Lock className="h-3 w-3" /> <T k="Pro" /></span> : null}
                   </Link>
                 );
               })}

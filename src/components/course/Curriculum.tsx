@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/components/i18n/LocaleProvider";
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Check, ChevronDown, Crown, Hammer, ListChecks, Lock } from "lucide-react";
@@ -8,6 +10,7 @@ import { Icon } from "@/components/ui/Icon";
 import { planAtLeast } from "@/lib/plans";
 
 export function Curriculum() {
+  const tx = useT();
   const catalog = useCatalog();
   const p = useProgress();
   const [open, setOpen] = useState<Set<string>>(new Set());
@@ -30,12 +33,12 @@ export function Curriculum() {
       <div className="card p-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="h1">Python course</h1>
-            <p className="mt-1 text-muted">{catalog.modules.length} modules · {total} lessons · from absolute zero to intermediate</p>
+            <h1 className="h1"><T k="Python course" /></h1>
+            <p className="mt-1 text-muted">{catalog.modules.length} <T k="modules ·" />{" "}{total} <T k="lessons · from absolute zero to intermediate" /></p>
           </div>
-          <p className="text-sm text-muted"><span className="text-2xl font-semibold text-fg">{Math.round((done / total) * 100)}%</span> complete</p>
+          <p className="text-sm text-muted"><span className="text-2xl font-semibold text-fg">{Math.round((done / total) * 100)}%</span> <T k="complete" /></p>
         </div>
-        <ProgressBar value={(done / total) * 100} className="mt-4" label="Course completion" />
+        <ProgressBar value={(done / total) * 100} className="mt-4" label={tx("Course completion")} />
       </div>
 
       <ol className="space-y-3">
@@ -51,9 +54,9 @@ export function Curriculum() {
                   {mDone === m.lessons.length ? <Check className="h-5 w-5" /> : <Icon name={m.icon} className="h-5 w-5" />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="text-xs text-muted">Module {m.number}</span>
-                  <span className="block font-semibold">{m.title}</span>
-                  <span className="mt-0.5 hidden text-sm text-muted sm:block">{m.description}</span>
+                  <span className="text-xs text-muted"><T k="Module" />{" "}{m.number}</span>
+                  <span className="block font-semibold"><T k={m.title} /></span>
+                  <span className="mt-0.5 hidden text-sm text-muted sm:block"><T k={m.description} /></span>
                 </span>
                 <span className="hidden w-32 shrink-0 sm:block">
                   <span className="mb-1 block text-right text-xs text-muted">{mDone}/{m.lessons.length}</span>
@@ -71,10 +74,10 @@ export function Curriculum() {
                         <li key={l.id}>
                           <Link href={`/learn/${l.id}`} className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-elevated">
                             <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-semibold ${ok ? "bg-success text-white" : "border border-border text-muted"}`}>{ok ? <Check className="h-3.5 w-3.5" /> : i + 1}</span>
-                            <span className="flex-1 text-sm">{l.title}</span>
-                            {l.kind === "project" && <span className="chip hidden sm:inline-flex"><Hammer className="h-3 w-3" /> Project</span>}
+                            <span className="flex-1 text-sm"><T k={l.title} /></span>
+                            {l.kind === "project" && <span className="chip hidden sm:inline-flex"><Hammer className="h-3 w-3" /> <T k="Project" /></span>}
                             {locked && <span className="chip"><Lock className="h-3 w-3" /> {l.minPlan}</span>}
-                            <span className="w-12 text-right text-xs text-muted">{l.minutes} min</span>
+                            <span className="w-12 text-right text-xs text-muted">{l.minutes} <T k="min" /></span>
                           </Link>
                         </li>
                       );
@@ -82,9 +85,9 @@ export function Curriculum() {
                     <li>
                       <Link href={`/quizzes/${m.id}`} className="mt-1 flex items-center gap-3 rounded-xl bg-elevated/60 px-3 py-2.5 hover:bg-elevated">
                         <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full ${quizPassed ? "bg-success text-white" : "bg-accent/15 text-accent"}`}>{quizPassed ? <Check className="h-3.5 w-3.5" /> : <ListChecks className="h-3.5 w-3.5" />}</span>
-                        <span className="flex-1 text-sm font-medium">Module {m.number} quiz</span>
-                        {p.bestQuiz[m.id] != null && <span className="text-xs text-muted">Best: {p.bestQuiz[m.id]}%</span>}
-                        <span className="text-xs text-accent">+50 XP</span>
+                        <span className="flex-1 text-sm font-medium"><T k="Module" />{" "}{m.number} <T k="quiz" /></span>
+                        {p.bestQuiz[m.id] != null && <span className="text-xs text-muted"><T k="Best:" />{" "}{p.bestQuiz[m.id]}%</span>}
+                        <span className="text-xs text-accent"><T k="+50 XP" /></span>
                       </Link>
                     </li>
                   </ul>
@@ -95,7 +98,7 @@ export function Curriculum() {
         })}
       </ol>
       {p.plan === "FREE" && (
-        <p className="text-center text-sm text-muted"><Crown className="mr-1 inline h-4 w-4 text-accent2" />All lessons are free. Projects 4–7 unlock with Pro and 8–10 with Max. <Link href="/pricing" className="link">Compare plans</Link></p>
+        <p className="text-center text-sm text-muted"><Crown className="mr-1 inline h-4 w-4 text-accent2" /><T k="All lessons are free. Projects 4–7 unlock with Pro and 8–10 with Max." />{" "}<Link href="/pricing" className="link"><T k="Compare plans" /></Link></p>
       )}
     </div>
   );

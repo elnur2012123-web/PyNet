@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/components/i18n/LocaleProvider";
+import { T } from "@/components/i18n/T";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
@@ -9,6 +11,7 @@ import { Spinner } from "@/components/ui/States";
 import { LogoMark } from "@/components/ui/Logo";
 
 function Onboarding() {
+  const tx = useT();
   const p = useProgress();
   const params = useSearchParams();
   const rawNext = params.get("next") ?? "";
@@ -30,15 +33,15 @@ function Onboarding() {
   };
 
   const steps = [
-    { title: "What is your programming experience?", options: EXPERIENCE.map((x) => ({ id: x.id as string | number, label: x.label })), value: exp, set: (v: string | number) => setExp(String(v)) },
-    { title: "Why are you learning Python?", options: GOALS.map((x) => ({ id: x.id as string | number, label: x.label })), value: goal, set: (v: string | number) => setGoal(String(v)) },
-    { title: "How much time can you study daily?", options: DAILY.map((x) => ({ id: x.id as string | number, label: x.label })), value: daily, set: (v: string | number) => setDaily(Number(v)) },
+    { title: tx("What is your programming experience?"), options: EXPERIENCE.map((x) => ({ id: x.id as string | number, label: x.label })), value: exp, set: (v: string | number) => setExp(String(v)) },
+    { title: tx("Why are you learning Python?"), options: GOALS.map((x) => ({ id: x.id as string | number, label: x.label })), value: goal, set: (v: string | number) => setGoal(String(v)) },
+    { title: tx("How much time can you study daily?"), options: DAILY.map((x) => ({ id: x.id as string | number, label: x.label })), value: daily, set: (v: string | number) => setDaily(Number(v)) },
   ];
   const s = steps[step];
 
   return (
     <div className="mx-auto max-w-xl py-6">
-      <div className="mb-8 flex items-center gap-3"><LogoMark size={36} /><div><p className="font-semibold">Let's personalise your path</p><p className="text-sm text-muted">Step {step + 1} of 3</p></div></div>
+      <div className="mb-8 flex items-center gap-3"><LogoMark size={36} /><div><p className="font-semibold"><T k="Let's personalise your path" /></p><p className="text-sm text-muted"><T k="Step" />{" "}{step + 1} <T k="of 3" /></p></div></div>
       <div className="mb-6 flex gap-2">{steps.map((_, i) => <span key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-accent" : "bg-elevated"}`} />)}</div>
       <h1 className="text-2xl font-semibold tracking-tight">{s.title}</h1>
       <div className="mt-6 grid gap-3" role="radiogroup">
@@ -50,13 +53,13 @@ function Onboarding() {
         ))}
       </div>
       <div className="mt-8 flex items-center justify-between">
-        <button onClick={() => finish(true)} className="btn-ghost" disabled={saving}>Skip for now</button>
+        <button onClick={() => finish(true)} className="btn-ghost" disabled={saving}><T k="Skip for now" /></button>
         <div className="flex gap-2">
-          {step > 0 && <button onClick={() => setStep(step - 1)} className="btn-secondary">Back</button>}
+          {step > 0 && <button onClick={() => setStep(step - 1)} className="btn-secondary"><T k="Back" /></button>}
           {step < 2 ? (
-            <button onClick={() => setStep(step + 1)} disabled={s.value === null} className="btn-primary">Next <ArrowRight className="h-4 w-4" /></button>
+            <button onClick={() => setStep(step + 1)} disabled={s.value === null} className="btn-primary"><T k="Next" />{" "}<ArrowRight className="h-4 w-4" /></button>
           ) : (
-            <button onClick={() => finish(false)} disabled={s.value === null || saving} className="btn-primary">{saving && <Spinner />} Start learning</button>
+            <button onClick={() => finish(false)} disabled={s.value === null || saving} className="btn-primary">{saving && <Spinner />} <T k="Start learning" /></button>
           )}
         </div>
       </div>

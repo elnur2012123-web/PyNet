@@ -537,3 +537,26 @@ do $$ begin
 end $$;
 reset role;
 select 'CUSTOM ROLE TESTS PASSED' as result;
+
+-- suggestions (migration 0017)
+set role service_role;
+insert into suggestions (user_id, category, message) values
+  ('22222222-2222-2222-2222-222222222222', 'idea', 'Please add Uzbek'),
+  ('11111111-1111-1111-1111-111111111111', 'bug', 'Button is broken');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
+do $$ begin
+  if (select count(*) from suggestions) <> 1 then raise exception 'user should see only own suggestions'; end if;
+  begin
+    insert into suggestions (user_id, category, message) values (auth.uid(), 'idea', 'direct insert');
+    raise exception 'browser inserted a suggestion';
+  exception when insufficient_privilege then null; end;
+  begin
+    update suggestions set status = 'done';
+    raise exception 'user changed status';
+  exception when insufficient_privilege then null; end;
+  if not ('read_suggestions' = any(public.all_permissions())) then raise exception 'permission missing'; end if;
+end $$;
+reset role;
+select 'SUGGESTION TESTS PASSED' as result;

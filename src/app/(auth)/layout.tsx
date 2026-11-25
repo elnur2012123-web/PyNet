@@ -1,3 +1,4 @@
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -10,7 +11,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <main id="main" className="flex flex-1 items-start justify-center px-4 pb-16 pt-6 sm:pt-12">
         <div className="w-full max-w-md">{children}</div>
       </main>
-      <footer className="pb-6 text-center text-xs text-muted"><Link href="/terms" className="hover:text-fg">Terms</Link> · <Link href="/privacy" className="hover:text-fg">Privacy</Link></footer>
+      <footer className="pb-6 text-center text-xs text-muted"><Link href="/terms" className="hover:text-fg"><T k="Terms" /></Link> · <Link href="/privacy" className="hover:text-fg"><T k="Privacy" /></Link></footer>
     </div>
   );
 }

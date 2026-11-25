@@ -1,3 +1,5 @@
+import { getT } from "@/i18n/server";
+import { T } from "@/components/i18n/T";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CalendarDays, Flame, Lock } from "lucide-react";
@@ -32,14 +34,15 @@ interface PublicProfile {
 }
 
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
+  const tx = await getT();
   const { username } = await params;
   if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) notFound();
   const supabase = await getServerSupabase();
-  if (!supabase) return <EmptyState title="Profiles need accounts" body="Public profiles are available once Supabase is configured." />;
+  if (!supabase) return <EmptyState title={tx("Profiles need accounts")} body={tx("Public profiles are available once Supabase is configured.")} />;
   const { data } = await supabase.rpc("get_public_profile", { p_username: username });
   const prof = (Array.isArray(data) ? data[0] : data) as PublicProfile | undefined;
   if (!prof) {
-    return <EmptyState icon={<Lock className="h-8 w-8" />} title="Profile not available" body="This learner doesn't exist or has made their profile private." />;
+    return <EmptyState icon={<Lock className="h-8 w-8" />} title={tx("Profile not available")} body={tx("This learner doesn't exist or has made their profile private.")} />;
   }
   const unlocked = new Set(prof.achievements.map((a) => a.id));
   const { data: me } = await supabase.rpc("my_moderation");
@@ -65,19 +68,19 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         <div className="relative flex flex-col items-start gap-5 sm:flex-row sm:items-end">
           <Avatar src={prof.avatar_url} name={prof.display_name || prof.username} size={96} />
           <div className="flex-1">
-            <p className={`text-sm font-semibold ${rank.className}`}>{rank.name}</p>
+            <p className={`text-sm font-semibold ${rank.className}`}><T k={rank.name} /></p>
             <h1 className={`flex flex-wrap items-center gap-2 text-2xl font-semibold`}><span className={prof.rating != null ? rank.className : ""}>{prof.display_name || prof.username}</span> <PlanBadge plan={prof.plan} />{prof.special_title && <SpecialChip title={prof.special_title} />}</h1>
             <p className="text-muted">@{prof.username}{prof.country ? ` · ${prof.country}` : ""}</p>
             {prof.badge && <div className="mt-2"><BadgeChip id={prof.badge} /></div>}
             <div className="mt-3 space-y-1 text-sm">
-              <p className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-accent" /> Contest rating: {prof.rating != null ? <><b className={rank.className}>{prof.rating}</b> <span className="text-xs text-muted">(max. <span className={maxRank.className}>{maxRank.name.toLowerCase()}, {prof.max_rating}</span>)</span></> : <span className="text-muted">unrated</span>}</p>
-              <p className="flex items-center gap-2"><Star className="h-4 w-4 text-warn" /> Friend of: {prof.friends} user{Number(prof.friends) === 1 ? "" : "s"}</p>
-              <p className="flex items-center gap-2"><Users className="h-4 w-4 text-muted" /> <Link className="link" href={`/submissions?user=${prof.username}`}>Submissions</Link></p>
+              <p className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-accent" /> <T k="Contest rating:" />{" "}{prof.rating != null ? <><b className={rank.className}>{prof.rating}</b> <span className="text-xs text-muted"><T k="(max." />{" "}<span className={maxRank.className}>{maxRank.name.toLowerCase()}, {prof.max_rating}</span>)</span></> : <span className="text-muted"><T k="unrated" /></span>}</p>
+              <p className="flex items-center gap-2"><Star className="h-4 w-4 text-warn" /> <T k="Friend of:" />{" "}{prof.friends} <T k="user" />{Number(prof.friends) === 1 ? "" : "s"}</p>
+              <p className="flex items-center gap-2"><Users className="h-4 w-4 text-muted" /> <Link className="link" href={`/submissions?user=${prof.username}`}><T k="Submissions" /></Link></p>
             </div>
-            {prof.banned && <p className="mt-2 inline-flex rounded-md bg-danger/10 px-2 py-0.5 text-xs font-semibold text-danger">Suspended</p>}
+            {prof.banned && <p className="mt-2 inline-flex rounded-md bg-danger/10 px-2 py-0.5 text-xs font-semibold text-danger"><T k="Suspended" /></p>}
             {prof.bio && <p className="mt-2 max-w-xl text-fg/90">{prof.bio}</p>}
             {canModerate && <div className="mt-3"><ModerateButtons username={prof.username} banned={prof.banned} /></div>}
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted"><CalendarDays className="h-3.5 w-3.5" /> Member since {new Date(prof.created_at).toLocaleDateString(undefined, { month: "long", year: "numeric" })}</p>
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted"><CalendarDays className="h-3.5 w-3.5" /> <T k="Member since" />{" "}{new Date(prof.created_at).toLocaleDateString(undefined, { month: "long", year: "numeric" })}</p>
           </div>
           {prof.special_title ? <SpecialBadge title={prof.special_title} size={56} showLabel /> : <LeagueBadge league={prof.league} size={56} showLabel />}
         </div>
@@ -90,29 +93,29 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           ))}
         </div>
       ) : (
-        <p className="card p-4 text-sm text-muted"><Lock className="mr-1 inline h-4 w-4" /> This learner keeps their statistics private.</p>
+        <p className="card p-4 text-sm text-muted"><Lock className="mr-1 inline h-4 w-4" /> <T k="This learner keeps their statistics private." /></p>
       )}
 
       <div className="card p-5">
-        <h2 className="mb-3 font-semibold">Rating history</h2>
+        <h2 className="mb-3 font-semibold"><T k="Rating history" /></h2>
         <RatingGraph points={history} />
       </div>
       {act !== null && (prof.show_stats || prof.total_xp != null) && (
         <div className="card p-5">
-          <h2 className="mb-3 font-semibold">Activity</h2>
+          <h2 className="mb-3 font-semibold"><T k="Activity" /></h2>
           <Heatmap days={(act ?? []) as { day: string; count: number }[]} solved={solved} />
         </div>
       )}
 
       <div className="card p-6">
-        <h2 className="font-semibold">Achievements ({unlocked.size})</h2>
-        {unlocked.size === 0 ? <p className="mt-3 text-sm text-muted">No achievements yet.</p> : (
+        <h2 className="font-semibold"><T k="Achievements (" />{unlocked.size})</h2>
+        {unlocked.size === 0 ? <p className="mt-3 text-sm text-muted"><T k="No achievements yet." /></p> : (
           <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {ACHIEVEMENTS.filter((a) => unlocked.has(a.id)).map((a) => (
               <li key={a.id} className="rounded-xl border border-border p-3 text-center">
                 <span className="flex justify-center"><BadgeMedal id={a.id} size={48} /></span>
-                <p className="mt-2 text-sm font-medium">{a.name}</p>
-                <p className="text-[11px] text-muted">{a.description}</p>
+                <p className="mt-2 text-sm font-medium"><T k={a.name} /></p>
+                <p className="text-[11px] text-muted"><T k={a.description} /></p>
               </li>
             ))}
           </ul>

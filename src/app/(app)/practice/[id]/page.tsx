@@ -1,3 +1,4 @@
+import { T } from "@/components/i18n/T";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -26,12 +27,12 @@ export default async function ExercisePage({ params }: { params: Promise<{ id: s
     if (!planAtLeast(ctx?.plan ?? "FREE", minPlan)) {
       return (
         <div className="mx-auto max-w-2xl">
-          <Link href="/practice" className="btn-ghost btn-sm mb-4"><ArrowLeft className="h-4 w-4" /> All challenges</Link>
-          <h1 className="h1">{ex.title}</h1>
+          <Link href="/practice" className="btn-ghost btn-sm mb-4"><ArrowLeft className="h-4 w-4" /> <T k="All challenges" /></Link>
+          <h1 className="h1"><T k={ex.title} /></h1>
           <div className="card mt-6 p-6">
-            <p className="flex items-center gap-2 font-semibold"><Lock className="h-4 w-4 text-accent2" /> Hard challenges are part of Pro</p>
-            <p className="mt-2 text-sm text-muted">Pro unlocks every Hard challenge, unlimited credited exercises and more PyBuddy messages — for $5/month.</p>
-            <div className="mt-5 flex gap-3"><Link href="/pricing" className="btn-primary">See plans</Link>{next && <Link href={`/practice/${next.id}`} className="btn-secondary">Next challenge</Link>}</div>
+            <p className="flex items-center gap-2 font-semibold"><Lock className="h-4 w-4 text-accent2" /> <T k="Hard challenges are part of Pro" /></p>
+            <p className="mt-2 text-sm text-muted"><T k="Pro unlocks every Hard challenge, unlimited credited exercises and more PyBuddy messages — for $5/month." /></p>
+            <div className="mt-5 flex gap-3"><Link href="/pricing" className="btn-primary"><T k="See plans" /></Link>{next && <Link href={`/practice/${next.id}`} className="btn-secondary"><T k="Next challenge" /></Link>}</div>
           </div>
         </div>
       );

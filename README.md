@@ -32,6 +32,19 @@ Email verification is optional. Turn **Confirm email** off in Supabase (Authenti
 - **PyBuddy without `ANTHROPIC_API_KEY`:** the tutor runs as **PyBuddy Lite**, a free rule-based tutor (`src/lib/tutor/`). It answers from PyNest's lessons, error guides, exercises and a Python glossary. It explains error messages, walks through pasted code line by line, flags common bugs, gives practice questions and exercise hints, and refuses non-Python questions. It needs no API key, costs nothing and has no daily limit. Add a key later and PyBuddy switches to Claude automatically.
 - **Payments without Lemon Squeezy credentials:** the pricing and billing pages show a "Demo mode" notice, and upgrade buttons are disabled. Nothing is simulated.
 
+## Languages
+
+PyNest's interface is available in **English**, **Oʻzbekcha (lotin)**, **Ўзбекча (кирилл)** and **Русский**. Use the language button (文A) in the top bar. The choice is stored in a cookie, so server-rendered pages switch too.
+
+- Translations live in `src/i18n/dict/t1.ts … t9.ts` as `[English, Oʻzbekcha, Русский]` triples. Uzbek Cyrillic is generated automatically from the Latin text by `src/i18n/translit.ts`, which keeps brand names and code like `print()` unchanged.
+- In components, use `<T k="English text" />`, or `const tx = useT()` (client) / `const tx = await getT()` (server). Placeholders look like `tx("Welcome back, {name}", { name })`. Counted words use `useTp()("day", n)` with proper Russian plurals.
+- `npx tsx scripts/i18n/collect.ts && npx tsx scripts/i18n/collect-data.ts && npx tsx scripts/i18n/coverage.ts` lists any string that's missing a translation.
+- Lesson bodies, quiz questions, problem statements and PyBuddy Lite answers are still English. Lessons show a note about this.
+
+## Suggestion bot
+
+Every signed-in user can open **Suggestions** (sidebar). A small chat bot asks what the suggestion is about (idea, bug, lesson, translation, other) and sends it to the team, together with the user's language. Staff whose role has **Read suggestions** see them in **Admin panel → Suggestions** and can mark them Planned, Done or Not planned, with a reply the user sees. Run `0017_suggestions.sql`.
+
 ## Posting updates ("What's new")
 
 Users see a bell with a red badge and a one-time popup whenever there's something new. There are two ways to post:

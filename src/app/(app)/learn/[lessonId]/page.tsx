@@ -1,3 +1,4 @@
+import { T } from "@/components/i18n/T";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -34,15 +35,15 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
     if (!planAtLeast(ctx?.plan ?? "FREE", lesson.minPlan)) {
       return (
         <div className="mx-auto max-w-2xl">
-          <p className="mb-2 text-sm text-muted">Module {module.number}: {module.title}</p>
-          <h1 className="h1">{lesson.title}</h1>
+          <p className="mb-2 text-sm text-muted"><T k="Module" />{" "}{module.number}: <T k={module.title} /></p>
+          <h1 className="h1"><T k={lesson.title} /></h1>
           <div className="card mt-6 p-6">
-            <p className="flex items-center gap-2 font-semibold"><Lock className="h-4 w-4 text-accent2" /> This project is part of the {lesson.minPlan} plan</p>
+            <p className="flex items-center gap-2 font-semibold"><Lock className="h-4 w-4 text-accent2" /> <T k="This project is part of the" />{" "}{lesson.minPlan} <T k="plan" /></p>
             <div className="mt-3 text-sm text-muted"><RichText text={lesson.intro.split("\n\n").slice(0, 2).join("\n\n")} /></div>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link href="/pricing" className="btn-primary">See plans</Link>
-              {!ctx && isSupabaseConfigured && <Link href={`/signin?next=/learn/${lesson.id}`} className="btn-secondary">Sign in</Link>}
-              {next && <Link href={`/learn/${next.id}`} className="btn-ghost">Skip to next</Link>}
+              <Link href="/pricing" className="btn-primary"><T k="See plans" /></Link>
+              {!ctx && isSupabaseConfigured && <Link href={`/signin?next=/learn/${lesson.id}`} className="btn-secondary"><T k="Sign in" /></Link>}
+              {next && <Link href={`/learn/${next.id}`} className="btn-ghost"><T k="Skip to next" /></Link>}
             </div>
           </div>
         </div>

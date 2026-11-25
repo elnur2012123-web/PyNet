@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/i18n/LocaleProvider";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Catalog } from "@/content/catalog";
@@ -229,6 +230,7 @@ function guestAward(g: GuestData, kind: "lesson" | "project" | "exercise" | "qui
 
 // ---------------------------------------------------------------- provider
 export function ProgressProvider({ children }: { children: React.ReactNode }) {
+  const tx = useT();
   const catalog = useCatalog();
   const toast = useToast();
   const router = useRouter();
@@ -260,7 +262,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch("/api/me", { cache: "no-store" });
       if (res.status === 401) {
-        if (wasAccount.current) toast({ kind: "info", title: "You've been signed out", body: "Your session ended. Sign in again to keep saving progress." });
+        if (wasAccount.current) toast({ kind: "info", title: tx("You've been signed out"), body: tx("Your session ended. Sign in again to keep saving progress.") });
         wasAccount.current = false;
         setState(guestToState(loadGuest(), {}));
         return;

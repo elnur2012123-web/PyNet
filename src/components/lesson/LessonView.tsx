@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale, useT } from "@/components/i18n/LocaleProvider";
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, Bot, Check, CheckCircle2, Clock, Globe2, Lightbulb, Play, Sparkles, TriangleAlert, XCircle } from "lucide-react";
@@ -36,6 +38,7 @@ export function LessonView({
 }: {
   lesson: LessonPayload; moduleTitle: string; moduleNumber: number; position: number; total: number; prev: NavLink | null; next: NavLink | null;
 }) {
+  const tx = useT();
   const p = useProgress();
   const { favs, toggle } = useFavorites();
   const done = p.lessons.has(lesson.id);
@@ -49,45 +52,45 @@ export function LessonView({
 
   return (
     <article className="mx-auto max-w-3xl animate-fade-up">
-      <nav className="mb-4 flex items-center gap-2 text-sm text-muted" aria-label="Breadcrumb">
-        <Link href="/learn" className="hover:text-fg">Course</Link><span>/</span>
-        <Link href={`/learn#m${moduleNumber}`} className="hover:text-fg">Module {moduleNumber}: {moduleTitle}</Link>
+      <nav className="mb-4 flex items-center gap-2 text-sm text-muted" aria-label={tx("Breadcrumb")}>
+        <Link href="/learn" className="hover:text-fg"><T k="Course" /></Link><span>/</span>
+        <Link href={`/learn#m${moduleNumber}`} className="hover:text-fg"><T k="Module" />{" "}{moduleNumber}: {moduleTitle}</Link>
       </nav>
 
       <header className="mb-8">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="chip">{lesson.kind === "project" ? "Project" : "Lesson"} {position} of {total}</span>
-          <span className="chip"><Clock className="h-3 w-3" /> {lesson.minutes} min</span>
-          {done && <span className="chip border-success/40 text-success"><Check className="h-3 w-3" /> Completed</span>}
+          <span className="chip">{lesson.kind === "project" ? tx("Project") : tx("Lesson")} {position} <T k="of" />{" "}{total}</span>
+          <span className="chip"><Clock className="h-3 w-3" /> {lesson.minutes} <T k="min" /></span>
+          {done && <span className="chip border-success/40 text-success"><Check className="h-3 w-3" /> <T k="Completed" /></span>}
         </div>
         <div className="flex items-start justify-between gap-4">
-          <h1 className="h1">{lesson.title}</h1>
-          <button onClick={() => toggle(lesson.id)} className="btn-ghost btn-sm mt-1 shrink-0" aria-pressed={favs.has(lesson.id)} title={favs.has(lesson.id) ? "Remove from favourites" : "Save to favourites"}>
+          <h1 className="h1"><T k={lesson.title} /></h1>
+          <LessonLanguageNote />
+          <button onClick={() => toggle(lesson.id)} className="btn-ghost btn-sm mt-1 shrink-0" aria-pressed={favs.has(lesson.id)} title={favs.has(lesson.id) ? tx("Remove from favourites") : tx("Save to favourites")}>
             {favs.has(lesson.id) ? <BookmarkCheck className="h-5 w-5 text-accent" /> : <Bookmark className="h-5 w-5" />}
           </button>
         </div>
       </header>
 
-      <Section icon={<Sparkles className="h-4 w-4" />} title="The idea">
+      <Section icon={<Sparkles className="h-4 w-4" />} title={tx("The idea")}>
         <RichText text={lesson.intro} />
         <button onClick={() => askTutor({ message: `I'm on the lesson "${lesson.title}". Can you explain it to me in a different, even simpler way, with a real-life analogy?` })} className="btn-secondary btn-sm mt-3">
-          <Bot className="h-3.5 w-3.5" /> Explain it differently
-        </button>
+          <Bot className="h-3.5 w-3.5" /> <T k="Explain it differently" /></button>
       </Section>
 
       {lesson.syntax && (
-        <Section title="Syntax">
+        <Section title={tx("Syntax")}>
           <CodeBlock code={lesson.syntax} />
         </Section>
       )}
 
-      <Section title="Examples">
+      <Section title={tx("Examples")}>
         <div className="space-y-5">
           {lesson.examples.map((ex) => (
             <div key={ex.title}>
               <div className="mb-2 flex items-center justify-between gap-3">
                 <h3 className="font-medium">{ex.title}</h3>
-                <button onClick={() => loadIntoEditor(ex.code)} className="btn-ghost btn-sm"><Play className="h-3.5 w-3.5" /> Try it</button>
+                <button onClick={() => loadIntoEditor(ex.code)} className="btn-ghost btn-sm"><Play className="h-3.5 w-3.5" /> <T k="Try it" /></button>
               </div>
               <CodeBlock code={ex.code} lineNumbers />
               {ex.note && <p className="mt-2 text-sm text-muted">{ex.note}</p>}
@@ -96,21 +99,21 @@ export function LessonView({
         </div>
       </Section>
 
-      <Section icon={<Globe2 className="h-4 w-4" />} title="In the real world">
+      <Section icon={<Globe2 className="h-4 w-4" />} title={tx("In the real world")}>
         <p className="text-[15px] leading-7 text-fg/90">{lesson.realWorld}</p>
       </Section>
 
-      <Section icon={<TriangleAlert className="h-4 w-4" />} title="Common mistakes">
+      <Section icon={<TriangleAlert className="h-4 w-4" />} title={tx("Common mistakes")}>
         <div className="space-y-4">
           {lesson.mistakes.map((m, i) => (
             <div key={i} className="card-flat p-4">
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
-                  <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-danger"><XCircle className="h-3.5 w-3.5" /> Mistake</p>
+                  <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-danger"><XCircle className="h-3.5 w-3.5" /> <T k="Mistake" /></p>
                   {looksLikeCode(m.wrong) ? <CodeBlock code={m.wrong} copy={false} /> : <p className="text-sm">{m.wrong}</p>}
                 </div>
                 <div>
-                  <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-success"><CheckCircle2 className="h-3.5 w-3.5" /> Correct</p>
+                  <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-success"><CheckCircle2 className="h-3.5 w-3.5" /> <T k="Correct" /></p>
                   {looksLikeCode(m.right) ? <CodeBlock code={m.right} copy={false} /> : <p className="text-sm">{m.right}</p>}
                 </div>
               </div>
@@ -120,12 +123,12 @@ export function LessonView({
         </div>
       </Section>
 
-      <Section id="try-it" title="Try it yourself">
-        <p className="mb-3 text-sm text-muted">This is real Python running in your browser. Change the code and press Run (or Ctrl/⌘ + Enter).</p>
+      <Section id="try-it" title={tx("Try it yourself")}>
+        <p className="mb-3 text-sm text-muted"><T k="This is real Python running in your browser. Change the code and press Run (or Ctrl/⌘ + Enter)." /></p>
         <PythonRunner key={tryCode ?? "initial"} initialCode={tryCode ?? lesson.tryIt} minHeight="180px" />
       </Section>
 
-      <Section title={`Practice (${practiceDone.size}/${lesson.practice.length})`}>
+      <Section title={`${tx("Practice")} (${practiceDone.size}/${lesson.practice.length})`}>
         <div className="space-y-6">
           {lesson.practice.map((t, i) => (
             <div key={i}>
@@ -148,14 +151,14 @@ export function LessonView({
 
       <KnowledgeCheck lessonId={lesson.id} questions={lesson.quiz} done={done} kind={lesson.kind} />
 
-      <nav className="mt-10 flex items-center justify-between gap-3 border-t border-border pt-6" aria-label="Lesson navigation">
+      <nav className="mt-10 flex items-center justify-between gap-3 border-t border-border pt-6" aria-label={tx("Lesson navigation")}>
         {prev ? (
           <Link href={`/learn/${prev.id}`} className="btn-secondary max-w-[48%]"><ArrowLeft className="h-4 w-4 shrink-0" /><span className="truncate">{prev.title}</span></Link>
         ) : <span />}
         {next ? (
-          <Link href={`/learn/${next.id}`} className="btn-primary max-w-[48%]"><span className="truncate">{next.title}</span><ArrowRight className="h-4 w-4 shrink-0" /></Link>
+          <Link href={`/learn/${next.id}`} className="btn-primary max-w-[48%]"><span className="truncate"><T k={next.title} /></span><ArrowRight className="h-4 w-4 shrink-0" /></Link>
         ) : (
-          <Link href="/dashboard" className="btn-primary">Back to dashboard <ArrowRight className="h-4 w-4" /></Link>
+          <Link href="/dashboard" className="btn-primary"><T k="Back to dashboard" />{" "}<ArrowRight className="h-4 w-4" /></Link>
         )}
       </nav>
     </article>
@@ -178,6 +181,7 @@ function Section({ title, icon, children, id }: { title: string; icon?: React.Re
 }
 
 function KnowledgeCheck({ lessonId, questions, done, kind }: { lessonId: string; questions: { q: string; code?: string; options: string[] }[]; done: boolean; kind: "lesson" | "project" }) {
+  const tx = useT();
   const p = useProgress();
   const [answers, setAnswers] = useState<(number | null)[]>(questions.map(() => null));
   const [graded, setGraded] = useState<GradedResponse | null>(null);
@@ -195,9 +199,9 @@ function KnowledgeCheck({ lessonId, questions, done, kind }: { lessonId: string;
 
   return (
     <section className="card mb-6 p-5 sm:p-6" aria-labelledby="kc">
-      <h2 id="kc" className="text-lg font-semibold">Knowledge check</h2>
+      <h2 id="kc" className="text-lg font-semibold"><T k="Knowledge check" /></h2>
       <p className="mt-1 text-sm text-muted">
-        Answer correctly to complete this {kind} and earn <strong className="text-fg">{kind === "project" ? 100 : 20} XP</strong>{done ? " (already earned)" : ""}.
+        <T k="Answer correctly to complete this" />{" "}{kind} <T k="and earn" />{" "}<strong className="text-fg">{kind === "project" ? 100 : 20} <T k="XP" /></strong>{done ? tx(" (already earned)") : ""}.
       </p>
       <div className="mt-5 space-y-6">
         {questions.map((q, i) => {
@@ -219,7 +223,7 @@ function KnowledgeCheck({ lessonId, questions, done, kind }: { lessonId: string;
                   );
                 })}
               </div>
-              {res && <p className={`mt-2 text-sm ${res.correct ? "text-success" : "text-danger"}`}>{res.correct ? "Correct! " : `Not quite. Answer: ${res.correctAnswer}. `}<span className="text-fg/80">{res.explain}</span></p>}
+              {res && <p className={`mt-2 text-sm ${res.correct ? "text-success" : "text-danger"}`}>{res.correct ? tx("Correct! ") : `Not quite. Answer: ${res.correctAnswer}. `}<span className="text-fg/80">{res.explain}</span></p>}
             </fieldset>
           );
         })}
@@ -227,19 +231,26 @@ function KnowledgeCheck({ lessonId, questions, done, kind }: { lessonId: string;
       {err && <div className="mt-4"><Notice kind="error">{err}</Notice></div>}
       <div className="mt-6 flex flex-wrap items-center gap-3">
         {!graded ? (
-          <button onClick={submit} disabled={busy || answers.some((a) => a === null)} className="btn-primary">{busy && <Spinner />} Check answers</button>
+          <button onClick={submit} disabled={busy || answers.some((a) => a === null)} className="btn-primary">{busy && <Spinner />} <T k="Check answers" /></button>
         ) : (
           <>
             <p className={`text-sm font-semibold ${graded.percent >= 50 ? "text-success" : "text-danger"}`}>
-              {graded.score}/{graded.total} correct — {graded.percent >= 50 ? `${kind === "project" ? "Project" : "Lesson"} complete!` : "Review the lesson and try again."}
+              {graded.score}/{graded.total} <T k="correct —" />{" "}{graded.percent >= 50 ? `${kind === "project" ? "Project" : "Lesson"} complete!` : tx("Review the lesson and try again.")}
             </p>
-            <button onClick={() => { setGraded(null); setAnswers(questions.map(() => null)); }} className="btn-secondary btn-sm">Try again</button>
+            <button onClick={() => { setGraded(null); setAnswers(questions.map(() => null)); }} className="btn-secondary btn-sm"><T k="Try again" /></button>
           </>
         )}
       </div>
       {graded && graded.percent >= 50 && p.mode === "guest" && p.authConfigured && (
-        <p className="mt-3 text-xs text-muted">Saved in this browser. <Link href="/signup" className="link">Create an account</Link> to keep your XP on the leaderboard.</p>
+        <p className="mt-3 text-xs text-muted"><T k="Saved in this browser." />{" "}<Link href="/signup" className="link"><T k="Create an account" /></Link> <T k="to keep your XP on the leaderboard." /></p>
       )}
     </section>
   );
+}
+
+/** Lesson bodies are English for now; tell non-English readers. */
+function LessonLanguageNote() {
+  const locale = useLocale();
+  if (locale === "en") return null;
+  return <p className="mt-2 inline-flex rounded-lg bg-warn/10 px-2.5 py-1 text-xs text-warn"><T k="Lesson text is still in English — translation is coming soon." /></p>;
 }

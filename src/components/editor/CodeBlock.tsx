@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/components/i18n/LocaleProvider";
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { tokenize } from "@/lib/highlight";
@@ -12,6 +13,7 @@ export function HighlightedCode({ code }: { code: string }) {
 }
 
 export function CodeBlock({ code, title, className = "", lineNumbers = false, copy = true, plain = false }: { code: string; title?: string; className?: string; lineNumbers?: boolean; copy?: boolean; plain?: boolean }) {
+  const tx = useT();
   const [copied, setCopied] = useState(false);
   const lines = code.split("\n");
   return (
@@ -21,7 +23,7 @@ export function CodeBlock({ code, title, className = "", lineNumbers = false, co
         <button
           onClick={() => { navigator.clipboard?.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
           className="absolute right-2 top-2 rounded-lg border border-border bg-surface/80 p-1.5 text-muted opacity-0 transition hover:text-fg focus:opacity-100 group-hover:opacity-100"
-          aria-label="Copy code" style={title ? { top: 40 } : undefined}
+          aria-label={tx("Copy code")} style={title ? { top: 40 } : undefined}
         >
           {copied ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
         </button>

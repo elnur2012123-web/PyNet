@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/components/i18n/T";
 import { CodeBlock } from "@/components/editor/CodeBlock";
 import { Inline } from "@/components/lesson/RichText";
 
@@ -21,8 +22,7 @@ export function Markdown({ text }: { text: string }) {
             onClick={() => { try { localStorage.setItem("pn-playground", code); } catch {} window.location.href = "/playground"; }}
             className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
           >
-            ▶ Open in Playground
-          </button>
+            <T k="▶ Open in Playground" /></button>
         </div>,
       );
     }

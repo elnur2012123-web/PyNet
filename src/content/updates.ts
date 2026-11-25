@@ -13,6 +13,14 @@ export interface UpdateEntry {
 
 export const CODE_UPDATES: UpdateEntry[] = [
   {
+    id: "2026-11-25-languages",
+    date: "2026-11-25T18:00:00Z",
+    kind: "feature",
+    title: "PyNest now speaks Uzbek and Russian",
+    body: "Choose Oʻzbekcha (lotin), Ўзбекча (кирилл) or Русский with the language button at the top. Lesson texts are being translated next. Got an idea or found a mistake? Tell us with the new Suggestions bot.",
+    link: "/suggest",
+  },
+  {
     id: "2026-11-25-cpp",
     date: "2026-11-25T10:00:00Z",
     kind: "feature",

@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/components/i18n/LocaleProvider";
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Crown, Flame, Medal, Trophy } from "lucide-react";
@@ -24,6 +26,7 @@ const TABS = [
 ] as const;
 
 export default function LeaderboardPage() {
+  const tx = useT();
   const p = useProgress();
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("global");
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -50,15 +53,15 @@ export default function LeaderboardPage() {
   const league = leagueForWeeklyXp(weekly);
 
   if (!p.authConfigured) {
-    return <EmptyState icon={<Trophy className="h-8 w-8" />} title="Leaderboard needs accounts" body="Rankings come from the database, so they're available once Supabase is configured on this deployment." />;
+    return <EmptyState icon={<Trophy className="h-8 w-8" />} title={tx("Leaderboard needs accounts")} body={tx("Rankings come from the database, so they're available once Supabase is configured on this deployment.")} />;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="h1">Leaderboard</h1>
-          <p className="mt-1 text-muted">Rankings are based only on XP earned by learning. Free, Pro and Max learners compete together.</p>
+          <h1 className="h1"><T k="Leaderboard" /></h1>
+          <p className="mt-1 text-muted"><T k="Rankings are based only on XP earned by learning. Free, Pro and Max learners compete together." /></p>
         </div>
       </div>
 
@@ -67,20 +70,20 @@ export default function LeaderboardPage() {
           <div className="card flex items-center gap-3 p-4 md:col-span-2">
             {p.profile?.special_title ? <SpecialBadge title={p.profile.special_title} size={48} /> : <LeagueBadge league={league.league.name} size={48} />}
             <div>
-              <p className="font-semibold">{p.profile?.special_title ?? `${league.league.name} League`}</p>
-              <p className="text-sm text-muted">{p.profile?.hidden_from_weekly ? "Hidden from weekly & monthly leaderboards" : `${weekly} XP this week${league.next ? ` · ${league.xpToNext} XP to ${league.next.name}` : ""}`}</p>
+              <p className="font-semibold">{p.profile?.special_title ?? tx("{league} League", { league: tx(league.league.name) })}</p>
+              <p className="text-sm text-muted">{p.profile?.hidden_from_weekly ? tx("Hidden from weekly & monthly leaderboards") : tx("{n} XP this week", { n: weekly }) + (league.next ? " · " + tx("{n} XP to {league}", { n: league.xpToNext, league: tx(league.next.name) }) : "")}</p>
             </div>
           </div>
-          <div className="card p-4"><p className="text-xs text-muted">Global rank</p><p className="text-2xl font-semibold">{p.stats?.global_rank ? `#${p.stats.global_rank}` : "—"}</p><p className="text-xs text-muted">Best: {p.stats?.best_rank ? `#${p.stats.best_rank}` : "—"}</p></div>
-          <div className="card p-4"><p className="text-xs text-muted">Weekly rank</p><p className="text-2xl font-semibold">{p.profile?.hidden_from_weekly ? "Hidden" : weekly > 0 && p.stats?.weekly_rank ? `#${p.stats.weekly_rank}` : "—"}</p><p className="text-xs text-muted">{p.stats?.monthly_xp ?? 0} XP this month</p></div>
+          <div className="card p-4"><p className="text-xs text-muted"><T k="Global rank" /></p><p className="text-2xl font-semibold">{p.stats?.global_rank ? `#${p.stats.global_rank}` : "—"}</p><p className="text-xs text-muted"><T k="Best:" />{" "}{p.stats?.best_rank ? `#${p.stats.best_rank}` : "—"}</p></div>
+          <div className="card p-4"><p className="text-xs text-muted"><T k="Weekly rank" /></p><p className="text-2xl font-semibold">{p.profile?.hidden_from_weekly ? tx("Hidden") : weekly > 0 && p.stats?.weekly_rank ? `#${p.stats.weekly_rank}` : "—"}</p><p className="text-xs text-muted">{p.stats?.monthly_xp ?? 0} <T k="XP this month" /></p></div>
         </div>
       ) : (
-        <div className="card flex flex-wrap items-center justify-between gap-3 p-4 text-sm"><span>Create an account to appear on the leaderboard and get your own rank.</span><Link href="/signup" className="btn-primary btn-sm">Join free</Link></div>
+        <div className="card flex flex-wrap items-center justify-between gap-3 p-4 text-sm"><span><T k="Create an account to appear on the leaderboard and get your own rank." /></span><Link href="/signup" className="btn-primary btn-sm"><T k="Join free" /></Link></div>
       )}
 
       <div className="flex flex-wrap gap-2" role="tablist">
         {TABS.map((t) => (
-          <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-xl px-3.5 py-1.5 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border bg-surface text-muted hover:text-fg"}`}>{t.label}</button>
+          <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-xl px-3.5 py-1.5 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border bg-surface text-muted hover:text-fg"}`}><T k={t.label} /></button>
         ))}
       </div>
 
@@ -89,9 +92,9 @@ export default function LeaderboardPage() {
         <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14" />)}</div>
       ) : rows.length === 0 ? (
         <EmptyState icon={<Trophy className="h-8 w-8" />}
-          title={tab === "friends" ? (p.mode === "account" ? "No friends yet" : "Sign in to see friends") : tab === "country" ? (p.profile?.country ? "No one from your country yet" : "Set your country in Settings") : "No rankings yet"}
-          body={tab === "friends" ? "Add friends to compete with them." : tab === "country" ? undefined : "Complete a lesson to be the first on the board!"}
-          action={tab === "friends" && p.mode === "account" ? <Link href="/friends" className="btn-primary btn-sm">Find friends</Link> : tab === "country" && !p.profile?.country && p.mode === "account" ? <Link href="/settings" className="btn-primary btn-sm">Settings</Link> : undefined} />
+          title={tab === "friends" ? (p.mode === "account" ? tx("No friends yet") : tx("Sign in to see friends")) : tab === "country" ? (p.profile?.country ? tx("No one from your country yet") : tx("Set your country in Settings")) : tx("No rankings yet")}
+          body={tab === "friends" ? tx("Add friends to compete with them.") : tab === "country" ? undefined : tx("Complete a lesson to be the first on the board!")}
+          action={tab === "friends" && p.mode === "account" ? <Link href="/friends" className="btn-primary btn-sm"><T k="Find friends" /></Link> : tab === "country" && !p.profile?.country && p.mode === "account" ? <Link href="/settings" className="btn-primary btn-sm"><T k="Settings" /></Link> : undefined} />
       ) : (
         <>
           {rows.length >= 3 && (
@@ -104,7 +107,7 @@ export default function LeaderboardPage() {
                     <Trophy className={`h-6 w-6 ${color}`} aria-label={`${place} place`} />
                     <div className="mt-2"><Avatar src={r.avatar_url} name={r.display_name || r.username} size={place === 1 ? 56 : 44} /></div>
                     <p className={`mt-2 max-w-full truncate text-sm font-semibold ${r.rating != null ? rankFor(r.rating).className : ""}`}>{r.display_name || r.username}</p>
-                    <p className="text-xs text-muted">{formatXp(r.xp)} XP</p>
+                    <p className="text-xs text-muted">{formatXp(r.xp)} <T k="XP" /></p>
                     {r.badge && <BadgeChip id={r.badge} className="mt-1.5" />}
                   </Link>
                 );
@@ -114,7 +117,7 @@ export default function LeaderboardPage() {
           <div className="card overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <thead className="border-b border-border text-left text-xs text-muted">
-                <tr><th className="px-4 py-3">Rank</th><th className="px-4 py-3">Learner</th><th className="px-4 py-3 text-right">XP</th><th className="px-4 py-3 text-right">Level</th><th className="px-4 py-3 text-right">Lessons</th><th className="px-4 py-3 text-right">Challenges</th><th className="px-4 py-3 text-right">Streak</th></tr>
+                <tr><th className="px-4 py-3"><T k="Rank" /></th><th className="px-4 py-3"><T k="Learner" /></th><th className="px-4 py-3 text-right"><T k="XP" /></th><th className="px-4 py-3 text-right"><T k="Level" /></th><th className="px-4 py-3 text-right"><T k="Lessons" /></th><th className="px-4 py-3 text-right"><T k="Challenges" /></th><th className="px-4 py-3 text-right"><T k="Streak" /></th></tr>
               </thead>
               <tbody>
                 {rows.map((r) => {
@@ -125,7 +128,7 @@ export default function LeaderboardPage() {
                       <td className="px-4 py-3">
                         <Link href={`/profile/${r.username}`} className="flex items-center gap-3 hover:text-accent">
                           <Avatar src={r.avatar_url} name={r.display_name || r.username} size={32} />
-                          <span className="min-w-0"><span className="flex items-center gap-1.5 font-medium"><span className={r.rating != null ? `font-semibold ${rankFor(r.rating).className}` : ""}>{r.display_name || r.username}</span> <PlanBadge plan={r.plan} />{r.special_title && <SpecialChip title={r.special_title} />}<BadgeChip id={r.badge} />{me && <span className="chip">You</span>}</span><span className="text-xs text-muted">@{r.username}</span></span>
+                          <span className="min-w-0"><span className="flex items-center gap-1.5 font-medium"><span className={r.rating != null ? `font-semibold ${rankFor(r.rating).className}` : ""}>{r.display_name || r.username}</span> <PlanBadge plan={r.plan} />{r.special_title && <SpecialChip title={r.special_title} />}<BadgeChip id={r.badge} />{me && <span className="chip"><T k="You" /></span>}</span><span className="text-xs text-muted">@{r.username}</span></span>
                           <span className="ml-auto">{r.special_title ? <SpecialBadge title={r.special_title} size={22} /> : <LeagueBadge league={r.league} size={22} />}</span>
                         </Link>
                       </td>
@@ -140,7 +143,7 @@ export default function LeaderboardPage() {
               </tbody>
             </table>
           </div>
-          <p className="text-center text-xs text-muted"><Crown className="mr-1 inline h-3.5 w-3.5" />Paid plans never earn extra XP. Private profiles are hidden from public rankings.</p>
+          <p className="text-center text-xs text-muted"><Crown className="mr-1 inline h-3.5 w-3.5" /><T k="Paid plans never earn extra XP. Private profiles are hidden from public rankings." /></p>
         </>
       )}
     </div>

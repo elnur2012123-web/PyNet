@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/components/i18n/LocaleProvider";
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, Loader2, Play, Send, XCircle } from "lucide-react";
@@ -62,6 +64,7 @@ interface ExampleResult { ok: boolean; output: string; error?: string }
 export function SolvePanel({ problemId, contestId, examples, timeLimitMs, contestRunning = false }: {
   problemId: number; contestId?: number; examples: { input: string; output: string }[]; timeLimitMs: number; contestRunning?: boolean;
 }) {
+  const tx = useT();
   const p = useProgress();
   const toast = useToast();
   const [lang, setLang] = useState<Lang>("python");
@@ -143,7 +146,7 @@ export function SolvePanel({ problemId, contestId, examples, timeLimitMs, contes
       const sj = await s.json();
       if (!s.ok) throw new Error(sj.error || "Submission failed");
       setResult(sj);
-      if (sj.xp > 0) toast({ kind: "success", title: `Accepted! +${sj.xp} XP`, body: "First solve of this problem." });
+      if (sj.xp > 0) toast({ kind: "success", title: `Accepted! +${sj.xp} XP`, body: tx("First solve of this problem.") });
       for (const id of sj.achievements ?? []) {
         const a = achievementById(id);
         if (a) toast({ kind: "achievement", title: a.name, body: a.description });
@@ -164,8 +167,8 @@ export function SolvePanel({ problemId, contestId, examples, timeLimitMs, contes
       <div className="card overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-medium">Your solution</p>
-            <select className="input w-auto py-1 text-xs" value={lang} onChange={(e) => pickLang(e.target.value as Lang)} aria-label="Language" disabled={!!busy}>
+            <p className="text-sm font-medium"><T k="Your solution" /></p>
+            <select className="input w-auto py-1 text-xs" value={lang} onChange={(e) => pickLang(e.target.value as Lang)} aria-label={tx("Language")} disabled={!!busy}>
               {(Object.keys(LANG_LABEL) as Lang[]).map((l) => <option key={l} value={l}>{LANG_LABEL[l]}</option>)}
             </select>
           </div>
@@ -174,23 +177,21 @@ export function SolvePanel({ problemId, contestId, examples, timeLimitMs, contes
         <CodeEditor language={lang} value={code} onChange={setCode} minHeight="280px" maxHeight="560px" onRun={runExamples} ariaLabel="Solution code" />
         <div className="flex flex-wrap items-center gap-2 border-t border-border px-4 py-3">
           <button className="btn-secondary btn-sm" onClick={runExamples} disabled={!!busy}>
-            {busy === "examples" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />} Run examples
-          </button>
+            {busy === "examples" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />} <T k="Run examples" /></button>
           {signedIn ? (
             <button className="btn-primary btn-sm" onClick={submit} disabled={!!busy || !code.trim()}>
-              {busy === "submit" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Submit
-            </button>
+              {busy === "submit" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} <T k="Submit" /></button>
           ) : (
-            <Link href="/signup" className="btn-primary btn-sm">Sign up to submit</Link>
+            <Link href="/signup" className="btn-primary btn-sm"><T k="Sign up to submit" /></Link>
           )}
           {progress && <span className="text-sm text-muted">{progress}</span>}
-          {contestRunning && <span className="ml-auto text-xs text-muted">Submitting registers you for the round.</span>}
+          {contestRunning && <span className="ml-auto text-xs text-muted"><T k="Submitting registers you for the round." /></span>}
         </div>
       </div>
 
       {compileLog && (
         <div className="card border-danger/40 p-4">
-          <p className="font-semibold text-danger">Compilation error</p>
+          <p className="font-semibold text-danger"><T k="Compilation error" /></p>
           <pre className="code-block mt-2 max-h-72 overflow-auto whitespace-pre-wrap text-xs">{compileLog}</pre>
         </div>
       )}
@@ -200,9 +201,9 @@ export function SolvePanel({ problemId, contestId, examples, timeLimitMs, contes
           {result.verdict === "OK" ? <CheckCircle2 className="h-6 w-6 text-success" /> : <XCircle className="h-6 w-6 text-danger" />}
           <div>
             <p className={`text-lg ${verdictClass(result.verdict)}`}>{verdictText(result.verdict, result.failedTest)}</p>
-            <p className="text-xs text-muted">Submission #{result.id} · {result.timeMs} ms</p>
+            <p className="text-xs text-muted"><T k="Submission #" />{result.id} · {result.timeMs} <T k="ms" /></p>
           </div>
-          <Link href={`/submissions/${result.id}`} className="btn-ghost btn-sm ml-auto">View submission</Link>
+          <Link href={`/submissions/${result.id}`} className="btn-ghost btn-sm ml-auto"><T k="View submission" /></Link>
         </div>
       )}
 
@@ -210,11 +211,11 @@ export function SolvePanel({ problemId, contestId, examples, timeLimitMs, contes
         <div className="card divide-y divide-border">
           {exResults.map((r, i) => (
             <div key={i} className="p-3 text-sm">
-              <p className={r.ok ? "font-medium text-success" : "font-medium text-danger"}>Example {i + 1}: {r.ok ? "correct" : r.error ?? "wrong answer"}</p>
+              <p className={r.ok ? "font-medium text-success" : "font-medium text-danger"}><T k="Example" />{" "}{i + 1}: {r.ok ? "correct" : r.error ?? "wrong answer"}</p>
               {!r.ok && (
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                  <div><p className="text-xs text-muted">Your output</p><pre className="code-block mt-1 max-h-40 overflow-auto text-xs">{r.output || "(nothing)"}</pre></div>
-                  <div><p className="text-xs text-muted">Expected</p><pre className="code-block mt-1 max-h-40 overflow-auto text-xs">{examples[i].output}</pre></div>
+                  <div><p className="text-xs text-muted"><T k="Your output" /></p><pre className="code-block mt-1 max-h-40 overflow-auto text-xs">{r.output || "(nothing)"}</pre></div>
+                  <div><p className="text-xs text-muted"><T k="Expected" /></p><pre className="code-block mt-1 max-h-40 overflow-auto text-xs">{examples[i].output}</pre></div>
                 </div>
               )}
             </div>
@@ -224,16 +225,16 @@ export function SolvePanel({ problemId, contestId, examples, timeLimitMs, contes
 
       {mine && mine.length > 0 && (
         <div className="card overflow-hidden">
-          <p className="border-b border-border px-4 py-2.5 text-sm font-medium">My submissions</p>
+          <p className="border-b border-border px-4 py-2.5 text-sm font-medium"><T k="My submissions" /></p>
           <table className="w-full text-sm">
             <tbody>
               {mine.map((s) => (
                 <tr key={s.id} className="border-b border-border/60 last:border-0">
                   <td className="px-4 py-2"><Link className="link" href={`/submissions/${s.id}`}>#{s.id}</Link></td>
                   <td className="px-2 py-2 text-xs text-muted">{new Date(s.created_at).toLocaleString()}</td>
-                  <td className="px-2 py-2 text-xs text-muted">{s.language === "cpp" ? "C++" : "Python"}</td>
+                  <td className="px-2 py-2 text-xs text-muted">{s.language === "cpp" ? "C++" : tx("Python")}</td>
                   <td className={`px-2 py-2 ${verdictClass(s.verdict)}`}>{verdictText(s.verdict, s.failed_test)}</td>
-                  <td className="px-4 py-2 text-right text-xs text-muted">{s.time_ms} ms</td>
+                  <td className="px-4 py-2 text-right text-xs text-muted">{s.time_ms} <T k="ms" /></td>
                 </tr>
               ))}
             </tbody>

@@ -7,6 +7,7 @@ export const PERMISSIONS = [
   { id: "create_problems", label: "Create problems", hint: "Write new problems and see hidden ones" },
   { id: "review_cheating", label: "Review cheating", hint: "Use the cheat detector (banning there also needs \"Ban users\")" },
   { id: "manage_roles", label: "Manage roles", hint: "Create/edit roles and give or remove roles ranked below their own" },
+  { id: "read_suggestions", label: "Read suggestions", hint: "See and answer suggestions sent with the suggestion bot" },
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number]["id"];
 

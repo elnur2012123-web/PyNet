@@ -1,4 +1,6 @@
 "use client";
+import { useT } from "@/components/i18n/LocaleProvider";
+import { T } from "@/components/i18n/T";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, BookOpen, Code2, FileQuestion, Search, Compass } from "lucide-react";
@@ -13,6 +15,7 @@ const PAGES: Item[] = [
 ].map(([title, href]) => ({ type: "Page" as const, title, sub: "Page", href, keywords: title.toLowerCase() }));
 
 export function GlobalSearch() {
+  const tx = useT();
   const catalog = useCatalog();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -63,27 +66,27 @@ export function GlobalSearch() {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="flex h-9 w-full max-w-xs items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm text-muted transition hover:border-accent/40" aria-label="Open search (Ctrl+K)">
+      <button onClick={() => setOpen(true)} className="flex h-9 w-full max-w-xs items-center gap-2 rounded-xl border border-border bg-surface px-3 text-sm text-muted transition hover:border-accent/40" aria-label={tx("Open search (Ctrl+K)")}>
         <Search className="h-4 w-4" />
-        <span className="flex-1 text-left">Search lessons, errors…</span>
+        <span className="flex-1 text-left"><T k="Search lessons, errors…" /></span>
         <span className="kbd hidden sm:inline">⌘K</span>
       </button>
       {open && (
         <div className="fixed inset-0 z-[95] flex items-start justify-center bg-black/40 p-4 pt-[12vh] backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && setOpen(false)}>
-          <div className="card w-full max-w-xl animate-fade-up overflow-hidden" role="dialog" aria-label="Open search (Ctrl+K)">
+          <div className="card w-full max-w-xl animate-fade-up overflow-hidden" role="dialog" aria-label={tx("Open search (Ctrl+K)")}>
             <div className="flex items-center gap-3 border-b border-border px-4">
               <Search className="h-4 w-4 text-muted" />
-              <input ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search lessons, concepts, errors, exercises…" className="h-12 flex-1 bg-transparent text-sm outline-none"
+              <input ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} placeholder={tx("Search lessons, concepts, errors, exercises…")} className="h-12 flex-1 bg-transparent text-sm outline-none"
                 onKeyDown={(e) => {
                   if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, results.length - 1)); }
                   if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
                   if (e.key === "Enter" && results[active]) go(results[active].href);
                 }}
                 aria-activedescendant={results[active] ? `sr-${active}` : undefined} />
-              <span className="kbd">Esc</span>
+              <span className="kbd"><T k="Esc" /></span>
             </div>
             <ul className="thin-scroll max-h-[50vh] overflow-y-auto p-2" role="listbox">
-              {results.length === 0 && <li className="px-3 py-8 text-center text-sm text-muted">No results for “{q}”. Try “loop”, “TypeError” or “dictionary”.</li>}
+              {results.length === 0 && <li className="px-3 py-8 text-center text-sm text-muted"><T k="No results for “" />{q}<T k="”. Try “loop”, “TypeError” or “dictionary”." /></li>}
               {results.map((r, i) => (
                 <li key={r.href} id={`sr-${i}`} role="option" aria-selected={i === active}>
                   <button onMouseEnter={() => setActive(i)} onClick={() => go(r.href)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ${i === active ? "bg-elevated" : ""}`}>

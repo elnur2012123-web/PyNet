@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -33,21 +34,21 @@ export default function ResetPasswordPage() {
   if (hasSession === false) {
     return (
       <div className="card p-6 sm:p-8">
-        <h1 className="text-xl font-semibold">This link has expired</h1>
-        <p className="mt-2 text-sm text-muted">Password reset links can only be used once and expire quickly. Request a new one.</p>
-        <Link href="/forgot-password" className="btn-primary mt-5">Send a new link</Link>
+        <h1 className="text-xl font-semibold"><T k="This link has expired" /></h1>
+        <p className="mt-2 text-sm text-muted"><T k="Password reset links can only be used once and expire quickly. Request a new one." /></p>
+        <Link href="/forgot-password" className="btn-primary mt-5"><T k="Send a new link" /></Link>
       </div>
     );
   }
 
   return (
     <div className="card p-6 sm:p-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Choose a new password</h1>
+      <h1 className="text-2xl font-semibold tracking-tight"><T k="Choose a new password" /></h1>
       <form onSubmit={submit} className="mt-6 space-y-4">
-        <div><label className="label" htmlFor="rp1">New password</label><PasswordInput id="rp1" value={pw} onChange={setPw} autoComplete="new-password" /><StrengthMeter password={pw} /></div>
-        <div><label className="label" htmlFor="rp2">Confirm new password</label><PasswordInput id="rp2" value={pw2} onChange={setPw2} autoComplete="new-password" /></div>
+        <div><label className="label" htmlFor="rp1"><T k="New password" /></label><PasswordInput id="rp1" value={pw} onChange={setPw} autoComplete="new-password" /><StrengthMeter password={pw} /></div>
+        <div><label className="label" htmlFor="rp2"><T k="Confirm new password" /></label><PasswordInput id="rp2" value={pw2} onChange={setPw2} autoComplete="new-password" /></div>
         {error && <Notice kind="error">{error}</Notice>}
-        <button className="btn-primary w-full" disabled={busy || hasSession === null}>{busy && <Spinner />} Save new password</button>
+        <button className="btn-primary w-full" disabled={busy || hasSession === null}>{busy && <Spinner />} <T k="Save new password" /></button>
       </form>
     </div>
   );

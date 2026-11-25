@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/components/i18n/LocaleProvider";
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FolderOpen, Info, Save, Trash2 } from "lucide-react";
@@ -25,6 +27,7 @@ const EXAMPLES = [
 interface Snippet { id: string; title: string; description: string | null; code: string; updated_at: string }
 
 export function Playground() {
+  const tx = useT();
   const p = useProgress();
   const toast = useToast();
   const [code, setCode] = useState(EXAMPLES[1].code);
@@ -53,10 +56,10 @@ export function Playground() {
     const { error } = await getBrowserSupabase()!.from("saved_code").insert({ user_id: p.profile.id, title: title.trim(), description: desc.trim() || null, code });
     setSaving(false);
     if (error) {
-      toast({ kind: "error", title: "Could not save", body: error.message.includes("up to 5") ? error.message : "Please try again." });
+      toast({ kind: "error", title: tx("Could not save"), body: error.message.includes("up to 5") ? error.message : "Please try again." });
       return;
     }
-    toast({ kind: "success", title: "Snippet saved" });
+    toast({ kind: "success", title: tx("Snippet saved") });
     setSaveOpen(false); setTitle(""); setDesc("");
     load();
   };
@@ -70,8 +73,8 @@ export function Playground() {
     <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
       <div className="min-w-0 space-y-4">
         <div>
-          <h1 className="h1">Python playground</h1>
-          <p className="mt-1 text-muted">Write and run real Python 3 in your browser. Your draft is kept in this browser automatically.</p>
+          <h1 className="h1"><T k="Python playground" /></h1>
+          <p className="mt-1 text-muted"><T k="Write and run real Python 3 in your browser. Your draft is kept in this browser automatically." /></p>
         </div>
         <PythonRunner
           key={runnerKey}
@@ -80,27 +83,24 @@ export function Playground() {
           minHeight="380px"
           examples={EXAMPLES}
           onCodeChange={setCode}
-          toolbarExtra={account ? <button onClick={() => setSaveOpen(true)} className="btn-ghost btn-sm"><Save className="h-3.5 w-3.5" /> Save</button> : null}
+          toolbarExtra={account ? <button onClick={() => setSaveOpen(true)} className="btn-ghost btn-sm"><Save className="h-3.5 w-3.5" /> <T k="Save" /></button> : null}
         />
         <div className="flex gap-2 rounded-xl border border-border bg-surface p-3 text-xs text-muted">
           <Info className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            Runs on <a className="link" href="https://pyodide.org" target="_blank" rel="noreferrer">Pyodide</a> (CPython compiled to WebAssembly). Limitations: only the standard library is available (no pip),
-            <code className="mx-1 font-mono">input()</code> reads lines from the Input box, files live in a temporary in-browser folder, and programs are stopped after 10 seconds.
-            Shortcuts: <span className="kbd">Ctrl/⌘ + Enter</span> run · <span className="kbd">Tab</span> indent.
-          </p>
+            <T k="Runs on" />{" "}<a className="link" href="https://pyodide.org" target="_blank" rel="noreferrer"><T k="Pyodide" /></a> <T k="(CPython compiled to WebAssembly). Limitations: only the standard library is available (no pip)," /><code className="mx-1 font-mono">input()</code> <T k="reads lines from the Input box, files live in a temporary in-browser folder, and programs are stopped after 10 seconds. Shortcuts:" />{" "}<span className="kbd"><T k="Ctrl/⌘ + Enter" /></span> <T k="run ·" />{" "}<span className="kbd"><T k="Tab" /></span> <T k="indent." /></p>
         </div>
       </div>
 
       <aside className="space-y-3">
-        <h2 className="flex items-center gap-2 font-semibold"><FolderOpen className="h-4 w-4" /> Saved snippets</h2>
+        <h2 className="flex items-center gap-2 font-semibold"><FolderOpen className="h-4 w-4" /> <T k="Saved snippets" /></h2>
         {!account ? (
-          <EmptyState title="Save your programs" body={p.authConfigured ? "Sign in to save snippets to your account and open them on any device." : "Accounts are not configured on this deployment."}
-            action={p.authConfigured ? <Link href="/signin?next=/playground" className="btn-primary btn-sm">Sign in</Link> : undefined} />
+          <EmptyState title={tx("Save your programs")} body={p.authConfigured ? tx("Sign in to save snippets to your account and open them on any device.") : tx("Accounts are not configured on this deployment.")}
+            action={p.authConfigured ? <Link href="/signin?next=/playground" className="btn-primary btn-sm"><T k="Sign in" /></Link> : undefined} />
         ) : snippets === null ? (
           <div className="flex justify-center py-6"><Spinner /></div>
         ) : snippets.length === 0 ? (
-          <EmptyState title="No snippets yet" body="Press Save in the editor toolbar to keep a program." />
+          <EmptyState title={tx("No snippets yet")} body={tx("Press Save in the editor toolbar to keep a program.")} />
         ) : (
           <ul className="space-y-2">
             {snippets.map((s) => (
@@ -110,19 +110,19 @@ export function Playground() {
                   {s.description && <p className="truncate text-xs text-muted">{s.description}</p>}
                   <p className="mt-1 text-[11px] text-muted">{new Date(s.updated_at).toLocaleString()}</p>
                 </button>
-                <button onClick={() => remove(s.id)} className="mt-1 text-xs text-muted hover:text-danger"><Trash2 className="mr-1 inline h-3 w-3" />Delete</button>
+                <button onClick={() => remove(s.id)} className="mt-1 text-xs text-muted hover:text-danger"><Trash2 className="mr-1 inline h-3 w-3" /><T k="Delete" /></button>
               </li>
             ))}
           </ul>
         )}
-        {account && p.plan === "FREE" && <p className="text-xs text-muted">Free plan: up to 5 snippets. <Link href="/pricing" className="link">Pro</Link> saves unlimited.</p>}
+        {account && p.plan === "FREE" && <p className="text-xs text-muted"><T k="Free plan: up to 5 snippets." />{" "}<Link href="/pricing" className="link"><T k="Pro" /></Link> <T k="saves unlimited." /></p>}
       </aside>
 
-      <Modal open={saveOpen} onClose={() => setSaveOpen(false)} title="Save snippet">
+      <Modal open={saveOpen} onClose={() => setSaveOpen(false)} title={tx("Save snippet")}>
         <form onSubmit={(e) => { e.preventDefault(); if (title.trim()) save(); }} className="space-y-4">
-          <div><label className="label" htmlFor="sn-title">Title</label><input id="sn-title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} required /></div>
-          <div><label className="label" htmlFor="sn-desc">Description <span className="text-muted">(optional)</span></label><input id="sn-desc" className="input" value={desc} onChange={(e) => setDesc(e.target.value)} maxLength={300} /></div>
-          <div className="flex justify-end gap-2"><button type="button" onClick={() => setSaveOpen(false)} className="btn-secondary">Cancel</button><button className="btn-primary" disabled={saving || !title.trim()}>{saving && <Spinner />} Save</button></div>
+          <div><label className="label" htmlFor="sn-title"><T k="Title" /></label><input id="sn-title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} required /></div>
+          <div><label className="label" htmlFor="sn-desc"><T k="Description" />{" "}<span className="text-muted"><T k="(optional)" /></span></label><input id="sn-desc" className="input" value={desc} onChange={(e) => setDesc(e.target.value)} maxLength={300} /></div>
+          <div className="flex justify-end gap-2"><button type="button" onClick={() => setSaveOpen(false)} className="btn-secondary"><T k="Cancel" /></button><button className="btn-primary" disabled={saving || !title.trim()}>{saving && <Spinner />} <T k="Save" /></button></div>
         </form>
       </Modal>
     </div>

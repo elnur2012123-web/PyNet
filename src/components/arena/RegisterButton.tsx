@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/components/i18n/T";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,7 +11,7 @@ export function RegisterButton({ contestId, registered, canUnregister, compact =
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  if (p.mode !== "account") return <Link href={`/signup?next=/contests/${contestId}`} className={compact ? "link text-xs font-semibold" : "btn-primary btn-sm"}>Register »</Link>;
+  if (p.mode !== "account") return <Link href={`/signup?next=/contests/${contestId}`} className={compact ? "link text-xs font-semibold" : "btn-primary btn-sm"}><T k="Register »" /></Link>;
   const act = async () => {
     const sb = getBrowserSupabase();
     if (!sb || !p.profile) return;
@@ -25,14 +26,14 @@ export function RegisterButton({ contestId, registered, canUnregister, compact =
   if (registered) {
     return (
       <span className="inline-flex flex-col items-center gap-0.5">
-        <span className="text-xs font-medium text-success">Registered ✓</span>
-        {canUnregister && <button onClick={act} disabled={busy} className="text-[11px] text-muted hover:text-danger">Cancel registration</button>}
+        <span className="text-xs font-medium text-success"><T k="Registered ✓" /></span>
+        {canUnregister && <button onClick={act} disabled={busy} className="text-[11px] text-muted hover:text-danger"><T k="Cancel registration" /></button>}
       </span>
     );
   }
   return (
     <span className="inline-flex flex-col items-center gap-0.5">
-      <button onClick={act} disabled={busy} className={compact ? "rounded-md bg-danger px-2 py-0.5 text-xs font-semibold text-white hover:opacity-90" : "btn-primary btn-sm"}>Register »</button>
+      <button onClick={act} disabled={busy} className={compact ? "rounded-md bg-danger px-2 py-0.5 text-xs font-semibold text-white hover:opacity-90" : "btn-primary btn-sm"}><T k="Register »" /></button>
       {err && <span className="text-[11px] text-danger">{err}</span>}
     </span>
   );

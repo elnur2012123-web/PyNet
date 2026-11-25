@@ -1,3 +1,4 @@
+import { T } from "@/components/i18n/T";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 
@@ -14,18 +15,18 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_repeat(4,1fr)]">
         <div>
           <Logo />
-          <p className="mt-3 max-w-xs text-sm leading-6 text-muted">A friendly place to learn Python from scratch — short lessons, real code, and help whenever you get stuck.</p>
+          <p className="mt-3 max-w-xs text-sm leading-6 text-muted"><T k="A friendly place to learn Python from scratch — short lessons, real code, and help whenever you get stuck." /></p>
         </div>
         {COLS.map((c) => (
           <div key={c.title}>
-            <p className="mb-3 text-sm font-semibold">{c.title}</p>
+            <p className="mb-3 text-sm font-semibold"><T k={c.title} /></p>
             <ul className="space-y-2">
-              {c.links.map(([label, href]) => <li key={href}><Link href={href} className="text-sm text-muted hover:text-fg">{label}</Link></li>)}
+              {c.links.map(([label, href]) => <li key={href}><Link href={href} className="text-sm text-muted hover:text-fg"><T k={label} /></Link></li>)}
             </ul>
           </div>
         ))}
       </div>
-      <div className="border-t border-border py-5 text-center text-xs text-muted">© {new Date().getFullYear()} PyNest · Made for people learning their first programming language. “Python” is a trademark of the Python Software Foundation.</div>
+      <div className="border-t border-border py-5 text-center text-xs text-muted">© {new Date().getFullYear()} <T k="PyNest · Made for people learning their first programming language. “Python” is a trademark of the Python Software Foundation." /></div>
     </footer>
   );
 }

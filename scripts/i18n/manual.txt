@@ -1,0 +1,57 @@
+src/app/(app)/leaderboard/page.tsx: All time
+src/app/(app)/leaderboard/page.tsx: This week
+src/app/(app)/leaderboard/page.tsx: This month
+src/app/(app)/leaderboard/page.tsx: Friends
+src/app/(app)/leaderboard/page.tsx: My country
+src/app/(app)/playground/Playground.tsx: Hello, World!
+src/app/(app)/playground/Playground.tsx: Variables & f-strings
+src/app/(app)/playground/Playground.tsx: Ask for input
+src/app/(app)/playground/Playground.tsx: Loops: multiplication table
+src/app/(app)/playground/Playground.tsx: Lists & dictionaries
+src/app/(app)/playground/Playground.tsx: Functions
+src/app/(app)/playground/Playground.tsx: Classes
+src/app/(app)/playground/Playground.tsx: An error to explore
+src/app/(app)/playground/Playground.tsx: Files
+src/components/arena/ArenaSidebar.tsx (sync server component): Pay attention
+src/components/arena/ArenaSidebar.tsx (sync server component): Top rated
+src/components/layout/AppShell.tsx: Home
+src/components/layout/AppShell.tsx: Learn
+src/components/layout/AppShell.tsx: Course
+src/components/layout/AppShell.tsx: Practice
+src/components/layout/AppShell.tsx: Quizzes
+src/components/layout/AppShell.tsx: Compete
+src/components/layout/AppShell.tsx: Problemset
+src/components/layout/AppShell.tsx: Contests
+src/components/layout/AppShell.tsx: Rating
+src/components/layout/AppShell.tsx: Status
+src/components/layout/AppShell.tsx: Calendar
+src/components/layout/AppShell.tsx: Tools
+src/components/layout/AppShell.tsx: Playground
+src/components/layout/AppShell.tsx: PyBuddy
+src/components/layout/AppShell.tsx: Error guide
+src/components/layout/AppShell.tsx: Community
+src/components/layout/AppShell.tsx: Leaderboard
+src/components/layout/AppShell.tsx: Achievements
+src/components/layout/AppShell.tsx: Friends
+src/components/layout/GlobalSearch.tsx: Page
+src/components/layout/SiteFooter.tsx: Learn
+src/components/layout/SiteFooter.tsx: Tools
+src/components/layout/SiteFooter.tsx: Community
+src/components/layout/SiteFooter.tsx: PyNest
+src/components/layout/SiteHeader.tsx: Course
+src/components/layout/SiteHeader.tsx: Practice
+src/components/layout/SiteHeader.tsx: Playground
+src/components/layout/SiteHeader.tsx: PyBuddy
+src/components/layout/SiteHeader.tsx: Pricing
+src/components/tutor/TutorChat.tsx: Ask
+src/components/tutor/TutorChat.tsx: Ask anything about Python
+src/components/tutor/TutorChat.tsx: Explain code
+src/components/tutor/TutorChat.tsx: Paste code to get a line-by-line explanation
+src/components/tutor/TutorChat.tsx: Debug
+src/components/tutor/TutorChat.tsx: Paste broken code and the error message
+src/components/tutor/TutorChat.tsx: Code review
+src/components/tutor/TutorChat.tsx: Detailed review with improvements (Max)
+src/components/tutor/TutorChat.tsx: Make exercises
+src/components/tutor/TutorChat.tsx: Personalised practice set on a topic (Max)
+src/components/ui/Logo.tsx (sync server component): PyNest home
+src/components/ui/States.tsx (sync server component): Loading

@@ -1,0 +1,11 @@
+import { readFileSync } from "node:fs";
+import { TRIPLES } from "../../src/i18n/dict/all";
+const keys: string[] = JSON.parse(readFileSync("scripts/i18n/all-keys.json", "utf8"));
+const have = new Set(TRIPLES.map((t) => t[0]));
+const dup = TRIPLES.map((t) => t[0]).filter((k, i, a) => a.indexOf(k) !== i);
+const skip = new Set(["”.", "Py", "PyBuddy", "PyNest", "Pyodide", "RuntimeError", "TypeError", "Hatchling", "Fledgling", "Soaring", "PyBuddy:", "Python", "Python 3", "main.cpp · C++20", "main.py · Python 3"]);
+const missing = keys.filter((k) => !have.has(k) && !skip.has(k));
+const unused = [...have].filter((k) => !keys.includes(k));
+console.log("missing:", missing.length); console.log(JSON.stringify(missing, null, 0));
+console.log("unused:", unused.length, unused.slice(0, 20));
+console.log("duplicates:", dup);
