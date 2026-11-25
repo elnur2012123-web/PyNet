@@ -3,7 +3,15 @@
  * Brand names, code and abbreviations (Python, PyBuddy, XP, print()) are left as they are.
  */
 const PROTECT = new Set(["Python", "PyNest", "PyBuddy", "Lite", "XP", "Pro", "Max", "Free", "Pyodide", "CPython", "WebAssembly", "Clang", "LLVM",
-  "Google", "Telegram", "Supabase", "GitHub", "Elo", "ICPC", "UTC", "AI", "OK", "C", "Enter", "Ctrl", "Cmd", "Shift", "Tab", "Esc", "Lemon", "Squeezy", "Hatchling", "Fledgling", "Soaring"]);
+  "Google", "Telegram", "Supabase", "GitHub", "Elo", "ICPC", "UTC", "AI", "OK", "C", "Enter", "Ctrl", "Cmd", "Shift", "Tab", "Esc", "Lemon", "Squeezy", "Hatchling", "Fledgling", "Soaring",
+  // words shown on buttons / printed by example programs
+  "Run", "Submit", "Install", "Hello", "World", "Alex", "Ada", "Done", "Start", "End", "Stop", "Reset", "Clear", "Copy", "Save", "VS", "Code", "PyCharm", "Thonny", "IDLE", "Homebrew", "PATH"]);
+// Python keywords, built-ins and common methods/modules: code stays code.
+const CODE_WORDS = new Set(("if elif else for while def return import from as try except finally raise with class lambda yield True False None " +
+  "and or not in is break continue pass global nonlocal assert del async await print input len range int str float bool list dict set tuple " +
+  "type open map filter zip enumerate sorted reversed sum min max abs round append insert remove pop sort reverse upper lower strip lstrip rstrip " +
+  "split replace find join format items keys values get update count index csv json os sys math random datetime pip self init main " +
+  "stdin stdout cin cout scanf printf std vector string include bits stdc cpp f-string").split(" "));
 const VOWELS = "aeiouAEIOUўЎоОаАэЭиИуУеЕ";
 const APOS = "['ʻ‘’`ʼ]";
 
@@ -39,7 +47,8 @@ function word(w: string): string {
       return head + to.slice(2) + word(w.slice(m[0].length) || "").replace(/^$/, "");
     }
   }
-  if (PROTECT.has(w) || /[0-9_()=+#/<>{}[\]\\.:@*]/.test(w) || /^[A-Z]{2,}$/.test(w)) return w;
+  if (CODE_WORDS.has(w) ||
+      PROTECT.has(w) || /[0-9_()=+#/<>{}[\]\\.:@*]/.test(w) || /^[A-Z]{2,}$/.test(w)) return w;
   let s = w;
   for (const [re, to] of PAIRS) s = s.replace(re, to);
   // tutuq belgisi (ʼ) → ъ
@@ -63,6 +72,6 @@ function word(w: string): string {
 
 export function latinToCyrillic(text: string) {
   // keep `code`, URLs and {placeholders} untouched
-  return text.split(/(`[^`]*`|https?:\/\/\S+|\{[a-zA-Z0-9_]+\})/g).map((part, i) =>
+  return text.split(/(```[\s\S]*?```|`[^`]*`|"[^"\n]*"|https?:\/\/\S+|\{[a-zA-Z0-9_]+\})/g).map((part, i) =>
     i % 2 ? part : part.replace(/[A-Za-z'ʻ‘’`ʼ]+/g, (w, off: number, str: string) => (str[off + w.length] === "(" ? w : word(w)))).join("");
 }

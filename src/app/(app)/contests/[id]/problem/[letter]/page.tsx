@@ -6,6 +6,8 @@ import { loadContest } from "../../data";
 import { contestPhase } from "@/lib/server/arena";
 import { ProblemStatement, type ProblemView } from "@/components/arena/Statement";
 import { SolvePanel } from "@/components/arena/SolvePanel";
+import { getLocale } from "@/i18n/server";
+import { localizeProblem } from "@/i18n/content";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +36,7 @@ export default async function ContestProblemPage({ params }: { params: Promise<{
           <Link key={p.letter} href={`/contests/${data.contest.id}/problem/${p.letter}`} className={`rounded-lg border px-3 py-1 text-sm font-semibold ${p.letter === letter ? "border-accent bg-accent/10 text-accent" : "border-border hover:bg-elevated"}`}>{p.letter}</Link>
         ))}
       </div>
-      <ProblemStatement problem={problem as ProblemView} letter={letter} showTags={phase === "finished"} />
+      <ProblemStatement problem={await localizeProblem(await getLocale(), problem as ProblemView)} letter={letter} showTags={phase === "finished"} />
       <SolvePanel problemId={problem.id} contestId={phase === "running" ? data.contest.id : undefined} contestRunning={phase === "running"} examples={(problem as ProblemView).examples} timeLimitMs={problem.time_limit_ms} />
     </div>
   );

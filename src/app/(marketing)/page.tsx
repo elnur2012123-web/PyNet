@@ -68,7 +68,7 @@ export default function Landing() {
               <T k="Imagine a" />{" "}<strong><T k="variable" /></strong> <T k="as a labelled box. You give the box a name, put something inside, and look at it later." /></div>
             <pre className="code-block mx-5 mt-4 overflow-x-auto rounded-xl border border-border p-4 font-mono text-[13px] leading-6"><code><HighlightedCode code={'name = "Aziza"\nage = 14\nprint(name, "is", age)'} /></code></pre>
             <div className="mx-5 mb-5 mt-3 rounded-xl bg-elevated/70 px-4 py-3 font-mono text-[13px]">
-              <span className="text-muted"><T k="Output →" />{" "}</span><T k="Aziza is 14" /></div>
+              <span className="text-muted"><T k="Output →" />{" "}</span>Aziza is 14</div>
           </div>
           <div className="card ml-auto mr-2 mt-4 max-w-sm p-4 text-sm sm:-mt-6 sm:mr-[-12px] lg:mr-[-28px]">
             <p className="text-muted"><span className="font-medium text-fg"><T k="You:" /></span> <T k="I didn't understand" /></p>
@@ -105,7 +105,7 @@ export default function Landing() {
               <pre className="code-block overflow-x-auto p-4 font-mono text-[13px] leading-6"><code><HighlightedCode code={'age = 14\nprint("I am " + age + " years old")'} /></code></pre>
               <div className="border-t border-danger/30 bg-danger/5 p-4 text-sm">
                 <p className="font-semibold text-danger"><T k="TypeError" />{" "}<span className="font-normal text-muted"><T k="on line 2" /></span></p>
-                <p className="mt-1 font-mono text-[12.5px]"><T k={"can only concatenate str (not \"int\") to str"} /></p>
+                <p className="mt-1 font-mono text-[12.5px]">{"can only concatenate str (not \"int\") to str"}</p>
                 <p className="mt-3 leading-6">
                   <span className="font-medium"><T k="What this means:" /></span> <T k="you're gluing text and a number together with" />{" "}<code className="rounded bg-elevated px-1 font-mono text-[12px]">+</code><T k=". Python can't add words to numbers. Write" />{" "}<code className="rounded bg-elevated px-1 font-mono text-[12px]">str(age)</code><T k=", or use an f-string:" />{" "}<code className="rounded bg-elevated px-1 font-mono text-[12px]">f&quot;I am {"{age}"} years old&quot;</code>.
                 </p>

@@ -17,6 +17,8 @@ import { Notice, Spinner } from "@/components/ui/States";
 import { looksLikeCodeOption } from "@/lib/looks-like-code";
 
 export interface LessonPayload {
+  /** False when the reader's language has no translation of this lesson yet. */
+  translated?: boolean;
   id: string;
   title: string;
   minutes: number;
@@ -54,7 +56,7 @@ export function LessonView({
     <article className="mx-auto max-w-3xl animate-fade-up">
       <nav className="mb-4 flex items-center gap-2 text-sm text-muted" aria-label={tx("Breadcrumb")}>
         <Link href="/learn" className="hover:text-fg"><T k="Course" /></Link><span>/</span>
-        <Link href={`/learn#m${moduleNumber}`} className="hover:text-fg"><T k="Module" />{" "}{moduleNumber}: {moduleTitle}</Link>
+        <Link href={`/learn#m${moduleNumber}`} className="hover:text-fg"><T k="Module" />{" "}{moduleNumber}: <T k={moduleTitle} /></Link>
       </nav>
 
       <header className="mb-8">
@@ -65,7 +67,7 @@ export function LessonView({
         </div>
         <div className="flex items-start justify-between gap-4">
           <h1 className="h1"><T k={lesson.title} /></h1>
-          <LessonLanguageNote />
+          {!lesson.translated && <LessonLanguageNote />}
           <button onClick={() => toggle(lesson.id)} className="btn-ghost btn-sm mt-1 shrink-0" aria-pressed={favs.has(lesson.id)} title={favs.has(lesson.id) ? tx("Remove from favourites") : tx("Save to favourites")}>
             {favs.has(lesson.id) ? <BookmarkCheck className="h-5 w-5 text-accent" /> : <Bookmark className="h-5 w-5" />}
           </button>
@@ -93,14 +95,14 @@ export function LessonView({
                 <button onClick={() => loadIntoEditor(ex.code)} className="btn-ghost btn-sm"><Play className="h-3.5 w-3.5" /> <T k="Try it" /></button>
               </div>
               <CodeBlock code={ex.code} lineNumbers />
-              {ex.note && <p className="mt-2 text-sm text-muted">{ex.note}</p>}
+              {ex.note && <p className="mt-2 text-sm text-muted"><RichTextInline text={ex.note} /></p>}
             </div>
           ))}
         </div>
       </Section>
 
       <Section icon={<Globe2 className="h-4 w-4" />} title={tx("In the real world")}>
-        <p className="text-[15px] leading-7 text-fg/90">{lesson.realWorld}</p>
+        <p className="text-[15px] leading-7 text-fg/90"><RichTextInline text={lesson.realWorld} /></p>
       </Section>
 
       <Section icon={<TriangleAlert className="h-4 w-4" />} title={tx("Common mistakes")}>
@@ -117,7 +119,7 @@ export function LessonView({
                   {looksLikeCode(m.right) ? <CodeBlock code={m.right} copy={false} /> : <p className="text-sm">{m.right}</p>}
                 </div>
               </div>
-              <p className="mt-3 text-sm text-fg/90"><Lightbulb className="mr-1 inline h-4 w-4 text-warn" />{m.why}</p>
+              <p className="mt-3 text-sm text-fg/90"><Lightbulb className="mr-1 inline h-4 w-4 text-warn" /><RichTextInline text={m.why} /></p>
             </div>
           ))}
         </div>

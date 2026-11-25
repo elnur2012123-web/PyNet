@@ -9,6 +9,8 @@ import { SolvePanel } from "@/components/arena/SolvePanel";
 import { SideBox } from "@/components/arena/ArenaSidebar";
 import { contestPhase } from "@/lib/server/arena";
 import { Notice } from "@/components/ui/States";
+import { getLocale } from "@/i18n/server";
+import { localizeProblem } from "@/i18n/content";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +20,7 @@ async function load(id: number) {
   const { data } = await sb.from("problems").select("id, title, statement, input_spec, output_spec, notes, examples, tags, rating, time_limit_ms").eq("id", id).maybeSingle();
   if (!data) return null;
   const { data: uses } = await sb.from("contest_problems").select("letter, contests(id, title, starts_at, duration_minutes)").eq("problem_id", id);
-  return { problem: data as ProblemView, uses: (uses ?? []) as unknown as { letter: string; contests: { id: number; title: string; starts_at: string; duration_minutes: number } }[] };
+  return { problem: await localizeProblem(await getLocale(), data as ProblemView), uses: (uses ?? []) as unknown as { letter: string; contests: { id: number; title: string; starts_at: string; duration_minutes: number } }[] };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

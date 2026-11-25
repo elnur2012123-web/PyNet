@@ -9,6 +9,8 @@ import { getUserContext } from "@/lib/server/user";
 import { planAtLeast } from "@/lib/plans";
 import { isSupabaseConfigured } from "@/lib/env";
 import { RichText } from "@/components/lesson/RichText";
+import { getLocale } from "@/i18n/server";
+import { localizeLesson } from "@/i18n/content";
 
 export async function generateMetadata({ params }: { params: Promise<{ lessonId: string }> }): Promise<Metadata> {
   const found = findLesson((await params).lessonId);
@@ -66,5 +68,8 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
     quiz: lesson.quiz.map(({ q, code, options }) => ({ q, code, options })), // answers stay on the server
   };
 
-  return <LessonView lesson={payload} moduleTitle={module.title} moduleNumber={module.number} position={index + 1} total={module.lessons.length} prev={prev} next={next} />;
+  const locale = await getLocale();
+  const localized = await localizeLesson(locale, payload);
+  localized.translated = locale === "en" || localized.intro !== payload.intro;
+  return <LessonView lesson={localized} moduleTitle={module.title} moduleNumber={module.number} position={index + 1} total={module.lessons.length} prev={prev} next={next} />;
 }

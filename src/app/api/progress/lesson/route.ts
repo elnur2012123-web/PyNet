@@ -5,6 +5,8 @@ import { error, json, readJson, sameOrigin } from "@/lib/server/http";
 import { planAtLeast } from "@/lib/plans";
 import { XP_RULES } from "@/lib/xp";
 import { isSupabaseConfigured } from "@/lib/env";
+import { getLocale } from "@/i18n/server";
+import { localizeGraded } from "@/i18n/content";
 
 const PASS = 50;
 
@@ -26,6 +28,7 @@ export async function POST(req: Request) {
   }
 
   const graded = gradeQuestions(lesson.quiz.map((q) => ({ type: "mcq" as const, ...q })), body.answers.slice(0, lesson.quiz.length));
+  graded.results = await localizeGraded(await getLocale(), graded.results);
   const passed = graded.percent >= PASS;
   if (!passed || !ctx) return json({ graded, passed, mode: ctx ? "account" : "guest" });
 

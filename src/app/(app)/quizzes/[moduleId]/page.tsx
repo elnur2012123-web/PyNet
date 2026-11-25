@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { findModule, findQuiz, publicQuestions } from "@/content/server";
 import { QuizView } from "./QuizView";
+import { getLocale } from "@/i18n/server";
+import { localizeQuestions } from "@/i18n/content";
 
 export async function generateMetadata({ params }: { params: Promise<{ moduleId: string }> }): Promise<Metadata> {
   const m = findModule((await params).moduleId);
@@ -13,5 +15,5 @@ export default async function QuizPage({ params }: { params: Promise<{ moduleId:
   const m = findModule(moduleId);
   const quiz = findQuiz(moduleId);
   if (!m || !quiz) notFound();
-  return <QuizView moduleId={m.id} moduleNumber={m.number} title={m.title} questions={publicQuestions(quiz.questions)} />;
+  return <QuizView moduleId={m.id} moduleNumber={m.number} title={m.title} questions={await localizeQuestions(await getLocale(), publicQuestions(quiz.questions))} />;
 }

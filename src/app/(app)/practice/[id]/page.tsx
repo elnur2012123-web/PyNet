@@ -9,6 +9,8 @@ import { getUserContext } from "@/lib/server/user";
 import { planAtLeast } from "@/lib/plans";
 import { isSupabaseConfigured } from "@/lib/env";
 import { ExerciseView } from "./ExerciseView";
+import { getLocale } from "@/i18n/server";
+import { localizeExercise } from "@/i18n/content";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   return { title: findExercise((await params).id)?.title ?? "Exercise" };
@@ -38,5 +40,5 @@ export default async function ExercisePage({ params }: { params: Promise<{ id: s
       );
     }
   }
-  return <ExerciseView exercise={ex} nextId={next?.id ?? null} />;
+  return <ExerciseView exercise={await localizeExercise(await getLocale(), ex)} nextId={next?.id ?? null} />;
 }

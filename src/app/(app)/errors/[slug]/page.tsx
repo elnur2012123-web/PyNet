@@ -7,6 +7,8 @@ import { findError } from "@/content/server";
 import { getUserContext } from "@/lib/server/user";
 import { isSupabaseConfigured } from "@/lib/env";
 import { ErrorView } from "./ErrorView";
+import { getLocale } from "@/i18n/server";
+import { localizeError } from "@/i18n/content";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   return { title: findError((await params).slug)?.name ?? "Error" };
@@ -33,5 +35,5 @@ export default async function ErrorPage({ params }: { params: Promise<{ slug: st
       );
     }
   }
-  return <ErrorView entry={entry} />;
+  return <ErrorView entry={await localizeError(await getLocale(), entry)} />;
 }

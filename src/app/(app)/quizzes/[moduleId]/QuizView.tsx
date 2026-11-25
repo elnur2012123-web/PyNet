@@ -99,7 +99,7 @@ export function QuizView({ moduleId, moduleNumber, title, questions }: { moduleI
                   <p className="flex items-center gap-1.5 font-medium">{r.correct ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-danger" />}{r.correct ? tx("Correct") : tx("Incorrect")}</p>
                   {!r.correct && q.type !== "code" && <p className="mt-1"><T k="Correct answer:" />{" "}<code className="font-mono">{r.correctAnswer}</code></p>}
                   {!r.correct && q.type === "code" && <CodeBlock code={r.correctAnswer} title={tx("One possible solution")} className="mt-2" />}
-                  <p className="mt-1 text-fg/80">{r.explain}</p>
+                  <p className="mt-1 text-fg/80"><Inline text={r.explain} /></p>
                 </div>
               )}
             </li>

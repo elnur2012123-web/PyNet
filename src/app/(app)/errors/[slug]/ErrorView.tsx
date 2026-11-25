@@ -23,10 +23,10 @@ export function ErrorView({ entry: e }: { entry: PythonErrorEntry }) {
         <p className="mt-2 text-lg">{e.summary}</p>
       </header>
 
-      <section><h2 className="mb-2 font-semibold"><T k="What it means" /></h2><p className="leading-7 text-fg/90">{e.meaning}</p></section>
+      <section><h2 className="mb-2 font-semibold"><T k="What it means" /></h2><p className="leading-7 text-fg/90"><Inline text={e.meaning} /></p></section>
       <section>
         <h2 className="mb-2 font-semibold"><T k="Why it happens" /></h2>
-        <ul className="list-disc space-y-1 pl-5 text-fg/90">{e.why.map((w) => <li key={w}>{w}</li>)}</ul>
+        <ul className="list-disc space-y-1 pl-5 text-fg/90">{e.why.map((w) => <li key={w}><Inline text={w} /></li>)}</ul>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
@@ -50,7 +50,7 @@ export function ErrorView({ entry: e }: { entry: PythonErrorEntry }) {
 
       <section>
         <h2 className="mb-2 flex items-center gap-2 font-semibold"><ShieldCheck className="h-4 w-4 text-success" /> <T k="How to prevent it" /></h2>
-        <ul className="list-disc space-y-1 pl-5 text-fg/90">{e.prevent.map((w) => <li key={w}>{w}</li>)}</ul>
+        <ul className="list-disc space-y-1 pl-5 text-fg/90">{e.prevent.map((w) => <li key={w}><Inline text={w} /></li>)}</ul>
       </section>
 
       <section>
@@ -64,7 +64,7 @@ export function ErrorView({ entry: e }: { entry: PythonErrorEntry }) {
         <div className="space-y-5">
           {e.quiz.map((q, i) => (
             <fieldset key={i}>
-              <legend className="mb-2 font-medium">{i + 1}. {q.q}</legend>
+              <legend className="mb-2 font-medium">{i + 1}. <Inline text={q.q} /></legend>
               <div className="grid gap-2">
                 {q.options.map((o, j) => {
                   const chosen = answers[i] === j;

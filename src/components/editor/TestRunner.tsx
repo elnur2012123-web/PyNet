@@ -9,6 +9,7 @@ import { ErrorPanel, RuntimeBadge } from "./PythonRunner";
 import { CodeBlock } from "./CodeBlock";
 import { getRuntime, runTests, type RunResult, type TestResult } from "@/lib/python/runner";
 import type { TestCase } from "@/content/types";
+import { Inline } from "@/components/lesson/RichText";
 
 export function TestRunner({
   starter = "", tests, hints = [], solution, explanation, onChecked, storageKey, minHeight = "160px", checkLabel = "Check solution",
@@ -93,7 +94,7 @@ export function TestRunner({
 
       {hintCount > 0 && (
         <div className="space-y-1 border-t border-border bg-warn/5 px-4 py-3 text-sm">
-          {hints.slice(0, hintCount).map((h, i) => <p key={i} className="flex gap-2"><Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warn" /> {h}</p>)}
+          {hints.slice(0, hintCount).map((h, i) => <p key={i} className="flex gap-2"><Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warn" /> <span><Inline text={h} /></span></p>)}
         </div>
       )}
 

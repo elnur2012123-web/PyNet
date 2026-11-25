@@ -5,6 +5,8 @@ import { getAdminSupabase } from "@/lib/supabase/admin";
 import { error, json, readJson, sameOrigin } from "@/lib/server/http";
 import { XP_RULES } from "@/lib/xp";
 import { isSupabaseConfigured } from "@/lib/env";
+import { getLocale } from "@/i18n/server";
+import { localizeGraded } from "@/i18n/content";
 
 /** Server-side grading for module quizzes. Answer keys never reach the browser. */
 export async function POST(req: Request, { params }: { params: Promise<{ moduleId: string }> }) {
@@ -16,6 +18,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ moduleI
   if (!body || !Array.isArray(body.answers)) return error("Invalid request");
 
   const graded = gradeQuestions(quiz.questions, body.answers.slice(0, quiz.questions.length));
+  graded.results = await localizeGraded(await getLocale(), graded.results);
   const passed = graded.percent >= QUIZ_PASS_PERCENT;
   const ctx = isSupabaseConfigured ? await getUserContext() : null;
   if (!ctx) return json({ graded, passed, mode: "guest" });
