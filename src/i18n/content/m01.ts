@@ -602,8 +602,8 @@ export const M01: [string, string, string][] = [
  ],
  [
   "print(5)  # any note",
-  "`print(5)  # istalgan izoh`",
-  "`print(5)  # любая заметка`"
+  "`print(5)  # any note`",
+  "`print(5)  # any note`"
  ],
  [
   "Which symbol starts a comment in Python?",

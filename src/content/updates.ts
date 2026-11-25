@@ -13,6 +13,14 @@ export interface UpdateEntry {
 
 export const CODE_UPDATES: UpdateEntry[] = [
   {
+    id: "2026-11-25-lessons-translated",
+    date: "2026-11-25T22:00:00Z",
+    kind: "feature",
+    title: "Every lesson now in Uzbek and Russian",
+    body: "All 15 modules, quizzes, practice tasks, the error guide and the problemset now open in Oʻzbekcha (lotin), Ўзбекча (кирилл) and Русский. Code and program output stay exactly as Python writes them, so what you see is what you type. Spot an awkward sentence? Send it through the Suggestions bot.",
+    link: "/learn",
+  },
+  {
     id: "2026-11-25-languages",
     date: "2026-11-25T18:00:00Z",
     kind: "feature",

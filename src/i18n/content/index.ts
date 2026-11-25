@@ -1,5 +1,7 @@
 // Human translations of learning content: [English, Oʻzbekcha (lotin), Русский].
 // Code inside `backticks` is never transliterated or changed.
+import { ERRORS } from "./errors";
+import { EXERCISES } from "./exercises";
 import { M01 } from "./m01";
 import { M02 } from "./m02";
 import { M03 } from "./m03";
@@ -15,4 +17,5 @@ import { M12 } from "./m12";
 import { M13 } from "./m13";
 import { M14 } from "./m14";
 import { M15 } from "./m15";
-export const CONTENT: [string, string, string][] = [...M01, ...M02, ...M03, ...M04, ...M05, ...M06, ...M07, ...M08, ...M09, ...M10, ...M11, ...M12, ...M13, ...M14, ...M15];
+import { PROBLEMS } from "./problems";
+export const CONTENT: [string, string, string][] = [...ERRORS, ...EXERCISES, ...M01, ...M02, ...M03, ...M04, ...M05, ...M06, ...M07, ...M08, ...M09, ...M10, ...M11, ...M12, ...M13, ...M14, ...M15, ...PROBLEMS];

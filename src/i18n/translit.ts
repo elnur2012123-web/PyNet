@@ -5,7 +5,11 @@
 const PROTECT = new Set(["Python", "PyNest", "PyBuddy", "Lite", "XP", "Pro", "Max", "Free", "Pyodide", "CPython", "WebAssembly", "Clang", "LLVM",
   "Google", "Telegram", "Supabase", "GitHub", "Elo", "ICPC", "UTC", "AI", "OK", "C", "Enter", "Ctrl", "Cmd", "Shift", "Tab", "Esc", "Lemon", "Squeezy", "Hatchling", "Fledgling", "Soaring",
   // words shown on buttons / printed by example programs
-  "Run", "Submit", "Install", "Hello", "World", "Alex", "Ada", "Done", "Start", "End", "Stop", "Reset", "Clear", "Copy", "Save", "VS", "Code", "PyCharm", "Thonny", "IDLE", "Homebrew", "PATH"]);
+  "Run", "Submit", "Install", "Hello", "World", "Alex", "Ada", "Done", "Start", "End", "Stop", "Reset", "Clear", "Copy", "Save", "VS", "Code", "PyCharm", "Thonny", "IDLE", "Homebrew", "PATH",
+  // product and library names
+  "Java", "JavaScript", "Excel", "Windows", "Mac", "Linux", "Instagram", "Todoist", "Bitwarden", "Zork", "YNAB", "PayPal",
+  "Django", "Flask", "FastAPI", "pandas", "numpy", "requests", "pygame", "matplotlib", "PyTorch", "PyPI", "JSON", "CSV", "Quickstart",
+  "Spock", "Paris", "Oslo", "Cairo", "Lima", "Tashkent", "Uzbekistan", "Ana", "Ben", "Cy", "Sam", "Kai", "Mia", "Grace", "Hopper", "Luna", "Rex"]);
 // Python keywords, built-ins and common methods/modules: code stays code.
 const CODE_WORDS = new Set(("if elif else for while def return import from as try except finally raise with class lambda yield True False None " +
   "and or not in is break continue pass global nonlocal assert del async await print input len range int str float bool list dict set tuple " +
@@ -73,5 +77,17 @@ function word(w: string): string {
 export function latinToCyrillic(text: string) {
   // keep `code`, URLs and {placeholders} untouched
   return text.split(/(```[\s\S]*?```|`[^`]*`|"[^"\n]*"|https?:\/\/\S+|\{[a-zA-Z0-9_]+\})/g).map((part, i) =>
-    i % 2 ? part : part.replace(/[A-Za-z'ʻ‘’`ʼ]+/g, (w, off: number, str: string) => (str[off + w.length] === "(" ? w : word(w)))).join("");
+    i % 2 ? part : part.replace(/[A-Za-z'ʻ‘’`ʼ]+/g, (w, off: number, str: string) => (looksLikeCodeToken(w, str, off) ? w : word(w)))).join("");
+}
+
+// Names that are code even outside backticks: calls, dotted names (math.sqrt, .isdigit),
+// snake_case and a_i, CamelCase error names (TypeError), and one-letter variables (n, x, a).
+function looksLikeCodeToken(w: string, str: string, off: number) {
+  const prev = str[off - 1] ?? "", next = str[off + w.length] ?? "", next2 = str[off + w.length + 1] ?? "";
+  if (next === "(" || prev === "_" || next === "_") return true;
+  if (/[0-9]/.test(prev) || /[0-9]/.test(next)) return true;
+  if (next === "." && /[A-Za-z_]/.test(next2)) return true;
+  if (prev === "." && /[A-Za-z_)\]]/.test(str[off - 2] ?? "")) return true;
+  if (/[a-z][A-Z]/.test(w)) return true;
+  return /^[A-Za-z]$/.test(w) && w !== "u" && w !== "U";
 }
