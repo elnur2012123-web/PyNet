@@ -35,7 +35,8 @@ export const HELP = `**Moderation commands**
 - \`/bans\` — list active bans
 - \`/log\` — recent moderation actions
 - \`/staff\` — list staff members
-- \`/role @username admin|co_founder|user\` — change a role (Founder only)
+- \`/role @username admin|co_founder\` — give a role (Founder only)
+- \`/unrole @username\` — take the role away; they become a normal user (Founder only)
 - \`/help\` — show this list`;
 
 const fmt = (d: string | null) => (d ? new Date(d).toUTCString().replace(" GMT", " UTC") : "never (permanent)");
@@ -74,11 +75,23 @@ export async function runCommand(input: string): Promise<{ ok: boolean; message:
         return { ok: true, message: `✅ **@${target}** is no longer banned.` };
       }
       case "/role": {
-        const role = (parts[2] ?? "").toLowerCase().replace("-", "_").replace("cofounder", "co_founder");
+        let role = (parts[2] ?? "").toLowerCase().replace("-", "_").replace("cofounder", "co_founder");
+        if (["none", "remove", "member", "normal", "nothing"].includes(role)) role = "user";
         if (!target || !role) return fail("Usage: `/role @username admin|co_founder|user`");
         const { error } = await admin.rpc("mod_set_role", { p_actor: user.id, p_username: target, p_role: role });
         if (error) return fail(error.message);
         return { ok: true, message: `👤 **@${target}** is now **${ROLE_LABEL[role] ?? role}**.` };
+      }
+      case "/unrole":
+      case "/removerole":
+      case "/demote": {
+        if (!target) return fail("Usage: `/unrole @username`");
+        const { data: who } = await admin.from("profiles").select("role").eq("username", target).maybeSingle();
+        if (!who) return fail(`No user called @${target}.`);
+        if (who.role === "user") return fail(`@${target} doesn't have a role.`);
+        const { error } = await admin.rpc("mod_set_role", { p_actor: user.id, p_username: target, p_role: "user" });
+        if (error) return fail(error.message);
+        return { ok: true, message: `👤 **@${target}** is no longer ${ROLE_LABEL[who.role] ?? who.role} — now a normal user.` };
       }
       case "/bans": {
         const { data, error } = await admin.rpc("mod_list_bans");

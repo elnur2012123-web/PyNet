@@ -1,5 +1,6 @@
 "use client";
 import { ArenaAdmin } from "./ArenaAdmin";
+import { StaffRoles } from "./StaffRoles";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Gavel, ShieldCheck, Terminal } from "lucide-react";
 import { Markdown } from "@/components/tutor/Markdown";
@@ -15,6 +16,7 @@ export function AdminConsole({ role, username }: { role: string; username: strin
   const [bans, setBans] = useState("");
   const [log, setLog] = useState("");
   const [form, setForm] = useState({ user: "", duration: "1d", reason: "" });
+  const [version, setVersion] = useState(0);
   const endRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(async () => {
@@ -30,7 +32,7 @@ export function AdminConsole({ role, username }: { role: string; username: strin
     const r = await sendCommand(c.trim());
     setHistory((h) => [...h, { cmd: c.trim(), ...r }]);
     setBusy(false);
-    if (/^\/(ban|unban|role)\b/.test(c)) refresh();
+    if (/^\/(ban|unban|role|unrole|removerole|demote)\b/.test(c)) { refresh(); setVersion((v) => v + 1); }
   };
 
   return (
@@ -77,6 +79,7 @@ export function AdminConsole({ role, username }: { role: string; username: strin
               </div>
             </form>
           </section>
+          <StaffRoles role={role} run={run} version={version} />
           <section className="card p-5"><h2 className="mb-2 font-semibold">Active bans</h2><Markdown text={bans || "Loading…"} /></section>
           <section className="card p-5"><h2 className="mb-2 font-semibold">Moderation log</h2><Markdown text={log || "Loading…"} /></section>
         </div>

@@ -50,9 +50,10 @@ There are three staff roles: **Founder**, **Co-Founder** and **Admin**. Staff ca
 | `/ban @user [30m\|12h\|7d\|2w\|perm] [reason]` (default 1 day) | Admin and above. Only users of a lower rank can be banned, and the Founder never can. |
 | `/unban @user` | Admin and above |
 | `/bans`, `/log`, `/staff`, `/help` | Admin and above |
-| `/role @user admin\|co_founder\|user` | Founder only |
+| `/role @user admin\|co_founder` | Founder only |
+| `/unrole @user` (take the role away) | Founder only |
 
-Staff also see **Ban/Unban** buttons on profiles. Banned users only see a suspension page with the reason and end date. They can't earn XP, use PyBuddy, save code or send friend requests, and they're hidden from leaderboards and search. Their progress is kept. Every action is written to `moderation_log`.
+Staff also see **Ban/Unban** buttons on profiles. The Admin panel has a **Staff & roles** box, where the Founder can give roles or press **Remove role**. Banned users only see a suspension page with the reason and end date. They can't earn XP, use PyBuddy, save code or send friend requests, and they're hidden from leaderboards and search. Their progress is kept. Every action is written to `moderation_log`.
 
 Run `supabase/migrations/0007_roles_and_bans.sql`, then make yourself Founder in the SQL editor:
 
