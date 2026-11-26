@@ -72,11 +72,29 @@ function useHasAdmin() {
   return has;
 }
 
+const UPSELL_KEY = "pynest-hide-upsell";
+/** The "Try Pro / Try Max" card can be closed. It stays closed until the plan changes. */
+function useHiddenUpsell(plan: string): [boolean, () => void] {
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    try { setHidden(localStorage.getItem(UPSELL_KEY) === plan); } catch { setHidden(false); }
+    const sync = (e: StorageEvent) => { if (e.key === UPSELL_KEY) setHidden(e.newValue === plan); };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, [plan]);
+  const hide = () => {
+    setHidden(true);
+    try { localStorage.setItem(UPSELL_KEY, plan); } catch { /* private mode: hidden for this visit only */ }
+  };
+  return [hidden, hide];
+}
+
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const tx = useT();
   const path = usePathname();
   const p = useProgress();
   const hasAdmin = useHasAdmin();
+  const [upsellHidden, hideUpsell] = useHiddenUpsell(p.plan);
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center px-5"><Logo href="/" /></div>
@@ -99,11 +117,17 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </nav>
       <div className="space-y-2 p-3">
-        {p.plan !== "MAX" && (
-          <Link href="/pricing" onClick={onNavigate} className="block rounded-2xl border border-border p-3.5 hover:bg-elevated">
-            <p className="flex items-center gap-1.5 text-sm font-semibold"><Crown className="h-4 w-4 text-accent2" /> {p.plan === "FREE" ? tx("Try Pro") : tx("Try Max")}</p>
-            <p className="mt-0.5 text-xs text-muted">{p.plan === "FREE" ? tx("Hard challenges, more projects — $1/month.") : tx("Code reviews and every project.")}</p>
-          </Link>
+        {p.plan !== "MAX" && !upsellHidden && (
+          <div className="relative">
+            <Link href="/pricing" onClick={onNavigate} className="block rounded-2xl border border-border p-3.5 pr-9 hover:bg-elevated">
+              <p className="flex items-center gap-1.5 text-sm font-semibold"><Crown className="h-4 w-4 text-accent2" /> {p.plan === "FREE" ? tx("Try Pro") : tx("Try Max")}</p>
+              <p className="mt-0.5 text-xs text-muted">{p.plan === "FREE" ? tx("Hard challenges, more projects — $1/month.") : tx("Code reviews and every project.")}</p>
+            </Link>
+            <button type="button" onClick={hideUpsell} aria-label={tx("Close")} title={tx("Close")}
+              className="absolute right-2 top-2 rounded-lg p-1 text-muted hover:bg-elevated hover:text-fg">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         )}
         {hasAdmin && (
           <Link href="/admin" onClick={onNavigate} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${path.startsWith("/admin") ? "bg-danger/10 font-medium text-danger" : "text-muted hover:bg-elevated hover:text-fg"}`}>
