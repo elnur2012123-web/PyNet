@@ -33,7 +33,7 @@ export default async function ExercisePage({ params }: { params: Promise<{ id: s
           <h1 className="h1"><T k={ex.title} /></h1>
           <div className="card mt-6 p-6">
             <p className="flex items-center gap-2 font-semibold"><Lock className="h-4 w-4 text-accent2" /> <T k="Hard challenges are part of Pro" /></p>
-            <p className="mt-2 text-sm text-muted"><T k="Pro unlocks every Hard challenge, unlimited credited exercises and more PyBuddy messages — for $5/month." /></p>
+            <p className="mt-2 text-sm text-muted"><T k="Pro unlocks every Hard challenge, unlimited credited exercises and more PyBuddy messages — for $1/month." /></p>
             <div className="mt-5 flex gap-3"><Link href="/pricing" className="btn-primary"><T k="See plans" /></Link>{next && <Link href={`/practice/${next.id}`} className="btn-secondary"><T k="Next challenge" /></Link>}</div>
           </div>
         </div>

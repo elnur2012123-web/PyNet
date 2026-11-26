@@ -31,7 +31,7 @@ export const T7: [string, string, string][] = [
   ["Free forever. Your progress is saved and you can learn on any device.", "Doimo bepul. Natijalaringiz saqlanadi va istalgan qurilmada oʻqishingiz mumkin.", "Бесплатно навсегда. Ваш прогресс сохраняется, и учиться можно с любого устройства."],
   ["Friends need accounts (Supabase) to be configured.", "Doʻstlar uchun hisoblar (Supabase) sozlangan boʻlishi kerak.", "Для друзей нужны настроенные аккаунты (Supabase)."],
   ["Great work — review the explanations below.", "Zoʻr ish — quyidagi tushuntirishlarni koʻrib chiqing.", "Отличная работа — посмотрите пояснения ниже."],
-  ["Hard challenges, more projects — $5/month.", "Qiyin masalalar, koʻproq loyihalar — oyiga $5.", "Сложные задачи и больше проектов — $5/мес."],
+  ["Hard challenges, more projects — $1/month.", "Qiyin masalalar, koʻproq loyihalar — oyiga $1.", "Сложные задачи и больше проектов — $1/мес."],
   ["Hidden", "Yashirin", "Скрыто"],
   ["Hidden from weekly & monthly leaderboards", "Haftalik va oylik reytinglarda yashirin", "Скрыт в недельном и месячном рейтингах"],
   ["Hide", "Yashirish", "Скрыть"],

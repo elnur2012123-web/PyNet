@@ -48,8 +48,8 @@ export const PLANS: {
     id: "PRO",
     name: "Pro",
     tagline: "For students serious about learning Python.",
-    monthly: 5,
-    yearly: 50,
+    monthly: 1,
+    yearly: 10,
     highlight: true,
     features: [
       "Everything in Free",
@@ -68,8 +68,8 @@ export const PLANS: {
     id: "MAX",
     name: "Max",
     tagline: "A premium AI-powered programming mentor.",
-    monthly: 20,
-    yearly: 200,
+    monthly: 5,
+    yearly: 50,
     features: [
       "Everything in Pro",
       `${AI_DAILY_LIMIT.MAX} PyBuddy messages per day (fair use)`,

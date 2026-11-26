@@ -178,7 +178,7 @@ export default function Landing() {
         <div className="rounded-2xl border border-border p-6">
           <h2 className="text-2xl font-semibold tracking-tight"><T k="Free is enough to learn Python" /></h2>
           <p className="mt-3 leading-7 text-muted">
-            <T k="All" />{" "}{lessonCount} <T k="lessons are free. If you want more," />{" "}<strong className="text-fg"><T k="Pro" /></strong> <T k="($5/month) adds hard challenges, more projects and more PyBuddy help, and" />{" "}<strong className="text-fg"><T k="Max" /></strong> <T k="($20/month) adds code reviews and the full project library." /></p>
+            <T k="All" />{" "}{lessonCount} <T k="lessons are free. If you want more," />{" "}<strong className="text-fg"><T k="Pro" /></strong> <T k="($1/month) adds hard challenges, more projects and more PyBuddy help, and" />{" "}<strong className="text-fg"><T k="Max" /></strong> <T k="($5/month) adds code reviews and the full project library." /></p>
           <Link href="/pricing" className="btn-secondary mt-5"><T k="Compare plans" /></Link>
         </div>
       </section>

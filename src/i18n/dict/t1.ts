@@ -1,7 +1,7 @@
 // [English, Oʻzbekcha (lotin), Русский]
 export const T1: [string, string, string][] = [
-  ["($20/month) adds code reviews and the full project library.", "(oyiga $20) kod tahlili va barcha loyihalarni qoʻshadi.", "($20/мес.) добавляет разбор кода и всю библиотеку проектов."],
-  ["($5/month) adds hard challenges, more projects and more PyBuddy help, and", "(oyiga $5) qiyin masalalar, koʻproq loyihalar va PyBuddy yordamini qoʻshadi, va", "($5/мес.) добавляет сложные задачи, больше проектов и больше помощи PyBuddy, а"],
+  ["($5/month) adds code reviews and the full project library.", "(oyiga $5) kod tahlili va barcha loyihalarni qoʻshadi.", "($5/мес.) добавляет разбор кода и всю библиотеку проектов."],
+  ["($1/month) adds hard challenges, more projects and more PyBuddy help, and", "(oyiga $1) qiyin masalalar, koʻproq loyihalar va PyBuddy yordamini qoʻshadi, va", "($1/мес.) добавляет сложные задачи, больше проектов и больше помощи PyBuddy, а"],
   ["(CPython compiled to WebAssembly). Limitations: only the standard library is available (no pip),", "(WebAssembly’ga kompilyatsiya qilingan CPython). Cheklovlar: faqat standart kutubxona mavjud (pip yoʻq),", "(CPython, скомпилированный в WebAssembly). Ограничения: доступна только стандартная библиотека (без pip),"],
   ["(max.", "(maks.", "(макс."],
   ["(no output — use print() to show something)", "(natija yoʻq — biror narsani koʻrsatish uchun print() dan foydalaning)", "(нет вывода — используйте print(), чтобы что-то показать)"],

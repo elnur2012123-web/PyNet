@@ -102,7 +102,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         {p.plan !== "MAX" && (
           <Link href="/pricing" onClick={onNavigate} className="block rounded-2xl border border-border p-3.5 hover:bg-elevated">
             <p className="flex items-center gap-1.5 text-sm font-semibold"><Crown className="h-4 w-4 text-accent2" /> {p.plan === "FREE" ? tx("Try Pro") : tx("Try Max")}</p>
-            <p className="mt-0.5 text-xs text-muted">{p.plan === "FREE" ? tx("Hard challenges, more projects — $5/month.") : tx("Code reviews and every project.")}</p>
+            <p className="mt-0.5 text-xs text-muted">{p.plan === "FREE" ? tx("Hard challenges, more projects — $1/month.") : tx("Code reviews and every project.")}</p>
           </Link>
         )}
         {hasAdmin && (

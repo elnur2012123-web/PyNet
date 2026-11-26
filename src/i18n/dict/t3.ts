@@ -94,7 +94,7 @@ export const T3: [string, string, string][] = [
   ["Privacy", "Maxfiylik", "Конфиденциальность"],
   ["Privacy Policy", "Maxfiylik siyosati", "Политика конфиденциальности"],
   ["Pro", "Pro", "Pro"],
-  ["Pro unlocks every Hard challenge, unlimited credited exercises and more PyBuddy messages — for $5/month.", "Pro barcha qiyin masalalarni, cheksiz hisoblanadigan mashqlarni va PyBuddy’ga koʻproq xabarlarni ochadi — oyiga $5.", "Pro открывает все сложные задачи, неограниченные засчитываемые упражнения и больше сообщений PyBuddy — за $5/мес."],
+  ["Pro unlocks every Hard challenge, unlimited credited exercises and more PyBuddy messages — for $1/month.", "Pro barcha qiyin masalalarni, cheksiz hisoblanadigan mashqlarni va PyBuddy’ga koʻproq xabarlarni ochadi — oyiga $1.", "Pro открывает все сложные задачи, неограниченные засчитываемые упражнения и больше сообщений PyBuddy — за $1/мес."],
   ["Pro unlocks the full error encyclopedia: causes, broken vs fixed code, an interactive example, a practice drill and a quiz for every error.", "Pro toʻliq xatolar ensiklopediyasini ochadi: sabablar, notoʻgʻri va tuzatilgan kod, interaktiv misol, har bir xato uchun mashq va test.", "Pro открывает полную энциклопедию ошибок: причины, неверный и исправленный код, интерактивный пример, упражнение и тест для каждой ошибки."],
   ["Pro/Max", "Pro/Max", "Pro/Max"],
   ["Problem", "Masala", "Задача"],
