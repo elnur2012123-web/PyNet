@@ -41,7 +41,7 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
   const [mode, setMode] = useState<AiFeature>("chat");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ kind: "warn" | "error" | "info"; text: string; cta?: "signin" | "upgrade" } | null>(null);
-  const [engine, setEngine] = useState<"claude" | "lite" | null>(null);
+  const [engine, setEngine] = useState<"claude" | "gemini" | "lite" | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);

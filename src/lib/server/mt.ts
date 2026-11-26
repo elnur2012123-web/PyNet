@@ -4,6 +4,7 @@ import "server-only";
  * Providers (first one configured wins):
  *   GOOGLE_TRANSLATE_API_KEY  Google Cloud Translation v2 (free tier: 500k characters / month)
  *   ANTHROPIC_API_KEY         Claude
+ *   GEMINI_API_KEY            Gemini
  * Code is protected: `inline code` and ```blocks``` are replaced by markers before
  * translation and restored afterwards, so it can never be changed.
  */
@@ -28,28 +29,42 @@ async function google(texts: string[], target: Target): Promise<string[] | null>
   return out && out.length === texts.length ? out : null;
 }
 
+const systemFor = (target: Target) => {
+  const lang = target === "uz" ? "Uzbek in the Latin alphabet (use oʻ and gʻ with ʻ, and ʼ for the tutuq belgisi)" : "Russian";
+  return `You translate a beginner Python course from English into ${lang}. Use simple, friendly language for school students. Never translate or change anything inside ⟦n⟧ markers, Python code, variable names, program output, or error names like TypeError. Reply with ONLY a JSON array of strings, same length and order as the input.`;
+};
+const parseArray = (text: string, n: number) => {
+  try {
+    const arr = JSON.parse(text.slice(text.indexOf("["), text.lastIndexOf("]") + 1));
+    return Array.isArray(arr) && arr.length === n ? arr.map(String) : null;
+  } catch {
+    return null;
+  }
+};
+
+async function gemini(texts: string[], target: Target): Promise<string[] | null> {
+  if (!process.env.GEMINI_API_KEY) return null;
+  const { geminiText } = await import("./gemini");
+  const out = parseArray(await geminiText(systemFor(target), JSON.stringify(texts)), texts.length);
+  // Uzbek: oʻ / gʻ use the turned comma (ʻ), not a plain apostrophe.
+  return out && target === "uz" ? out.map((t) => t.replace(/([OoGg])['‘’`]/g, "$1ʻ")) : out;
+}
+
 async function claude(texts: string[], target: Target): Promise<string[] | null> {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const client = new Anthropic();
-  const lang = target === "uz" ? "Uzbek in the Latin alphabet (use oʻ and gʻ with ʻ, and ʼ for the tutuq belgisi)" : "Russian";
   const msg = await client.messages.create({
     model: process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5",
     max_tokens: 8000,
-    system: `You translate a beginner Python course from English into ${lang}. Use simple, friendly language for school students. Never translate or change anything inside ⟦n⟧ markers, Python code, variable names, program output, or error names like TypeError. Reply with ONLY a JSON array of strings, same length and order as the input.`,
+    system: systemFor(target),
     messages: [{ role: "user", content: JSON.stringify(texts) }],
   });
-  const text = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("");
-  try {
-    const arr = JSON.parse(text.slice(text.indexOf("["), text.lastIndexOf("]") + 1));
-    return Array.isArray(arr) && arr.length === texts.length ? arr.map(String) : null;
-  } catch {
-    return null;
-  }
+  return parseArray(msg.content.map((b) => (b.type === "text" ? b.text : "")).join(""), texts.length);
 }
 
-export const mtConfigured = () => Boolean(process.env.GOOGLE_TRANSLATE_API_KEY || process.env.ANTHROPIC_API_KEY);
-export const mtProvider = () => (process.env.GOOGLE_TRANSLATE_API_KEY ? "google" : process.env.ANTHROPIC_API_KEY ? "claude" : "none");
+export const mtConfigured = () => Boolean(process.env.GOOGLE_TRANSLATE_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY);
+export const mtProvider = () => (process.env.GOOGLE_TRANSLATE_API_KEY ? "google" : process.env.ANTHROPIC_API_KEY ? "claude" : process.env.GEMINI_API_KEY ? "gemini" : "none");
 
 /** Translate a batch; returns null entries for anything that failed. */
 export async function machineTranslate(texts: string[], target: Target): Promise<(string | null)[]> {
@@ -59,7 +74,7 @@ export async function machineTranslate(texts: string[], target: Target): Promise
   for (let i = 0; i < prepared.length; i += 40) {
     const chunk = prepared.slice(i, i + 40);
     let res: string[] | null = null;
-    try { res = (await google(chunk.map((c) => c.masked), target)) ?? (await claude(chunk.map((c) => c.masked), target)); } catch { res = null; }
+    try { res = (await google(chunk.map((c) => c.masked), target)) ?? (await claude(chunk.map((c) => c.masked), target)) ?? (await gemini(chunk.map((c) => c.masked), target)); } catch { res = null; }
     if (res) res.forEach((t, j) => { out[i + j] = chunk[j].restore(t); });
   }
   return out;

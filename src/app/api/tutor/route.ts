@@ -6,10 +6,24 @@ import { error, readJson, sameOrigin } from "@/lib/server/http";
 import { AI_DAILY_LIMIT, AI_FEATURE_MIN_PLAN, planAtLeast, type AiFeature, type Plan } from "@/lib/plans";
 import { isSupabaseConfigured } from "@/lib/env";
 import { localTutorAnswer } from "@/lib/tutor/local";
+import { getLocale } from "@/i18n/server";
+import type { Locale } from "@/i18n/locales";
+import { geminiStream, GeminiError } from "@/lib/server/gemini";
+
+/** Which AI answers: Claude if its key is set, otherwise Gemini, otherwise the free rule-based PyBuddy Lite. */
+const provider = () => (process.env.ANTHROPIC_API_KEY ? "claude" : process.env.GEMINI_API_KEY ? "gemini" : "lite");
+
+const LANGUAGE_RULE: Record<Locale, string> = {
+  en: "Reply in simple English.",
+  uz: "Reply in Uzbek written in the Latin alphabet (Oʻzbekcha lotin yozuvi).",
+  "uz-Cyrl": "Reply in Uzbek written in the Cyrillic alphabet (Ўзбекча кирилл ёзуви).",
+  ru: "Reply in Russian.",
+};
+const CODE_RULE = "Only your explanations use that language. Every piece of code must be written fully in English: English variable names (fruits, total, name), English text inside strings (\"apple\", \"Hello\"), English comments, and English program output, error names (NameError) and keywords. Never transliterate or translate anything inside code blocks. If the learner writes in another language, still reply in the language above unless they ask you to switch.";
 
 /** Which tutor engine is active (used by the chat UI label). */
 export function GET() {
-  return Response.json({ mode: process.env.ANTHROPIC_API_KEY ? "claude" : "lite" });
+  return Response.json({ mode: provider() });
 }
 
 /** Stream a ready-made answer in small chunks so it feels like typing. */
@@ -96,7 +110,7 @@ export async function POST(req: Request) {
   const feature: AiFeature = body?.feature && body.feature in FEATURE_PROMPTS ? body.feature : "chat";
 
   // Free mode: no API key configured -> PyBuddy Lite (rule-based, no cost, no quota).
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (provider() === "lite") {
     if (isSupabaseConfigured && !(await getUserContext())) return error("Please sign up or sign in to chat with PyBuddy.", 401, { signIn: true });
     const burst = rateLimit(`lite:${clientIp(req)}`, 30, 60_000);
     if (!burst.ok) return error(`You're sending messages very quickly. Try again in ${burst.retryAfter}s.`, 429);
@@ -143,13 +157,40 @@ export async function POST(req: Request) {
     if (!burst.ok || !daily.ok) return error("Demo limit reached for now. Please try again later.", 429, { limitReached: true });
   }
 
+  const language = `${LANGUAGE_RULE[await getLocale()]} ${CODE_RULE}`;
+  const extra = [FEATURE_PROMPTS[feature], context ? `Current page: ${context}` : "", language].filter(Boolean).join("\n");
+  const maxTokens = feature === "review" || feature === "generate" ? 8000 : 3000;
+  const headers = { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "X-AI-Remaining": String(remaining), "X-AI-Limit": String(limit) };
+
+  // --- call Gemini -----------------------------------------------------------
+  if (provider() === "gemini") {
+    const enc = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        try {
+          const res = await geminiStream({ system: `${SYSTEM_PROMPT}\n\n${extra}`, messages, maxTokens }, (t) => controller.enqueue(enc.encode(t)));
+          if (res.finish === "MAX_TOKENS") controller.enqueue(enc.encode("\n\n_(I stopped because the answer got long — ask me to continue!)_"));
+          else if (res.finish === "SAFETY" || res.finish === "PROHIBITED_CONTENT") controller.enqueue(enc.encode("\n\nSorry, I can't help with that one. Let's get back to Python — what would you like to learn?"));
+          if (userId) await getAdminSupabase()?.rpc("record_ai_tokens", { p_user: userId, p_feature: feature, p_tokens: res.tokens });
+        } catch (e) {
+          const status = e instanceof GeminiError ? e.status : 0;
+          const msg = status === 400 || status === 401 || status === 403 ? "PyBuddy's Gemini API key was rejected. The site owner needs to update GEMINI_API_KEY."
+            : status === 429 ? "PyBuddy is very busy right now. Please try again in a minute."
+            : "PyBuddy couldn't reach the AI service. Please try again in a moment.";
+          controller.enqueue(enc.encode(`\n\n[[error]] ${msg}`));
+        } finally {
+          controller.close();
+        }
+      },
+    });
+    return new Response(stream, { headers });
+  }
+
   // --- call Claude -----------------------------------------------------------
   const client = new Anthropic();
   const system = [
     { type: "text" as const, text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" as const } },
-    ...(FEATURE_PROMPTS[feature] || context
-      ? [{ type: "text" as const, text: [FEATURE_PROMPTS[feature], context ? `Current page: ${context}` : ""].filter(Boolean).join("\n") }]
-      : []),
+    { type: "text" as const, text: extra },
   ];
 
   const encoder = new TextEncoder();
@@ -158,7 +199,7 @@ export async function POST(req: Request) {
       try {
         const s = client.beta.messages.stream({
           model: MODEL,
-          max_tokens: feature === "review" || feature === "generate" ? 8000 : 3000,
+          max_tokens: maxTokens,
           system,
           messages,
           output_config: { effort: feature === "review" || feature === "generate" ? "medium" : "low" },
@@ -193,12 +234,5 @@ export async function POST(req: Request) {
     },
   });
 
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-store",
-      "X-AI-Remaining": String(remaining),
-      "X-AI-Limit": String(limit),
-    },
-  });
+  return new Response(stream, { headers });
 }
