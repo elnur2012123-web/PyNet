@@ -23,7 +23,7 @@ const CODE_RULE = "Only your explanations use that language. Every piece of code
 
 /** Which tutor engine is active (used by the chat UI label). */
 export function GET() {
-  return Response.json({ mode: provider() });
+  return Response.json({ mode: provider() }, { headers: { "Cache-Control": "no-store" } });
 }
 
 /** Stream a ready-made answer in small chunks so it feels like typing. */
@@ -45,6 +45,7 @@ function streamText(text: string, headers: Record<string, string> = {}) {
 }
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
@@ -160,7 +161,7 @@ export async function POST(req: Request) {
   const language = `${LANGUAGE_RULE[await getLocale()]} ${CODE_RULE}`;
   const extra = [FEATURE_PROMPTS[feature], context ? `Current page: ${context}` : "", language].filter(Boolean).join("\n");
   const maxTokens = feature === "review" || feature === "generate" ? 8000 : 3000;
-  const headers = { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "X-AI-Remaining": String(remaining), "X-AI-Limit": String(limit) };
+  const headers = { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "X-AI-Remaining": String(remaining), "X-AI-Limit": String(limit), "X-AI-Mode": provider() };
 
   // --- call Gemini -----------------------------------------------------------
   if (provider() === "gemini") {

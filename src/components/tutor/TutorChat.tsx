@@ -47,7 +47,7 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
   const taRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    fetch("/api/tutor").then((r) => r.json()).then((d) => setEngine(d.mode)).catch(() => {});
+    fetch("/api/tutor", { cache: "no-store" }).then((r) => r.json()).then((d) => setEngine(d.mode)).catch(() => {});
   }, []);
   useEffect(() => {
     try {
@@ -91,6 +91,8 @@ export function TutorChat({ compact = false, context, listen = false }: { compac
         body: JSON.stringify({ messages: history.map(({ role, content }) => ({ role, content })), feature, context }),
         signal: ctrl.signal,
       });
+      const mode = res.headers.get("X-AI-Mode");
+      if (mode === "lite" || mode === "gemini" || mode === "claude") setEngine(mode);
       if (!res.ok || !res.body) {
         const d = await res.json().catch(() => ({}));
         setMessages((m) => m.slice(0, -1));
