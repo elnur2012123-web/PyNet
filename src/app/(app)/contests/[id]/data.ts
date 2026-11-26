@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { finalizeFinishedContests, type ContestRow } from "@/lib/server/arena";
-import { translateTexts } from "@/i18n/content";
+import { localizeProblemTitles, translateTexts } from "@/i18n/content";
 import { getLocale } from "@/i18n/server";
 
 export interface StandingRow { rank: number; user_id: string; username: string; rating: number | null; country: string | null; solved: number; penalty: number; cells: Record<string, { ok: boolean; wrong: number; minute: number | null }> }
@@ -25,7 +25,11 @@ export const loadContest = cache(async (id: number) => {
   ]);
   const problems = (probs.data ?? []) as ContestProblem[];
   const contest = c as ContestRow & { description?: string | null };
-  const tr = await translateTexts(await getLocale(), [contest.title, contest.description ?? "", ...problems.map((p) => p.title)]);
+  const locale = await getLocale();
+  const [tr, titles] = await Promise.all([
+    translateTexts(locale, [contest.title, contest.description ?? ""]),
+    localizeProblemTitles(locale, problems.map((p) => ({ id: p.problem_id, title: p.title }))),
+  ]);
   const localized = { ...contest, title: tr.get(contest.title) ?? contest.title, description: contest.description ? tr.get(contest.description) ?? contest.description : contest.description } as ContestRow;
   const authors = ((author.data ?? []) as { id: number; authors: string[] }[]).find((x) => x.id === id)?.authors ?? [];
   return {
@@ -33,7 +37,7 @@ export const loadContest = cache(async (id: number) => {
     me,
     participants: count ?? 0,
     registered: Boolean(reg.data),
-    problems: problems.map((p) => ({ ...p, title: tr.get(p.title) ?? p.title })),
+    problems: problems.map((p) => ({ ...p, title: titles.get(p.problem_id) ?? p.title })),
     standings: ((stand.data ?? []) as StandingRow[]).map((r) => ({ ...r, rank: Number(r.rank) })),
     authors,
   };

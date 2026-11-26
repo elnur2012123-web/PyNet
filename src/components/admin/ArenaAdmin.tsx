@@ -1,13 +1,12 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarPlus, FilePlus2, Loader2, Trash2, X } from "lucide-react";
+import { CalendarPlus, Loader2, Pencil, Search, Trash2, X } from "lucide-react";
 import { getBrowserSupabase } from "@/lib/supabase/client";
-import { getRuntime } from "@/lib/python/runner";
-import { CodeEditor } from "@/components/editor/CodeEditor";
 import { difficultyClass } from "@/lib/arena/rank";
 import { CheatDetector } from "./CheatDetector";
 import { DIVISIONS } from "@/lib/arena/divisions";
+import { ProblemEditor } from "./ProblemEditor";
 
 interface P { id: number; title: string; rating: number; visibility: string }
 interface C { id: number; title: string; starts_at: string; duration_minutes: number }
@@ -19,7 +18,6 @@ async function post(body: Record<string, unknown>) {
   if (!r.ok) throw new Error(j.error || "Request failed");
   return j;
 }
-const splitBlocks = (t: string) => t.split(/^===\s*$/m).map((x) => x.replace(/^\n/, "")).filter((x) => x.trim()).map((x) => (x.endsWith("\n") ? x : x + "\n"));
 
 export function ArenaAdmin({ permissions }: { permissions: string[] }) {
   const can = (p: string) => permissions.includes(p);
@@ -63,32 +61,14 @@ export function ArenaAdmin({ permissions }: { permissions: string[] }) {
     try { await post({ action: "delete_contest", id }); load(); } catch (e) { setMsg({ ok: false, text: (e as Error).message }); }
   };
 
-  // ---- write a problem
-  const [pf, setPf] = useState({ title: "", rating: 800, tags: "implementation", timeLimitMs: 2000, visibility: "hidden", statement: "", inputSpec: "", outputSpec: "", notes: "", examples: "", tests: "" });
-  const [ref, setRef] = useState("# Reference solution (used to compute the expected outputs)\n");
-  const saveProblem = async () => {
-    setBusy("problem"); setMsg(null);
-    try {
-      const exIn = splitBlocks(pf.examples), testIn = splitBlocks(pf.tests);
-      if (!exIn.length) throw new Error("Add at least one example input (separate inputs with a line containing only ===).");
-      const rt = getRuntime();
-      const outs: string[] = [];
-      for (const [i, inp] of [...exIn, ...testIn].entries()) {
-        const r = await rt.run(ref, { stdin: inp, timeoutMs: pf.timeLimitMs + 2000, maxOutput: 4_000_000 });
-        if (r.error || r.timedOut) throw new Error(`Reference solution failed on ${i < exIn.length ? `example ${i + 1}` : `test ${i - exIn.length + 1}`}: ${r.timedOut ? "time limit" : `${r.error!.type}: ${r.error!.message}`}`);
-        outs.push(r.stdout.replace(/\s+$/, ""));
-      }
-      const all = [...exIn, ...testIn].map((input, i) => ({ input, expected: outs[i] }));
-      const j = await post({
-        action: "create_problem", title: pf.title, rating: Number(pf.rating), timeLimitMs: Number(pf.timeLimitMs), visibility: pf.visibility,
-        tags: pf.tags.split(",").map((t) => t.trim()).filter(Boolean), statement: pf.statement, inputSpec: pf.inputSpec, outputSpec: pf.outputSpec, notes: pf.notes,
-        examples: exIn.map((input, i) => ({ input, output: outs[i] })), tests: all,
-      });
-      setMsg({ ok: true, text: `Problem ${j.id} saved with ${all.length} tests.` });
-      load();
-    } catch (e) { setMsg({ ok: false, text: (e as Error).message }); }
-    setBusy(null);
-  };
+  // ---- edit problems
+  const [editId, setEditId] = useState<number | null>(null);
+  const [find, setFind] = useState("");
+  const found = useMemo(() => {
+    const q = find.trim().toLowerCase();
+    return [...problems].sort((x, y) => y.id - x.id).filter((p) => !q || String(p.id) === q || p.title.toLowerCase().includes(q)).slice(0, 60);
+  }, [problems, find]);
+  const saved = (text: string) => { setMsg({ ok: true, text }); load(); };
 
   const upcoming = contests.filter((c) => new Date(c.starts_at).getTime() > Date.now());
 
@@ -148,28 +128,33 @@ export function ArenaAdmin({ permissions }: { permissions: string[] }) {
           )}
         </section>}
 
-        {can("create_problems") && <section className="card space-y-3 p-5">
-          <h3 className="flex items-center gap-2 font-semibold"><FilePlus2 className="h-4 w-4" /> Write a problem</h3>
-          <input className="input w-full" placeholder="Title" value={pf.title} onChange={(e) => setPf({ ...pf, title: e.target.value })} />
-          <div className="grid grid-cols-3 gap-2 text-sm">
-            <label className="space-y-1"><span className="label">Difficulty</span>
-              <select className="input w-full" value={pf.rating} onChange={(e) => setPf({ ...pf, rating: Number(e.target.value) })}>{Array.from({ length: 28 }, (_, i) => 800 + i * 100).map((r) => <option key={r}>{r}</option>)}</select></label>
-            <label className="space-y-1"><span className="label">Time limit (ms)</span><input type="number" min={500} max={10000} step={500} className="input w-full" value={pf.timeLimitMs} onChange={(e) => setPf({ ...pf, timeLimitMs: Number(e.target.value) })} /></label>
-            <label className="space-y-1"><span className="label">Where</span>
-              <select className="input w-full" value={pf.visibility} onChange={(e) => setPf({ ...pf, visibility: e.target.value })}><option value="hidden">Hidden (for a round)</option><option value="public">Problemset now</option></select></label>
-          </div>
-          <input className="input w-full" placeholder="Tags, comma separated (math, strings, dp …)" value={pf.tags} onChange={(e) => setPf({ ...pf, tags: e.target.value })} />
-          <textarea className="input min-h-24 w-full" placeholder="Statement (use `backticks` for code)" value={pf.statement} onChange={(e) => setPf({ ...pf, statement: e.target.value })} />
-          <textarea className="input min-h-14 w-full" placeholder="Input format" value={pf.inputSpec} onChange={(e) => setPf({ ...pf, inputSpec: e.target.value })} />
-          <textarea className="input min-h-14 w-full" placeholder="Output format" value={pf.outputSpec} onChange={(e) => setPf({ ...pf, outputSpec: e.target.value })} />
-          <textarea className="input min-h-12 w-full" placeholder="Note (optional)" value={pf.notes} onChange={(e) => setPf({ ...pf, notes: e.target.value })} />
-          <textarea className="input min-h-20 w-full font-mono text-xs" placeholder={"Example inputs (shown to everyone)\nSeparate inputs with a line: ===\n3\n1 2 3\n===\n1\n5"} value={pf.examples} onChange={(e) => setPf({ ...pf, examples: e.target.value })} />
-          <textarea className="input min-h-24 w-full font-mono text-xs" placeholder={"Hidden test inputs, separated by ===\nInclude edge cases and big inputs."} value={pf.tests} onChange={(e) => setPf({ ...pf, tests: e.target.value })} />
-          <div className="overflow-hidden rounded-xl border border-border"><CodeEditor value={ref} onChange={setRef} minHeight="160px" ariaLabel="Reference solution" /></div>
-          <p className="text-xs text-muted">Expected outputs are computed by running your reference solution here in the browser. Examples become tests 1, 2, ….</p>
-          <button className="btn-primary btn-sm" disabled={busy === "problem" || !pf.title || !pf.statement} onClick={saveProblem}>{busy === "problem" && <Loader2 className="h-4 w-4 animate-spin" />} Run reference &amp; save</button>
-        </section>}
+        {can("create_problems") && <ProblemEditor onSaved={saved} />}
       </div>
+
+      {can("edit_problems") && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <section className="card space-y-3 p-5">
+            <h3 className="flex items-center gap-2 font-semibold"><Pencil className="h-4 w-4" /> Edit problems</h3>
+            <label className="relative block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+              <input className="input w-full pl-9" placeholder="Search by number or title" value={find} onChange={(e) => setFind(e.target.value)} />
+            </label>
+            <div className="thin-scroll max-h-96 overflow-y-auto rounded-xl border border-border">
+              {found.map((p) => (
+                <button key={p.id} onClick={() => setEditId(p.id)}
+                  className={`flex w-full items-center justify-between gap-2 border-b border-border/60 px-3 py-1.5 text-left text-sm last:border-0 hover:bg-elevated ${editId === p.id ? "bg-elevated" : ""}`}>
+                  <span>{p.id}. {p.title} {p.visibility === "hidden" && <span className="chip ml-1">hidden</span>}</span>
+                  <span className={`font-semibold ${difficultyClass(p.rating)}`}>{p.rating}</span>
+                </button>
+              ))}
+              {!found.length && <p className="px-3 py-6 text-center text-sm text-muted">No problems match.</p>}
+            </div>
+          </section>
+          {editId !== null
+            ? <ProblemEditor key={editId} editId={editId} onSaved={saved} onClose={() => setEditId(null)} />
+            : <p className="card p-5 text-sm text-muted">Pick a problem on the left to change its text, languages, difficulty, time limit or tests.</p>}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { getLocale, getT } from "@/i18n/server";
-import { translateTexts } from "@/i18n/content";
+import { localizeProblemTitles } from "@/i18n/content";
 import { T } from "@/components/i18n/T";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -22,8 +22,8 @@ export default async function ProblemsetPage({ searchParams }: { searchParams: S
   if (!sb) return <EmptyState title={tx("Problemset needs accounts")} body={tx("Problems are stored in the database, so they appear once Supabase is configured.")} />;
   const { data } = await sb.rpc("get_problemset");
   const raw = (data ?? []) as Row[];
-  const tr = await translateTexts(await getLocale(), raw.map((r) => r.title));
-  const all = raw.map((r) => ({ ...r, en: r.title, title: tr.get(r.title) ?? r.title, solved: Number(r.solved) }));
+  const tr = await localizeProblemTitles(await getLocale(), raw);
+  const all = raw.map((r) => ({ ...r, en: r.title, title: tr.get(r.id) ?? r.title, solved: Number(r.solved) }));
   const tags = [...new Set(all.flatMap((r) => r.tags))].sort();
   const min = Number(sp.min) || 0, max = Number(sp.max) || 99999;
   const q = (sp.q ?? "").trim().toLowerCase();

@@ -1,10 +1,11 @@
-/** Permissions a role can have. Keep in sync with public.all_permissions() (migration 0016). */
+/** Permissions a role can have. Keep in sync with public.all_permissions() (migration 0020). */
 export const PERMISSIONS = [
   { id: "ban_users", label: "Ban and unban users", hint: "Quick ban, /ban, /unban and Ban buttons on profiles" },
   { id: "view_logs", label: "See bans and the moderation log", hint: "Active bans list, /bans, /log" },
   { id: "view_code", label: "Read everyone's code", hint: "Any submission, even during a running contest" },
   { id: "host_contests", label: "Host contests", hint: "Schedule and delete rounds" },
   { id: "create_problems", label: "Create problems", hint: "Write new problems and see hidden ones" },
+  { id: "edit_problems", label: "Edit problems", hint: "Change any problem's text, languages, limits and tests" },
   { id: "review_cheating", label: "Review cheating", hint: "Use the cheat detector (banning there also needs \"Ban users\")" },
   { id: "manage_roles", label: "Manage roles", hint: "Create/edit roles and give or remove roles ranked below their own" },
   { id: "read_suggestions", label: "Read suggestions", hint: "See and answer suggestions sent with the suggestion bot" },

@@ -13,6 +13,14 @@ export interface UpdateEntry {
 
 export const CODE_UPDATES: UpdateEntry[] = [
   {
+    id: "2026-11-26-problem-languages",
+    date: "2026-11-26T15:00:00Z",
+    kind: "feature",
+    title: "Problems in your language, written by their authors",
+    body: "Problem writers can now write a problem in Oʻzbekcha, Ўзбекча, Русский or English and add the other languages right in the same form. You always see the author's own version in your language when there is one.",
+    link: "/problemset",
+  },
+  {
     id: "2026-11-26-problem-pack-2",
     date: "2026-11-26T09:00:00Z",
     kind: "feature",

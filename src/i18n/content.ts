@@ -137,14 +137,82 @@ export async function localizeError<E extends { summary: string; meaning: string
   return e;
 }
 
-export async function localizeProblem<P extends { title: string; statement: string; input_spec: string; output_spec: string; notes: string }>(locale: Locale, p: P): Promise<P> {
-  const x = structuredClone(p);
+type ProblemText = { title: string; statement: string; input_spec: string; output_spec: string; notes: string };
+const TEXT_FIELDS = ["title", "statement", "input_spec", "output_spec", "notes"] as const;
+interface ProblemLangs { lang: Locale; tr: Partial<Record<Locale, ProblemText>> }
+
+/** The language a problem was written in, plus the versions its author wrote in other languages. */
+async function loadProblemLangs(ids: number[], titlesOnly = false): Promise<Map<number, ProblemLangs>> {
+  const out = new Map<number, ProblemLangs>();
+  const admin = getAdminSupabase();
+  const uniq = [...new Set(ids)].filter(Number.isInteger);
+  if (!admin || !uniq.length) return out;
+  const [langs, trs] = await Promise.all([
+    admin.from("problems").select("id, lang").in("id", uniq),
+    admin.from("problem_translations").select(titlesOnly ? "problem_id, locale, title" : "problem_id, locale, title, statement, input_spec, output_spec, notes").in("problem_id", uniq),
+  ]);
+  if (langs.error) return out; // migration 0020 not run yet: everything is English
+  for (const r of (langs.data ?? []) as { id: number; lang: Locale }[]) out.set(r.id, { lang: r.lang ?? "en", tr: {} });
+  for (const r of (trs.data ?? []) as unknown as (ProblemText & { problem_id: number; locale: Locale })[]) {
+    const info = out.get(r.problem_id);
+    if (info) info.tr[r.locale] = { title: r.title, statement: r.statement ?? "", input_spec: r.input_spec ?? "", output_spec: r.output_spec ?? "", notes: r.notes ?? "" };
+  }
+  return out;
+}
+
+const fill = (t: ProblemText, base: ProblemText): ProblemText =>
+  Object.fromEntries(TEXT_FIELDS.map((f) => [f, t[f]?.trim() ? t[f] : base[f]])) as ProblemText;
+const toCyrillic = (t: ProblemText): ProblemText =>
+  Object.fromEntries(TEXT_FIELDS.map((f) => [f, t[f] ? latinToCyrillic(t[f]) : t[f]])) as ProblemText;
+
+/**
+ * Which text a reader in `locale` sees:
+ *  1. the author's own version in that language;
+ *  2. the original, if it was written in that language;
+ *  3. Uzbek Cyrillic is made from the Uzbek Latin version;
+ *  4. English text (original or the author's English version) is translated automatically;
+ *  5. otherwise the problem is shown in the language it was written in.
+ */
+export function pickProblemText(locale: Locale, base: ProblemText, info?: ProblemLangs): { text: ProblemText; translate: boolean } {
+  if (!info) return { text: base, translate: locale !== "en" };
+  const own = info.tr[locale];
+  if (own) return { text: fill(own, base), translate: false };
+  if (info.lang === locale) return { text: base, translate: false };
+  if (locale === "uz-Cyrl") {
+    const latin = info.tr.uz ? fill(info.tr.uz, base) : info.lang === "uz" ? base : null;
+    if (latin) return { text: toCyrillic(latin), translate: false };
+  }
+  const english = info.lang === "en" ? base : info.tr.en ? fill(info.tr.en, base) : null;
+  if (english) return { text: english, translate: locale !== "en" };
+  return { text: base, translate: false };
+}
+
+export async function localizeProblem<P extends ProblemText & { id?: number }>(locale: Locale, p: P): Promise<P> {
+  const info = typeof p.id === "number" ? (await loadProblemLangs([p.id])).get(p.id) : undefined;
+  const picked = pickProblemText(locale, p, info);
+  const x = { ...structuredClone(p), ...picked.text } as P;
+  if (!picked.translate) return x;
   await apply(locale, [x], (o, take) => {
-    take(o.title, (v) => { o.title = v; });
-    take(o.statement, (v) => { o.statement = v; });
-    take(o.input_spec, (v) => { o.input_spec = v; });
-    take(o.output_spec, (v) => { o.output_spec = v; });
-    take(o.notes, (v) => { o.notes = v; });
+    for (const f of TEXT_FIELDS) take(o[f], (v) => { (o as ProblemText)[f] = v; });
   });
   return x;
+}
+
+/** Problem titles for lists (problemset, contests, status), by problem id. */
+export async function localizeProblemTitles(locale: Locale, rows: { id: number; title: string }[]): Promise<Map<number, string>> {
+  const out = new Map<number, string>();
+  if (!rows.length) return out;
+  const infos = await loadProblemLangs(rows.map((r) => r.id), true);
+  const viaEnglish: { id: number; title: string }[] = [];
+  for (const r of rows) {
+    const base = { title: r.title, statement: "", input_spec: "", output_spec: "", notes: "" };
+    const picked = pickProblemText(locale, base, infos.get(r.id));
+    if (picked.translate) viaEnglish.push({ id: r.id, title: picked.text.title });
+    else out.set(r.id, picked.text.title);
+  }
+  if (viaEnglish.length) {
+    const tr = await translateTexts(locale, viaEnglish.map((r) => r.title));
+    for (const r of viaEnglish) out.set(r.id, tr.get(r.title) ?? r.title);
+  }
+  return out;
 }

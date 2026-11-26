@@ -89,7 +89,7 @@ export function AdminConsole({ roleName, username, permissions }: { role: string
         </div>
       </div>
       {can("read_suggestions") && <SuggestionsInbox />}
-      {(can("host_contests") || can("create_problems") || can("review_cheating")) && <ArenaAdmin permissions={permissions} />}
+      {(can("host_contests") || can("create_problems") || can("edit_problems") || can("review_cheating")) && <ArenaAdmin permissions={permissions} />}
     </div>
   );
 }

@@ -560,3 +560,45 @@ do $$ begin
 end $$;
 reset role;
 select 'SUGGESTION TESTS PASSED' as result;
+
+-- problem languages + edit_problems (migration 0020)
+reset role;
+insert into problems (id, title, statement, rating, visibility) values (99001, 'Secret Draft', 'Not in any round yet.', 1500, 'hidden');
+insert into problem_translations (problem_id, locale, title, statement) values
+  (1001, 'ru', 'Привет, гнездо', 'Поздоровайтесь.'),
+  (99001, 'uz', 'Maxfiy qoralama', 'Yashirin masala.');
+insert into roles (id, name, color, rank, permissions) values ('coordinator_t', 'Coordinator T', 'teal', 30, array['edit_problems'])
+  on conflict (id) do update set permissions = excluded.permissions;
+set role anon;
+select set_config('request.jwt.claim.sub', '', false);
+do $$ begin
+  if (select count(*) from problem_translations where problem_id = 1001) <> 1 then raise exception 'public problem translation not readable'; end if;
+  if exists (select 1 from problem_translations where problem_id = 99001) then raise exception 'hidden problem translation leaked'; end if;
+  begin
+    insert into problem_translations (problem_id, locale, title) values (1001, 'uz', 'x');
+    raise exception 'anon wrote a translation';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+update profiles set role = 'coordinator_t' where id = '22222222-2222-2222-2222-222222222222';
+set role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
+do $$ begin
+  if not public.has_perm(auth.uid(), 'edit_problems') then raise exception 'edit_problems not granted'; end if;
+  if not exists (select 1 from problem_translations where problem_id = 99001) then raise exception 'editor cannot read hidden translation'; end if;
+  if not exists (select 1 from problems where id = 99001) then raise exception 'editor cannot read hidden problem'; end if;
+  begin
+    update problem_translations set title = 'hacked' where problem_id = 1001;
+  exception when insufficient_privilege then null; end;
+  if exists (select 1 from problem_translations where title = 'hacked') then raise exception 'browser edited a translation'; end if;
+end $$;
+reset role;
+update profiles set role = 'user' where id = '22222222-2222-2222-2222-222222222222';
+delete from roles where id = 'coordinator_t';
+delete from problems where id = 99001;
+do $$ begin
+  if not ('edit_problems' = any(public.all_permissions())) then raise exception 'edit_problems missing'; end if;
+  if not exists (select 1 from roles where id = 'admin' and 'edit_problems' = any(permissions)) then raise exception 'admin cannot edit problems'; end if;
+  if not exists (select 1 from roles where id = 'co_founder' and 'edit_problems' = any(permissions)) then raise exception 'co-founder cannot edit problems'; end if;
+end $$;
+select 'PROBLEM LANGUAGE TESTS PASSED' as result;
