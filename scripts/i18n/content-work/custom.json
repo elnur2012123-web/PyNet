@@ -1,0 +1,34 @@
+{
+ "uz": [
+  "Adolatli konfetlar",
+  "Oʻqituvchining n ta bolasi bor. i-bolada a_i ta konfet bor. Oʻqituvchi har bir bolada konfetlar soni bir xil boʻlishini xohlaydi, lekin u faqat konfet BERA oladi, hech qachon olib qoʻya olmaydi.",
+  "Jami eng kamida nechta konfet berishi kerak?",
+  "Birinchi qatorda n (1 ≤ n ≤ 1000). Ikkinchi qatorda n ta butun son a_1 … a_n (0 ≤ a_i ≤ 10^6).",
+  "Bitta butun son chiqaring: berilishi kerak boʻlgan eng kam konfetlar soni.",
+  "Birinchi misolda hammaga 4 tadan konfet kerak: birinchi bolaga 3 ta, uchinchi bolaga 2 ta bering, jami 5 ta.",
+  "Tosh buzar",
+  "Koʻrsichqon n × m oʻlchamli panjara shaklidagi bogʻda yashaydi. Har bir katak yo yumshoq tuproq `.`, yo tosh `#`.",
+  "Koʻrsichqon yuqori chap katakdan boshlab, pastki oʻng katakka yetib bormoqchi. Bir qadamda u qoʻshni katakka (yuqoriga, pastga, chapga yoki oʻngga) oʻtadi. Tuproq boʻylab erkin yura oladi. Tosh katakka ham oʻtishi mumkin, lekin faqat shu toshni buzib, uning tirnoqlari esa jami koʻpi bilan k ta toshni buzishga yetadi.",
+  "Koʻrsichqonga eng kamida nechta qadam kerak? Agar u yetib bora olmasa, -1 ni chiqaring.",
+  "Birinchi qatorda n, m va k (1 ≤ n, m ≤ 100, 0 ≤ k ≤ 10). Keyingi n ta qatorning har birida m ta `.` yoki `#` belgisi. Boshlanish va tugash kataklari har doim `.`.",
+  "Eng kam qadamlar sonini yoki -1 ni chiqaring.",
+  "Ikkinchi misolda koʻrsichqon har tomondan toshlar bilan oʻralgan, shuning uchun k = 0 da u qimirlay olmaydi. Uchinchi misolda u oʻng tomonidagi toshni buzadi va 4 qadam yuradi.",
+  "Ehtiyot boʻling: toshlarga eʼtibor bermaydigan eng qisqa yoʻl va eng kam tosh buziladigan yoʻl har doim bir xil boʻlavermaydi. Har bir holatda nechta tosh buzilganini eslab qolishingiz kerak."
+ ],
+ "ru": [
+  "Честные конфеты",
+  "У учительницы n детей. У ребёнка i есть a_i конфет. Учительница хочет, чтобы у всех детей было одинаковое число конфет, но она может только ДАВАТЬ конфеты и никогда не забирать.",
+  "Какое наименьшее число конфет ей придётся раздать всего?",
+  "В первой строке — n (1 ≤ n ≤ 1000). Во второй строке — n целых чисел a_1 … a_n (0 ≤ a_i ≤ 10^6).",
+  "Выведите одно целое число: наименьшее общее число конфет, которые нужно раздать.",
+  "В первом примере всем нужно по 4 конфеты: дайте 3 первому ребёнку и 2 третьему, всего 5.",
+  "Крушитель камней",
+  "Крот живёт в саду, который представляет собой сетку n × m. Каждая клетка — либо мягкая земля `.`, либо камень `#`.",
+  "Крот начинает в верхней левой клетке и хочет добраться до нижней правой. За один шаг он переходит в соседнюю клетку (вверх, вниз, влево или вправо). По земле он ходит свободно. Он может зайти и в клетку с камнем, но только разбив этот камень, а его когтей хватает, чтобы разбить не более k камней всего.",
+  "Какое наименьшее число шагов нужно кроту? Если он не может добраться, выведите -1.",
+  "В первой строке — n, m и k (1 ≤ n, m ≤ 100, 0 ≤ k ≤ 10). В каждой из следующих n строк — m символов `.` или `#`. Стартовая и финишная клетки всегда `.`.",
+  "Выведите наименьшее число шагов или -1.",
+  "Во втором примере крот со всех сторон окружён камнями, поэтому при k = 0 он не может сдвинуться. В третьем примере он разбивает камень справа от себя и проходит 4 шага.",
+  "Осторожно: кратчайший путь без учёта камней и путь, разбивающий меньше всего камней, не всегда совпадают. Нужно помнить, сколько камней разбито в каждом состоянии."
+ ]
+}

@@ -1,0 +1,16 @@
+[
+"Fair Candies",
+"A teacher has n kids. Kid i has a_i candies. The teacher wants every kid to have the same number of candies, but she can only GIVE candies, never take them away.",
+"What is the smallest number of candies she has to give in total?",
+"The first line contains n (1 ≤ n ≤ 1000). The second line contains n integers a_1 … a_n (0 ≤ a_i ≤ 10^6).",
+"Print one integer: the smallest total number of candies to give.",
+"In the first example everyone needs 4 candies: give 3 to the first kid and 2 to the third kid, 5 in total.",
+"Rock Breaker",
+"A mole lives in a garden that is an n × m grid. Each cell is either soft soil `.` or a rock `#`.",
+"The mole starts in the top-left cell and wants to reach the bottom-right cell. In one step it moves to a neighbouring cell (up, down, left or right). It can walk through soil freely. It can also step into a rock cell, but only by breaking that rock, and its claws are strong enough to break at most k rocks in total.",
+"What is the minimum number of steps the mole needs? If it can't get there, print -1.",
+"The first line contains n, m and k (1 ≤ n, m ≤ 100, 0 ≤ k ≤ 10). Each of the next n lines contains m characters `.` or `#`. The start and the finish cells are always `.`.",
+"Print the minimum number of steps, or -1.",
+"In the second example the mole is completely surrounded by rocks, so with k = 0 it can't move. In the third example it breaks the rock to its right and walks 4 steps.",
+"Careful: the shortest path that ignores rocks and the path that breaks the fewest rocks are not always the same. You have to remember how many rocks were broken in each state."
+]

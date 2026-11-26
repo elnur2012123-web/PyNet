@@ -7,7 +7,19 @@ import { getAdminSupabase } from "@/lib/supabase/admin";
 import { machineTranslate, mtProvider } from "@/lib/server/mt";
 
 const UZ = new Map<string, string>(), RU = new Map<string, string>();
-for (const [en, uz, ru] of CONTENT) { if (uz) UZ.set(en, uz); if (ru) RU.set(en, ru); }
+/** Text typed into forms picks up stray spaces, Windows line breaks and curly quotes; match it anyway. */
+const norm = (s: string) => s.replace(/\r\n?/g, "\n").replace(/[ \t\u00a0]+/g, " ").replace(/ *\n */g, "\n").replace(/\n{3,}/g, "\n\n").replace(/[‘’]/g, "'").trim();
+for (const [en, uz, ru] of CONTENT) { if (uz) UZ.set(norm(en), uz); if (ru) RU.set(norm(en), ru); }
+
+/** Whole text first; otherwise paragraph by paragraph (a statement may mix known and new paragraphs). */
+function humanLookup(dict: Map<string, string>, text: string): string | undefined {
+  const whole = dict.get(norm(text));
+  if (whole) return whole;
+  const paras = norm(text).split(/\n\n/);
+  if (paras.length < 2) return undefined;
+  const out = paras.map((p) => dict.get(p));
+  return out.every(Boolean) ? out.join("\n\n") : undefined;
+}
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 /** Program output / code shown as an answer option must never be translated. */
@@ -26,7 +38,7 @@ export async function translateTexts(locale: Locale, texts: string[]): Promise<M
   const missing: string[] = [];
   for (const t of new Set(texts)) {
     if (!t || !/[A-Za-z]/.test(t)) { out.set(t, t); continue; }
-    const hit = dict.get(t);
+    const hit = humanLookup(dict, t);
     if (hit) out.set(t, hit); else missing.push(t);
   }
   if (missing.length) {
