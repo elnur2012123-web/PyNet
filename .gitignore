@@ -7,3 +7,4 @@ public/pyodide
 next-env.d.ts
 .vercel
 public/cpp
+__pycache__/
