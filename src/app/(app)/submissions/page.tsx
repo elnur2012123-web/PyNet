@@ -1,4 +1,6 @@
 import { getT } from "@/i18n/server";
+import { translateTexts } from "@/i18n/content";
+import { getLocale } from "@/i18n/server";
 import { T } from "@/components/i18n/T";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -24,6 +26,8 @@ export default async function StatusPage({ searchParams }: { searchParams: SP })
   });
   let rows = (data ?? []) as Row[];
   if (sp.verdict) rows = rows.filter((r) => r.verdict === sp.verdict);
+  const tr = await translateTexts(await getLocale(), rows.map((r) => r.problem_title));
+  rows = rows.map((r) => ({ ...r, problem_title: tr.get(r.problem_title) ?? r.problem_title }));
   const title = sp.user ? tx("Submissions of {user}", { user: sp.user }) : sp.contest ? tx("Contest status") : sp.problem ? tx("Submissions for problem {n}", { n: sp.problem }) : tx("Status");
 
   return (

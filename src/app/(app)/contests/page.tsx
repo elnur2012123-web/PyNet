@@ -1,4 +1,5 @@
-import { getT } from "@/i18n/server";
+import { getLocale, getT } from "@/i18n/server";
+import { translateTexts } from "@/i18n/content";
 import { T } from "@/components/i18n/T";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -22,7 +23,9 @@ export default async function ContestsPage() {
   const tx = await getT();
   if (!isSupabaseConfigured) return <EmptyState title={tx("Contests need accounts")} body={tx("Rounds and standings live in the database, so they appear once Supabase is configured.")} />;
   await finalizeFinishedContests();
-  const contests = await listContests();
+  const rawContests = await listContests();
+  const tr = await translateTexts(await getLocale(), rawContests.map((c) => c.title));
+  const contests = rawContests.map((c) => ({ ...c, title: tr.get(c.title) ?? c.title }));
   const current = contests.filter((c) => contestPhase(c) !== "finished").sort((a, b) => +new Date(a.starts_at) - +new Date(b.starts_at));
   const past = contests.filter((c) => contestPhase(c) === "finished");
 

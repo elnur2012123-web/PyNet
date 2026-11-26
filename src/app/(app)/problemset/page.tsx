@@ -1,4 +1,5 @@
-import { getT } from "@/i18n/server";
+import { getLocale, getT } from "@/i18n/server";
+import { translateTexts } from "@/i18n/content";
 import { T } from "@/components/i18n/T";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -20,12 +21,14 @@ export default async function ProblemsetPage({ searchParams }: { searchParams: S
   const sb = await getServerSupabase();
   if (!sb) return <EmptyState title={tx("Problemset needs accounts")} body={tx("Problems are stored in the database, so they appear once Supabase is configured.")} />;
   const { data } = await sb.rpc("get_problemset");
-  const all = ((data ?? []) as Row[]).map((r) => ({ ...r, solved: Number(r.solved) }));
+  const raw = (data ?? []) as Row[];
+  const tr = await translateTexts(await getLocale(), raw.map((r) => r.title));
+  const all = raw.map((r) => ({ ...r, en: r.title, title: tr.get(r.title) ?? r.title, solved: Number(r.solved) }));
   const tags = [...new Set(all.flatMap((r) => r.tags))].sort();
   const min = Number(sp.min) || 0, max = Number(sp.max) || 99999;
   const q = (sp.q ?? "").trim().toLowerCase();
   let rows = all.filter((r) => r.rating >= min && r.rating <= max && (!sp.tag || r.tags.includes(sp.tag))
-    && (!q || r.title.toLowerCase().includes(q) || String(r.id) === q)
+    && (!q || r.title.toLowerCase().includes(q) || r.en.toLowerCase().includes(q) || String(r.id) === q)
     && (!sp.status || (sp.status === "unsolved" ? r.my_status !== "OK" : r.my_status === "OK")));
   const order = sp.order ?? "new";
   rows = [...rows].sort((a, b) =>
