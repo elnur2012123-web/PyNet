@@ -602,3 +602,36 @@ do $$ begin
   if not exists (select 1 from roles where id = 'co_founder' and 'edit_problems' = any(permissions)) then raise exception 'co-founder cannot edit problems'; end if;
 end $$;
 select 'PROBLEM LANGUAGE TESTS PASSED' as result;
+
+-- manual plans (migration 0021)
+reset role;
+update subscriptions set plan = 'PRO', status = 'cancelled', payment_provider = 'manual', cancel_at_period_end = true,
+  billing_interval = 'month', current_period_end = now() + interval '1 month'
+ where user_id = '22222222-2222-2222-2222-222222222222';
+update subscriptions set plan = 'MAX', status = 'cancelled', payment_provider = 'manual', cancel_at_period_end = true,
+  billing_interval = 'year', current_period_end = now() - interval '1 day'
+ where user_id = '11111111-1111-1111-1111-111111111111';
+set role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
+do $$ begin
+  begin
+    perform public.expire_manual_plans();
+    raise exception 'browser expired plans';
+  exception when insufficient_privilege then null; end;
+  begin
+    update subscriptions set current_period_end = now() + interval '10 years' where user_id = auth.uid();
+  exception when insufficient_privilege then null; end;
+  if exists (select 1 from subscriptions where user_id = auth.uid() and current_period_end > now() + interval '2 months') then
+    raise exception 'user extended their own plan';
+  end if;
+end $$;
+reset role;
+do $$ begin
+  if public.expire_manual_plans() <> 1 then raise exception 'expected exactly one expired manual plan'; end if;
+  if (select plan from subscriptions where user_id = '11111111-1111-1111-1111-111111111111') <> 'FREE' then raise exception 'expired plan not reset'; end if;
+  if (select plan from subscriptions where user_id = '22222222-2222-2222-2222-222222222222') <> 'PRO' then raise exception 'running plan was reset'; end if;
+  if not ('give_plans' = any(public.all_permissions())) then raise exception 'give_plans missing'; end if;
+end $$;
+update subscriptions set plan = 'FREE', status = 'active', payment_provider = null, cancel_at_period_end = false, billing_interval = null, current_period_end = null
+ where user_id in ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222');
+select 'MANUAL PLAN TESTS PASSED' as result;

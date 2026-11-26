@@ -62,6 +62,7 @@ function BillingInner() {
 
   const periodEnd = sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString(undefined, { dateStyle: "long" }) : null;
   const paid = p.plan !== "FREE";
+  const manual = paid && sub?.payment_provider === "manual";
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -73,24 +74,27 @@ function BillingInner() {
           <div>
             <p className="text-sm text-muted"><T k="Current plan" /></p>
             <p className="mt-1 flex items-center gap-2 text-2xl font-semibold">{PLANS.find((x) => x.id === p.plan)?.name} <PlanBadge plan={p.plan} /></p>
-            <p className="mt-1 text-sm text-muted">{paid ? `Billed ${sub?.billing_interval === "year" ? "yearly" : "monthly"} · status: ${sub?.status}` : tx("Free forever")} · {AI_DAILY_LIMIT[p.plan]} <T k="PyBuddy messages/day" /></p>
+            <p className="mt-1 text-sm text-muted">{manual ? tx("Given by PyNest") : paid ? `Billed ${sub?.billing_interval === "year" ? "yearly" : "monthly"} · status: ${sub?.status}` : tx("Free forever")} · {AI_DAILY_LIMIT[p.plan]} <T k="PyBuddy messages/day" /></p>
           </div>
           {paid && periodEnd && (
             <div className="rounded-xl bg-elevated/70 px-4 py-3 text-sm">
-              <p className="flex items-center gap-1.5 text-muted"><CalendarClock className="h-4 w-4" /> {sub?.cancel_at_period_end ? tx("Access ends on") : tx("Next billing date")}</p>
+              <p className="flex items-center gap-1.5 text-muted"><CalendarClock className="h-4 w-4" /> {manual ? tx("Plan ends on") : sub?.cancel_at_period_end ? tx("Access ends on") : tx("Next billing date")}</p>
               <p className="font-semibold">{periodEnd}</p>
             </div>
           )}
         </div>
         {sub?.status === "past_due" && <div className="mt-4"><Notice kind="warn"><T k="Your last payment failed. Update your payment method to keep your plan." /></Notice></div>}
-        {sub?.cancel_at_period_end && paid && (
+        {manual && (
+          <div className="mt-4"><Notice>{tx("Your plan was given by PyNest and doesn't renew by itself. You keep {plan} until {date}.", { plan: p.plan === "MAX" ? "Max" : "Pro", date: periodEnd ?? "" })}</Notice></div>
+        )}
+        {sub?.cancel_at_period_end && paid && !manual && (
           <div className="mt-4"><Notice><T k="Your subscription is cancelled and won't renew. You keep" />{" "}{p.plan} <T k="until" />{" "}{periodEnd}<T k=". Your XP and progress are always kept." /></Notice></div>
         )}
         <div className="mt-5 flex flex-wrap gap-2">
           {paid && sub?.update_payment_url && <a href={sub.update_payment_url} target="_blank" rel="noreferrer" className="btn-secondary btn-sm"><CreditCard className="h-3.5 w-3.5" /> <T k="Update payment method" /></a>}
           {paid && sub?.portal_url && <a href={sub.portal_url} target="_blank" rel="noreferrer" className="btn-secondary btn-sm"><ExternalLink className="h-3.5 w-3.5" /> <T k="Customer portal" /></a>}
           {paid && !sub?.cancel_at_period_end && <button onClick={() => setCancelOpen(true)} disabled={!configured || working} className="btn-ghost btn-sm text-danger"><T k="Cancel subscription" /></button>}
-          {paid && sub?.cancel_at_period_end && <button onClick={() => post("/api/billing/change", { resume: true })} disabled={!configured || working} className="btn-primary btn-sm">{working && <Spinner />} <T k="Resume subscription" /></button>}
+          {paid && !manual && sub?.cancel_at_period_end && <button onClick={() => post("/api/billing/change", { resume: true })} disabled={!configured || working} className="btn-primary btn-sm">{working && <Spinner />} <T k="Resume subscription" /></button>}
         </div>
       </section>
 

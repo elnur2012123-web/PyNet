@@ -64,4 +64,8 @@ export const T9: [string, string, string][] = [
   ["Run reference & save", "Yechimni ishga tushirib saqlash", "Запустить эталон и сохранить"],
   ["Edit problems", "Masalalarni tahrirlash", "Редактировать задачи"],
   ["Change any problem's text, languages, limits and tests", "Istalgan masalaning matni, tillari, cheklovlari va testlarini oʻzgartirish", "Менять текст, языки, ограничения и тесты любой задачи"],
+  // manual plans
+  ["Given by PyNest", "PyNest tomonidan berilgan", "Выдан PyNest"],
+  ["Plan ends on", "Tarif tugash sanasi", "Тариф действует до"],
+  ["Your plan was given by PyNest and doesn't renew by itself. You keep {plan} until {date}.", "Tarifingiz PyNest tomonidan berilgan va oʻzi uzaytirilmaydi. {plan} tarifi {date} gacha amal qiladi.", "Ваш тариф выдан PyNest и не продлевается сам. {plan} действует до {date}."],
 ];

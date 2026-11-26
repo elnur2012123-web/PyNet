@@ -1,4 +1,4 @@
-/** Permissions a role can have. Keep in sync with public.all_permissions() (migration 0020). */
+/** Permissions a role can have. Keep in sync with public.all_permissions() (migration 0021). */
 export const PERMISSIONS = [
   { id: "ban_users", label: "Ban and unban users", hint: "Quick ban, /ban, /unban and Ban buttons on profiles" },
   { id: "view_logs", label: "See bans and the moderation log", hint: "Active bans list, /bans, /log" },
@@ -8,6 +8,7 @@ export const PERMISSIONS = [
   { id: "edit_problems", label: "Edit problems", hint: "Change any problem's text, languages, limits and tests" },
   { id: "review_cheating", label: "Review cheating", hint: "Use the cheat detector (banning there also needs \"Ban users\")" },
   { id: "manage_roles", label: "Manage roles", hint: "Create/edit roles and give or remove roles ranked below their own" },
+  { id: "give_plans", label: "Give plans", hint: "Give users Pro or Max for a month or a year (for payments made outside the site)" },
   { id: "read_suggestions", label: "Read suggestions", hint: "See and answer suggestions sent with the suggestion bot" },
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number]["id"];

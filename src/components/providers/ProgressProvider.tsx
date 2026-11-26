@@ -49,7 +49,7 @@ export interface DayActivity { date: string; xp: number; lessons: number; exerci
 export interface Stats { global_rank: number | null; weekly_rank: number | null; weekly_xp: number; monthly_xp: number; league: string; best_rank: number | null }
 export interface Subscription {
   plan: Plan; status: string; billing_interval: "month" | "year" | null; current_period_end: string | null;
-  cancel_at_period_end: boolean; provider_subscription_id: string | null; portal_url: string | null; update_payment_url: string | null;
+  cancel_at_period_end: boolean; provider_subscription_id: string | null; portal_url: string | null; update_payment_url: string | null; payment_provider?: string | null;
 }
 export interface RecentItem { kind: "lesson" | "exercise" | "quiz"; id: string; at: string }
 

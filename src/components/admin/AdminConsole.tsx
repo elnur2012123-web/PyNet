@@ -2,6 +2,7 @@
 import { ArenaAdmin } from "./ArenaAdmin";
 import { RolesManager } from "./RolesManager";
 import { SuggestionsInbox } from "./SuggestionsInbox";
+import { PlansManager } from "./PlansManager";
 import type { Permission } from "@/lib/permissions";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Gavel, ShieldCheck, Terminal } from "lucide-react";
@@ -88,6 +89,7 @@ export function AdminConsole({ roleName, username, permissions }: { role: string
           {can("view_logs") && <section className="card p-5"><h2 className="mb-2 font-semibold">Moderation log</h2><Markdown text={log || "Loading…"} /></section>}
         </div>
       </div>
+      {can("give_plans") && <PlansManager />}
       {can("read_suggestions") && <SuggestionsInbox />}
       {(can("host_contests") || can("create_problems") || can("edit_problems") || can("review_cheating")) && <ArenaAdmin permissions={permissions} />}
     </div>

@@ -12,6 +12,7 @@ export interface SubscriptionRow {
   provider_subscription_id: string | null;
   portal_url: string | null;
   update_payment_url: string | null;
+  payment_provider?: string | null;
 }
 
 /** Statuses during which paid features stay unlocked. */
@@ -38,7 +39,7 @@ export async function getUserContext(): Promise<UserContext | null> {
   if (!auth) return null;
   const { data } = await auth.supabase
     .from("subscriptions")
-    .select("plan,status,billing_interval,current_period_end,cancel_at_period_end,provider_subscription_id,portal_url,update_payment_url")
+    .select("plan,status,billing_interval,current_period_end,cancel_at_period_end,provider_subscription_id,portal_url,update_payment_url,payment_provider")
     .eq("user_id", auth.user.id)
     .maybeSingle();
   const subscription = (data as SubscriptionRow | null) ?? null;

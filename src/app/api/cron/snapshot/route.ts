@@ -7,6 +7,7 @@ export async function GET(req: Request) {
   if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) return error("Unauthorized", 401);
   const admin = getAdminSupabase();
   if (!admin) return error("Not configured", 503);
+  await admin.rpc("expire_manual_plans").then(() => null, () => null);
   const { error: e } = await admin.rpc("snapshot_leaderboards");
   if (e) return error(e.message, 500);
   return json({ ok: true });
