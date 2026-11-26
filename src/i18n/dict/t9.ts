@@ -16,4 +16,18 @@ export const T9: [string, string, string][] = [
   ["Submissions of {user}", "{user} yechimlari", "Посылки {user}"],
   ["Contest status", "Musobaqa holati", "Статус соревнования"],
   ["Submissions for problem {n}", "{n}-masala yechimlari", "Посылки по задаче {n}"],
+  // problem tags
+  ["hashing", "xeshlash", "хеширование"],
+  ["two pointers", "ikki koʻrsatkich", "два указателя"],
+  ["prefix sums", "prefiks yigʻindilar", "префиксные суммы"],
+  ["graphs", "graflar", "графы"],
+  ["dfs and similar", "chuqurlik boʻyicha qidiruv", "поиск в глубину"],
+  ["shortest paths", "eng qisqa yoʻllar", "кратчайшие пути"],
+  ["bfs", "kenglik boʻyicha qidiruv", "поиск в ширину"],
+  ["dsu", "birlashmalar tizimi (DSU)", "система непересекающихся множеств"],
+  ["topological sort", "topologik saralash", "топологическая сортировка"],
+  ["divide and conquer", "boʻl va hukmronlik qil", "разделяй и властвуй"],
+  ["bitmasks", "bit maskalar", "битовые маски"],
+  ["trees", "daraxtlar", "деревья"],
+  ["binary lifting", "ikkilik koʻtarilish", "двоичный подъём"],
 ];

@@ -305,9 +305,9 @@ select 'BADGE TESTS PASSED' as result;
 select set_config('request.jwt.claim.sub', '', false);
 set role anon;
 do $$ begin
-  if (select count(*) from problems) <> 24 then raise exception 'anon should only see the 24 public problems, saw %', (select count(*) from problems); end if;
+  if (select count(*) from problems) <> 64 then raise exception 'anon should only see the 64 public problems, saw %', (select count(*) from problems); end if;
   if exists (select 1 from contest_problems) then raise exception 'contest problems leaked before start'; end if;
-  if (select count(*) from get_problemset()) <> 24 then raise exception 'problemset should list 24'; end if;
+  if (select count(*) from get_problemset()) <> 64 then raise exception 'problemset should list 64'; end if;
   begin
     perform 1 from problem_tests limit 1;
     raise exception 'anon read hidden tests';

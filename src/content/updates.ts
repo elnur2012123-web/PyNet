@@ -13,6 +13,14 @@ export interface UpdateEntry {
 
 export const CODE_UPDATES: UpdateEntry[] = [
   {
+    id: "2026-11-26-problem-pack-2",
+    date: "2026-11-26T09:00:00Z",
+    kind: "feature",
+    title: "40 new problems, rated 900 to 2500",
+    body: "The problemset grew from 24 to 64 problems: from warm-ups like Above Average to graph, DP and data-structure challenges like Free Tickets, Weak Bridges and Merge Piles. Every one is in English, Oʻzbekcha, Ўзбекча and Русский.",
+    link: "/problemset",
+  },
+  {
     id: "2026-11-25-lessons-translated",
     date: "2026-11-25T22:00:00Z",
     kind: "feature",

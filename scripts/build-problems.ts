@@ -7,6 +7,7 @@
 import { readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { loadPyodide } from "pyodide";
 import { PROBLEMS, SEED_CONTESTS } from "./problems/data";
+import { PROBLEMS2 } from "./problems/data2";
 
 const norm = (s: string) => s.replace(/\r\n/g, "\n").split("\n").map((l) => l.replace(/\s+$/, "")).join("\n").replace(/\n+$/, "");
 const sql = (s: string) => `'${s.replace(/'/g, "''")}'`;
@@ -43,9 +44,11 @@ def _pn_judge_setup(data):
   // One statement per row, so files can be split anywhere between statements.
   const pub: string[] = [];
   const pool: string[] = [];
+  const pack2: string[] = [];
+  const pack2Ids = new Set(PROBLEMS2.map((p) => p.id));
   let out = "";
   let fails = 0, tests = 0;
-  for (const p of PROBLEMS) {
+  for (const p of [...PROBLEMS, ...PROBLEMS2]) {
     if (ids.has(p.id)) throw new Error(`duplicate id ${p.id}`);
     ids.add(p.id);
     const all: { input: string; expected: string }[] = [];
@@ -65,7 +68,7 @@ def _pn_judge_setup(data):
     const stmts: string[] = [];
     stmts.push(`insert into public.problems (id, title, statement, input_spec, output_spec, notes, examples, tags, rating, time_limit_ms, visibility) values (${p.id}, ${sql(p.title)}, ${sql(p.statement)}, ${sql(p.input)}, ${sql(p.output)}, ${sql(p.notes ?? "")}, ${sql(JSON.stringify(p.examples.map((e) => ({ input: e.input, output: norm(e.output) }))))}::jsonb, array[${p.tags.map(sql).join(",")}]::text[], ${p.rating}, ${p.timeLimitMs ?? 2000}, ${sql(p.visibility)}) on conflict (id) do nothing;\n`);
     for (const [i, t] of all.entries()) stmts.push(`insert into public.problem_tests (problem_id, idx, input, expected) values (${p.id}, ${i + 1}, ${sql(t.input)}, ${sql(t.expected)}) on conflict do nothing;\n`);
-    (p.visibility === "public" ? pub : pool).push(...stmts);
+    (pack2Ids.has(p.id) ? pack2 : p.visibility === "public" ? pub : pool).push(...stmts);
   }
   out = "";
   // Rounds start on the next Saturday at 14:00 UTC after the migration runs, one week apart.
@@ -78,7 +81,7 @@ def _pn_judge_setup(data):
   if (fails) { console.log(`\n${fails} failures`); process.exit(1); }
   pool.push(out);
   // The Supabase SQL Editor rejects big queries, so write parts of at most ~250 KB.
-  for (const f of readdirSync("supabase/migrations")) if (/^001[01]_/.test(f)) unlinkSync(`supabase/migrations/${f}`);
+  for (const f of readdirSync("supabase/migrations")) if (/^(001[01]|0019)_/.test(f)) unlinkSync(`supabase/migrations/${f}`);
   const LIMIT = 250 * 1024;
   const write = (prefix: string, name: string, what: string, stmts: string[]) => {
     const parts: string[][] = [[]];
@@ -95,8 +98,9 @@ def _pn_judge_setup(data):
       console.log(`  ${file} (${(body.length / 1024).toFixed(0)} KB)`);
     });
   };
-  console.log(`\nWrote ${PROBLEMS.length} problems, ${tests} tests:`);
+  console.log(`\nWrote ${PROBLEMS.length + PROBLEMS2.length} problems, ${tests} tests:`);
   write("0010", "problemset_seed", "Problemset (public problems) + their hidden tests", pub);
   write("0011", "contests_seed", "Contest problems (hidden until their round starts) + the first two rounds", pool);
+  write("0019", "problem_pack2", "Problem pack 2: 40 problems rated 900-2500 + their hidden tests", pack2);
 }
 main();

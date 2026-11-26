@@ -20,4 +20,5 @@ import { M13 } from "./m13";
 import { M14 } from "./m14";
 import { M15 } from "./m15";
 import { PROBLEMS } from "./problems";
-export const CONTENT: [string, string, string][] = [...CONTESTS, ...CUSTOM, ...ERRORS, ...EXERCISES, ...M01, ...M02, ...M03, ...M04, ...M05, ...M06, ...M07, ...M08, ...M09, ...M10, ...M11, ...M12, ...M13, ...M14, ...M15, ...PROBLEMS];
+import { PROBLEMS2 } from "./problems2";
+export const CONTENT: [string, string, string][] = [...CONTESTS, ...CUSTOM, ...ERRORS, ...EXERCISES, ...M01, ...M02, ...M03, ...M04, ...M05, ...M06, ...M07, ...M08, ...M09, ...M10, ...M11, ...M12, ...M13, ...M14, ...M15, ...PROBLEMS, ...PROBLEMS2];

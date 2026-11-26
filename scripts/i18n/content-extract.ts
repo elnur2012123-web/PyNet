@@ -8,6 +8,7 @@ import { MODULE_QUIZZES } from "../../src/content/quizzes";
 import { EXERCISES } from "../../src/content/exercises";
 import { PY_ERRORS } from "../../src/content/errors";
 import { PROBLEMS } from "../problems/data";
+import { PROBLEMS2 } from "../problems/data2";
 import { CONTENT } from "../../src/i18n/content/index";
 
 const have = new Set(CONTENT.map((t) => t[0]));
@@ -32,6 +33,7 @@ for (const m of MODULES) {
 EXERCISES.forEach((e) => { add("exercises", e.description); e.constraints?.forEach((c) => add("exercises", c)); e.hints.forEach((h) => add("exercises", h)); add("exercises", e.explanation); });
 PY_ERRORS.forEach((e) => { add("errors", e.meaning); e.why.forEach((w) => add("errors", w)); e.prevent.forEach((w) => add("errors", w)); add("errors", e.exercise.prompt); add("errors", e.exercise.hint); e.quiz.forEach((q) => mcq("errors", q)); });
 PROBLEMS.forEach((p) => { add("problems", p.title); add("problems", p.statement); add("problems", p.input); add("problems", p.output); add("problems", p.notes); });
+PROBLEMS2.forEach((p) => { add("problems2", p.title); add("problems2", p.statement); add("problems2", p.input); add("problems2", p.output); add("problems2", p.notes); });
 
 mkdirSync("scripts/i18n/content-todo", { recursive: true });
 let total = 0;
