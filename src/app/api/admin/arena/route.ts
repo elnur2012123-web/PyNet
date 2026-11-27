@@ -70,6 +70,67 @@ export async function POST(req: Request) {
     return json({ id: c.id });
   }
 
+  if (body.action === "update_contest") {
+    const id = Number(body.id);
+    const { data: c } = await admin.from("contests").select("id, title, starts_at, duration_minutes, rated, rating_applied, division").eq("id", id).maybeSingle();
+    if (!c) return error("Round not found", 404);
+    const now = Date.now();
+    const oldStart = new Date(c.starts_at).getTime();
+    const started = oldStart <= now;
+    const ended = oldStart + c.duration_minutes * 60_000 <= now;
+
+    const title = str(body.title, 100).trim();
+    if (title.length < 3) return error("Give the round a title.");
+    const patch: Record<string, unknown> = { title, description: str(body.description, 4000) };
+    const changes: string[] = [];
+    if (title !== c.title) changes.push("title");
+
+    let problems: number[] | null = null;
+    if (!started) {
+      // Not started yet: everything can change.
+      const starts = new Date(String(body.startsAt));
+      const duration = Number(body.durationMinutes);
+      if (isNaN(starts.getTime()) || starts.getTime() < now + 60_000) return error("The start time must be in the future.");
+      if (!(duration >= 10 && duration <= 10080)) return error("Duration must be between 10 minutes and 7 days.");
+      problems = Array.isArray(body.problems) ? body.problems.map(Number).filter(Number.isInteger) : [];
+      if (problems.length < 1 || problems.length > 10 || new Set(problems).size !== problems.length) return error("Pick 1–10 different problems.");
+      const { count } = await admin.from("problems").select("id", { count: "exact", head: true }).in("id", problems);
+      if (count !== problems.length) return error("Some problems don't exist.");
+      Object.assign(patch, {
+        starts_at: starts.toISOString(), duration_minutes: duration, rated: body.rated !== false,
+        division: ["hatchling", "fledgling", "soaring"].includes(String(body.division)) ? body.division : c.division,
+      });
+      if (starts.getTime() !== oldStart) changes.push("start");
+      if (duration !== c.duration_minutes) changes.push("length");
+    } else if (!ended) {
+      // Running: only the length can change, and the round must still end in the future.
+      const duration = Number(body.durationMinutes);
+      if (!(duration >= 10 && duration <= 10080)) return error("Duration must be between 10 minutes and 7 days.");
+      if (oldStart + duration * 60_000 <= now + 60_000) return error("The round is running: the new length must end at least a minute from now.");
+      patch.duration_minutes = duration;
+      if (duration !== c.duration_minutes) changes.push("length");
+    }
+    // Ended: only the title and description change.
+
+    const { error: e } = await admin.from("contests").update(patch).eq("id", id);
+    if (e) return error("Could not save the round.", 500);
+    if (problems) {
+      const { data: oldProblems } = await admin.from("contest_problems").select("letter, problem_id").eq("contest_id", id).order("letter");
+      const same = (oldProblems ?? []).map((r) => r.problem_id).join(",") === problems.join(",");
+      if (!same) {
+        await admin.from("contest_problems").delete().eq("contest_id", id);
+        const { error: e2 } = await admin.from("contest_problems").insert(problems.map((pid, i) => ({ contest_id: id, letter: LETTERS[i], problem_id: pid })));
+        if (e2) {
+          if (oldProblems?.length) await admin.from("contest_problems").insert(oldProblems.map((r) => ({ contest_id: id, ...r })));
+          return error("Could not change the problems.", 500);
+        }
+        changes.push("problems");
+      }
+    }
+    await admin.from("moderation_log").insert({ actor_id: user.id, action: "contest_edit", details: `#${id} ${title}${changes.length ? ` (${changes.join(", ")})` : ""}` }).then(() => null, () => null);
+    return json({ id, phase: !started ? "upcoming" : !ended ? "running" : "ended" });
+  }
+
   if (body.action === "delete_contest") {
     const id = Number(body.id);
     const { data: c } = await admin.from("contests").select("starts_at").eq("id", id).maybeSingle();

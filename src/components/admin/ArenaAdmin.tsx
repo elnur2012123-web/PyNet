@@ -9,7 +9,18 @@ import { DIVISIONS } from "@/lib/arena/divisions";
 import { ProblemEditor } from "./ProblemEditor";
 
 interface P { id: number; title: string; rating: number; visibility: string }
-interface C { id: number; title: string; starts_at: string; duration_minutes: number }
+interface C { id: number; title: string; description: string; starts_at: string; duration_minutes: number; rated: boolean; division: string }
+type Phase = "upcoming" | "running" | "ended";
+const phaseOf = (c: C, now = Date.now()): Phase => {
+  const s = new Date(c.starts_at).getTime();
+  return s > now ? "upcoming" : s + c.duration_minutes * 60_000 > now ? "running" : "ended";
+};
+/** ISO time → the value a datetime-local input wants, in the browser's time zone. */
+const toLocalInput = (iso: string) => {
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+};
+const EMPTY_ROUND = { title: "", description: "", start: "", duration: 120, rated: true, division: "hatchling" };
 const LETTERS = "ABCDEFGHIJ";
 
 async function post(body: Record<string, unknown>) {
@@ -24,6 +35,7 @@ export function ArenaAdmin({ permissions }: { permissions: string[] }) {
   const [problems, setProblems] = useState<P[]>([]);
   const [used, setUsed] = useState<Map<number, number[]>>(new Map());
   const [contests, setContests] = useState<C[]>([]);
+  const [contestProblems, setContestProblems] = useState<Map<number, number[]>>(new Map());
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = useCallback(async () => {
@@ -31,28 +43,54 @@ export function ArenaAdmin({ permissions }: { permissions: string[] }) {
     if (!sb) return;
     const [{ data: ps }, { data: cps }, { data: cs }] = await Promise.all([
       sb.from("problems").select("id, title, rating, visibility").order("id"),
-      sb.from("contest_problems").select("contest_id, problem_id"),
-      sb.from("contests").select("id, title, starts_at, duration_minutes").order("starts_at", { ascending: false }),
+      sb.from("contest_problems").select("contest_id, problem_id, letter").order("letter"),
+      sb.from("contests").select("id, title, description, starts_at, duration_minutes, rated, division").order("starts_at", { ascending: false }),
     ]);
     setProblems((ps ?? []) as P[]);
     const m = new Map<number, number[]>();
-    for (const r of (cps ?? []) as { contest_id: number; problem_id: number }[]) m.set(r.problem_id, [...(m.get(r.problem_id) ?? []), r.contest_id]);
+    const byContest = new Map<number, number[]>();
+    for (const r of (cps ?? []) as { contest_id: number; problem_id: number }[]) {
+      m.set(r.problem_id, [...(m.get(r.problem_id) ?? []), r.contest_id]);
+      byContest.set(r.contest_id, [...(byContest.get(r.contest_id) ?? []), r.problem_id]);
+    }
     setUsed(m);
+    setContestProblems(byContest);
     setContests((cs ?? []) as C[]);
   }, []);
   useEffect(() => { load(); }, [load]);
 
   // ---- schedule a round
-  const [round, setRound] = useState({ title: "", description: "", start: "", duration: 120, rated: true, division: "hatchling" });
+  const [round, setRound] = useState(EMPTY_ROUND);
   const [picked, setPicked] = useState<number[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  // ---- edit a round (null = scheduling a new one)
+  const [editing, setEditing] = useState<C | null>(null);
+  const phase: Phase = editing ? phaseOf(editing) : "upcoming";
+  const locked = phase !== "upcoming"; // start, division, rated and problems are fixed once a round starts
+  const startEdit = (c: C) => {
+    setEditing(c); setMsg(null);
+    setRound({ title: c.title, description: c.description ?? "", start: toLocalInput(c.starts_at), duration: c.duration_minutes, rated: c.rated, division: c.division ?? "soaring" });
+    setPicked(contestProblems.get(c.id) ?? []);
+    if (typeof window !== "undefined") document.getElementById("round-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const stopEdit = () => { setEditing(null); setRound(EMPTY_ROUND); setPicked([]); };
+  const saveRound = async () => {
+    if (!editing) return;
+    setBusy("round"); setMsg(null);
+    try {
+      await post({ action: "update_contest", id: editing.id, title: round.title, description: round.description, startsAt: new Date(round.start).toISOString(), durationMinutes: Number(round.duration), rated: round.rated, division: round.division, problems: picked });
+      setMsg({ ok: true, text: `Round #${editing.id} saved.` });
+      stopEdit(); load();
+    } catch (e) { setMsg({ ok: false, text: (e as Error).message }); }
+    setBusy(null);
+  };
   const pool = useMemo(() => [...problems].sort((a, b) => Number(used.has(a.id)) - Number(used.has(b.id)) || (a.visibility === "hidden" ? -1 : 1) - (b.visibility === "hidden" ? -1 : 1) || a.rating - b.rating), [problems, used]);
   const createRound = async () => {
     setBusy("round"); setMsg(null);
     try {
       const j = await post({ action: "create_contest", title: round.title, description: round.description, startsAt: new Date(round.start).toISOString(), durationMinutes: Number(round.duration), rated: round.rated, division: round.division, problems: picked });
       setMsg({ ok: true, text: `Round #${j.id} scheduled.` });
-      setRound({ title: "", description: "", start: "", duration: 120, rated: true, division: "hatchling" }); setPicked([]); load();
+      setRound(EMPTY_ROUND); setPicked([]); load();
     } catch (e) { setMsg({ ok: false, text: (e as Error).message }); }
     setBusy(null);
   };
@@ -70,7 +108,12 @@ export function ArenaAdmin({ permissions }: { permissions: string[] }) {
   }, [problems, find]);
   const saved = (text: string) => { setMsg({ ok: true, text }); load(); };
 
-  const upcoming = contests.filter((c) => new Date(c.starts_at).getTime() > Date.now());
+  // Upcoming and running rounds, then the 10 most recent finished ones.
+  const listed = useMemo(() => {
+    const live = contests.filter((c) => phaseOf(c) !== "ended").sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+    return [...live, ...contests.filter((c) => phaseOf(c) === "ended").slice(0, 10)];
+  }, [contests]);
+  const PHASE_LABEL: Record<Phase, string> = { upcoming: "upcoming", running: "running now", ended: "finished" };
 
   return (
     <div className="space-y-6">
@@ -78,30 +121,43 @@ export function ArenaAdmin({ permissions }: { permissions: string[] }) {
       {can("review_cheating") && <CheatDetector canBan={can("ban_users")} />}
       {msg && <p className={`card p-3 text-sm ${msg.ok ? "text-success" : "text-danger"}`}>{msg.text}</p>}
       <div className="grid gap-6 lg:grid-cols-2">
-        {can("host_contests") && <section className="card space-y-3 p-5">
-          <h3 className="flex items-center gap-2 font-semibold"><CalendarPlus className="h-4 w-4" /> Schedule a round</h3>
+        {can("host_contests") && <section id="round-form" className={`card space-y-3 p-5 ${editing ? "ring-2 ring-accent/40" : ""}`}>
+          {editing ? (
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="flex items-center gap-2 font-semibold"><Pencil className="h-4 w-4" /> Edit round #{editing.id}</h3>
+                <p className="mt-0.5 text-xs text-muted">
+                  {phase === "upcoming" && "Not started yet: you can change everything."}
+                  {phase === "running" && "Running now: you can change the title, the description and the length (to end it earlier or give more time)."}
+                  {phase === "ended" && "Finished: you can change the title and the description."}
+                </p>
+              </div>
+              <button onClick={stopEdit} className="btn-ghost btn-sm" aria-label="Stop editing"><X className="h-4 w-4" /></button>
+            </div>
+          ) : <h3 className="flex items-center gap-2 font-semibold"><CalendarPlus className="h-4 w-4" /> Schedule a round</h3>}
           <input className="input w-full" placeholder="PyNest Hatchling Round #3" value={round.title} onChange={(e) => setRound({ ...round, title: e.target.value })} />
           <textarea className="input min-h-16 w-full" placeholder="Short description (optional)" value={round.description} onChange={(e) => setRound({ ...round, description: e.target.value })} />
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <label className="space-y-1"><span className="label">Start (your time)</span><input type="datetime-local" className="input w-full" value={round.start} onChange={(e) => setRound({ ...round, start: e.target.value })} /></label>
-            <label className="space-y-1"><span className="label">Length (minutes)</span><input type="number" min={10} max={10080} className="input w-full" value={round.duration} onChange={(e) => setRound({ ...round, duration: Number(e.target.value) })} /></label>
+            <label className="space-y-1"><span className="label">Start (your time)</span><input type="datetime-local" disabled={locked} className="input w-full disabled:opacity-50" value={round.start} onChange={(e) => setRound({ ...round, start: e.target.value })} /></label>
+            <label className="space-y-1"><span className="label">Length (minutes)</span><input type="number" min={10} max={10080} disabled={phase === "ended"} className="input w-full disabled:opacity-50" value={round.duration} onChange={(e) => setRound({ ...round, duration: Number(e.target.value) })} /></label>
           </div>
           <label className="block space-y-1 text-sm"><span className="label">Division</span>
-            <select className="input w-full" value={round.division} onChange={(e) => setRound({ ...round, division: e.target.value })}>
+            <select disabled={locked} className="input w-full disabled:opacity-50" value={round.division} onChange={(e) => setRound({ ...round, division: e.target.value })}>
               {DIVISIONS.map((d) => <option key={d.id} value={d.id}>{d.emoji} {d.name} — {d.who}</option>)}
             </select>
           </label>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={round.rated} onChange={(e) => setRound({ ...round, rated: e.target.checked })} /> Rated</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" disabled={locked} checked={round.rated} onChange={(e) => setRound({ ...round, rated: e.target.checked })} /> Rated</label>
           <div>
             <p className="label">Problems in order ({picked.length}/10)</p>
             <div className="flex flex-wrap gap-1.5">
               {picked.map((id, i) => {
                 const p = problems.find((x) => x.id === id);
-                return <span key={id} className="chip">{LETTERS[i]}. {p?.title} <button onClick={() => setPicked(picked.filter((x) => x !== id))} aria-label="Remove"><X className="h-3 w-3" /></button></span>;
+                return <span key={id} className="chip">{LETTERS[i]}. {p?.title} {!locked && <button onClick={() => setPicked(picked.filter((x) => x !== id))} aria-label="Remove"><X className="h-3 w-3" /></button>}</span>;
               })}
               {!picked.length && <span className="text-xs text-muted">Click problems below to add them.</span>}
             </div>
           </div>
+          {locked ? <p className="text-xs text-muted">The problems can't change once a round has started.</p> : <>
           <div className="thin-scroll max-h-56 overflow-y-auto rounded-xl border border-border">
             {pool.map((p) => (
               <button key={p.id} disabled={picked.includes(p.id) || picked.length >= 10} onClick={() => setPicked([...picked, p.id])}
@@ -112,17 +168,32 @@ export function ArenaAdmin({ permissions }: { permissions: string[] }) {
             ))}
           </div>
           <p className="text-xs text-muted">Tip: use <b>unused hidden</b> problems — public ones may already be solved by contestants.</p>
-          <button className="btn-primary btn-sm" disabled={busy === "round" || !round.title || !round.start || !picked.length} onClick={createRound}>{busy === "round" && <Loader2 className="h-4 w-4 animate-spin" />} Schedule round</button>
-          {upcoming.length > 0 && (
+          </>}
+          {editing ? (
+            <div className="flex flex-wrap gap-2">
+              <button className="btn-primary btn-sm" disabled={busy === "round" || !round.title || !round.start || !picked.length} onClick={saveRound}>{busy === "round" && <Loader2 className="h-4 w-4 animate-spin" />} Save changes</button>
+              <button className="btn-ghost btn-sm" onClick={stopEdit}>Cancel</button>
+            </div>
+          ) : (
+            <button className="btn-primary btn-sm" disabled={busy === "round" || !round.title || !round.start || !picked.length} onClick={createRound}>{busy === "round" && <Loader2 className="h-4 w-4 animate-spin" />} Schedule round</button>
+          )}
+          {listed.length > 0 && (
             <div className="border-t border-border pt-3">
-              <p className="label">Upcoming rounds</p>
+              <p className="label">Rounds</p>
               <ul className="space-y-1 text-sm">
-                {upcoming.map((c) => (
-                  <li key={c.id} className="flex items-center justify-between gap-2">
-                    <Link href={`/contests/${c.id}`} className="link">{c.title}</Link>
-                    <span className="flex items-center gap-2 text-xs text-muted">{new Date(c.starts_at).toLocaleString()}<button onClick={() => deleteRound(c.id)} className="text-danger" aria-label="Delete round"><Trash2 className="h-4 w-4" /></button></span>
-                  </li>
-                ))}
+                {listed.map((c) => {
+                  const ph = phaseOf(c);
+                  return (
+                    <li key={c.id} className={`flex items-center justify-between gap-2 rounded-lg px-1 ${editing?.id === c.id ? "bg-elevated" : ""}`}>
+                      <span className="min-w-0 truncate"><Link href={`/contests/${c.id}`} className="link">{c.title}</Link> <span className={`text-xs ${ph === "running" ? "text-success" : "text-muted"}`}>· {PHASE_LABEL[ph]}</span></span>
+                      <span className="flex shrink-0 items-center gap-2 text-xs text-muted">
+                        {new Date(c.starts_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                        <button onClick={() => startEdit(c)} className="hover:text-fg" aria-label="Edit round" title="Edit round"><Pencil className="h-4 w-4" /></button>
+                        {ph === "upcoming" && <button onClick={() => deleteRound(c.id)} className="text-danger" aria-label="Delete round" title="Delete round"><Trash2 className="h-4 w-4" /></button>}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
